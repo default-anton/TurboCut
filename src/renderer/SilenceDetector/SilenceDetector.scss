@@ -1,0 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+@import './_loading-animation.scss';
+
+.silence-detector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Roboto', sans-serif;
+  padding: 1rem;
+
+  .input-file {
+     position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    label {
+     position: relative;
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background-image: linear-gradient(135deg, #6474f5 0%, #7c83fd 100%);
+      color: #fff;
+      font-weight: 500;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      input[type='file'] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+      }
+    }
+
+    .file-name {
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #555;
+      margin-left: 1rem;
+    }
+  }
+
+  .input-parameters {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 500px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+
+    .input-min-silence-len,
+    .input-silence-thresh {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 45%;
+
+      &:not(:last-child) {
+        margin-right: 1rem;
+      }
+
+      label {
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+      }
+
+      input {
+        width: 100%;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.9rem;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        transition: all 0.3s ease;
+
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(100, 116, 245, 0.5);
+          border-color: #6474f5;
+        }
+      }
+    }
+  }
+
+  button {
+    background-image: linear-gradient(135deg, #6474f5 0%, #7c83fd 100%);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      background-image: linear-gradient(135deg, #a4a6c3 0%, #b4b6d3 100%);
+      color: #c4c4c4;
+      cursor: not-allowed;
+
+      &:hover {
+        transform: none;
+      }
+    }
+  }
+
+  .waveform {
+    width: 100%;
+    max-width: 800px;
+    background-color: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: linear-gradient(135deg, rgba(100, 116, 245, 0.1) 0%, rgba(124, 131, 253, 0.1) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    &:hover::before {
+      opacity: 1;
+    }
+  }
+
+  .waveform-timeline {
+    width: 100%;
+    max-width: 800px;
+  }
+}
