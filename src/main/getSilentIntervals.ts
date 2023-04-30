@@ -6,7 +6,6 @@ const getSilentIntervals = (
   minSilenceLen: number,
   silenceThresh: number
 ): Promise<Array<Interval>> => {
-  console.log('getSilentIntervals', inputFile, minSilenceLen, silenceThresh);
   return new Promise((resolve, reject) => {
     const silenceIntervals: Array<Interval> = [];
     const outputAudioFile = inputFile
