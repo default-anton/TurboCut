@@ -46,6 +46,7 @@ export function useWaveSurfer(
       container: waveformRef.current,
       waveColor: 'violet',
       progressColor: 'purple',
+      height: 256,
       plugins: [
         CursorPlugin.create({
           showTime: true,
