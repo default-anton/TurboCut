@@ -15,7 +15,7 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import getSilentIntervals from './getSilentIntervals';
-import convertToMonoMp3 from './convertToMonoMp3';
+import convertToMono from './convertToMono';
 
 class AppUpdater {
   constructor() {
@@ -136,12 +136,12 @@ app
       }
     );
     ipcMain.handle(
-      'convertToMonoMp3',
+      'convertToMono',
       async (
         _event,
-        ...args: Parameters<typeof convertToMonoMp3>
-      ): ReturnType<typeof convertToMonoMp3> => {
-        return convertToMonoMp3(...args);
+        ...args: Parameters<typeof convertToMono>
+      ): ReturnType<typeof convertToMono> => {
+        return convertToMono(...args);
       }
     );
 

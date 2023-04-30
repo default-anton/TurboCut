@@ -19,8 +19,8 @@ const electronHandler = {
       padding
     );
   },
-  convertToMonoMp3(inputPath: string, outputPath: string): Promise<void> {
-    return ipcRenderer.invoke('convertToMonoMp3', inputPath, outputPath);
+  convertToMono(inputPath: string, outputPath: string): Promise<void> {
+    return ipcRenderer.invoke('convertToMono', inputPath, outputPath);
   },
 };
 

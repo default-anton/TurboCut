@@ -1,13 +1,12 @@
 import ffmpeg from 'fluent-ffmpeg';
 
-const convertToMonoMp3 = (
+const convertToMono = (
   inputPath: string,
   outputPath: string
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
       .noVideo()
-      .audioCodec('libmp3lame')
       .audioFrequency(44100)
       .audioChannels(1)
       .audioBitrate('192k')
@@ -22,4 +21,4 @@ const convertToMonoMp3 = (
   });
 };
 
-export default convertToMonoMp3;
+export default convertToMono;

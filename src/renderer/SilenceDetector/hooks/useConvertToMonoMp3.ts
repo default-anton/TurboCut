@@ -12,9 +12,9 @@ export function useConvertToMonoMp3(
     const convert = async () => {
       // outputPath is located in the same directory as the input file, but it has a suffix of "-mono.mp3". inputFile.path
       // is the absolute path of the input file which can be any video or audio file that ffmpeg supports.
-      const outPath = inputFile.path.replace(/\.[^/.]+$/, '-mono.mp3');
+      const outPath = inputFile.path.replace(/\.[^/.]+$/, '-mono.wav');
       setIsLoading(true);
-      await window.electron.convertToMonoMp3(inputFile.path, outPath);
+      await window.electron.convertToMono(inputFile.path, outPath);
       setOutputPath(outPath);
     };
 
