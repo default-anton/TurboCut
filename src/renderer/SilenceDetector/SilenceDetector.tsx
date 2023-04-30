@@ -99,19 +99,22 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
       const currentTime = wavesurferRef.current.getCurrentTime();
       const regions = wavesurferRef.current.regions.list;
 
-      for (const regionId in regions) {
-        const region = regions[regionId];
-        if (region.start <= currentTime && region.end >= currentTime) {
-          skipRegionInProgress.current = true;
-          wavesurferRef.current.seekTo(
-            region.end / wavesurferRef.current.getDuration()
-          );
-          setTimeout(() => {
-            skipRegionInProgress.current = false;
-          }, 0);
-          break;
+      Object.entries(regions).forEach(([, region]) => {
+        if (
+          Object.prototype.hasOwnProperty.call(region, 'start') &&
+          Object.prototype.hasOwnProperty.call(region, 'end')
+        ) {
+          if (region.start <= currentTime && region.end >= currentTime) {
+            skipRegionInProgress.current = true;
+            wavesurferRef.current!.seekTo(
+              region.end / wavesurferRef.current!.getDuration()
+            );
+            setTimeout(() => {
+              skipRegionInProgress.current = false;
+            }, 0);
+          }
         }
-      }
+      });
     };
 
     wavesurferRef.current.on('audioprocess', onAudioProcess);
@@ -140,8 +143,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Spacebar key code is 32
-      if (event.keyCode === 32) {
+      if (event.key === ' ') {
         handlePlayPauseClick();
       }
     };
