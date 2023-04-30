@@ -1,4 +1,5 @@
 import ffmpeg from 'fluent-ffmpeg';
+import fs from 'fs';
 import { Interval } from '../shared/types';
 
 const getSilentIntervals = (
@@ -9,14 +10,18 @@ const getSilentIntervals = (
 ): Promise<Array<Interval>> => {
   return new Promise((resolve, reject) => {
     const silenceIntervals: Array<Interval> = [];
-    const outputAudioFile = inputFile
-      .replace(/\.[^/.]+$/, '_silence.wav')
-      .replace(/.*\//, './');
+    // use a temporary mono audio file in tmp to detect silence
+    const outputAudioFile = `${inputFile}.mono.wav`;
 
     ffmpeg(inputFile)
+      .noVideo()
+      .audioFrequency(44100)
+      .audioChannels(1)
+      .audioBitrate('192k')
       .audioFilters(`silencedetect=n=${silenceThresh}dB:d=${minSilenceLen}`)
       .on('end', () => {
         resolve(silenceIntervals);
+        fs.unlinkSync(outputAudioFile);
       })
       .on('stderr', (line: string) => {
         const silenceStartRegex = /silence_start: (\d+(\.\d+)?)/;
@@ -37,7 +42,6 @@ const getSilentIntervals = (
       .on('error', (err: Error) => {
         reject(err);
       })
-      .noVideo()
       .output(outputAudioFile)
       .run();
   });
