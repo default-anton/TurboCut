@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Interval } from '../../shared/types';
-import { AudioFileInput } from './components/AudioFileInput';
-import { InputParameters } from './components/InputParameters';
-import { AudioWaveformAnimation } from './components/AudioWaveformAnimation';
-import { Waveform } from './components/Waveform';
-import { PlayPauseButton } from './components/PlayPauseButton';
+import AudioFileInput from './components/AudioFileInput';
+import InputParameters from './components/InputParameters';
+import AudioWaveformAnimation from './components/AudioWaveformAnimation';
+import Waveform from './components/Waveform';
+import PlayPauseButton from './components/PlayPauseButton';
 import { useAudioFileInput } from './hooks/useAudioFileInput';
 import { useSilenceDetection } from './hooks/useSilenceDetection';
 import { useWaveSurfer } from './hooks/useWaveSurfer';
