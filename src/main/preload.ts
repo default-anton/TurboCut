@@ -8,13 +8,15 @@ const electronHandler = {
   getSilentIntervals(
     inputFile: string,
     minSilenceLen: number,
-    silenceThresh: number
+    silenceThresh: number,
+    padding: number
   ): Promise<Array<Interval>> {
     return ipcRenderer.invoke(
       'getSilentIntervals',
       inputFile,
       minSilenceLen,
-      silenceThresh
+      silenceThresh,
+      padding
     );
   },
 };

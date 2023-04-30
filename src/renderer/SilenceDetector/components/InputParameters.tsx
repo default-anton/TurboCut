@@ -5,6 +5,8 @@ interface InputParametersProps {
   setMinSilenceLen: (value: number) => void;
   silenceThresh: number;
   setSilenceThresh: (value: number) => void;
+  padding: number;
+  setPadding: (value: number) => void;
 }
 
 export const InputParameters: React.FC<InputParametersProps> = ({
@@ -12,6 +14,8 @@ export const InputParameters: React.FC<InputParametersProps> = ({
   setMinSilenceLen,
   silenceThresh,
   setSilenceThresh,
+  padding,
+  setPadding,
 }) => (
   <div className="input-parameters">
     <div className="input-min-silence-len">
@@ -33,6 +37,17 @@ export const InputParameters: React.FC<InputParametersProps> = ({
           type="number"
           value={silenceThresh}
           onChange={(event) => setSilenceThresh(parseFloat(event.target.value))}
+        />
+      </label>
+    </div>
+    <div className="input-padding">
+      <label htmlFor="input-padding">
+        Padding:
+        <input
+          id="input-padding"
+          type="number"
+          value={padding}
+          onChange={(event) => setPadding(parseFloat(event.target.value))}
         />
       </label>
     </div>

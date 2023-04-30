@@ -4,7 +4,8 @@ import { Interval } from '../shared/types';
 const getSilentIntervals = (
   inputFile: string,
   minSilenceLen: number,
-  silenceThresh: number
+  silenceThresh: number,
+  padding: number
 ): Promise<Array<Interval>> => {
   return new Promise((resolve, reject) => {
     const silenceIntervals: Array<Interval> = [];
@@ -23,10 +24,14 @@ const getSilentIntervals = (
 
         if (silenceStartRegex.test(line)) {
           const [, start] = line.match(silenceStartRegex) as RegExpMatchArray;
-          silenceIntervals.push({ start: parseFloat(start), end: null });
+          silenceIntervals.push({
+            start: parseFloat(start) + padding,
+            end: null,
+          });
         } else if (silenceEndRegex.test(line)) {
           const [, end] = line.match(silenceEndRegex) as RegExpMatchArray;
-          silenceIntervals[silenceIntervals.length - 1].end = parseFloat(end);
+          silenceIntervals[silenceIntervals.length - 1].end =
+            parseFloat(end) - padding;
         }
       })
       .on('error', (err: Error) => {

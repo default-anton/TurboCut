@@ -61,11 +61,10 @@
     flex-wrap: wrap;
 
     .input-min-silence-len,
-    .input-silence-thresh {
+    .input-silence-thresh,
+    .input-padding {
       display: flex;
       flex-direction: column;
-      flex: 1;
-      min-width: 45%;
 
       &:not(:last-child) {
         margin-right: 1rem;

@@ -16,8 +16,9 @@ interface SilenceDetectorProps {}
 const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [minSilenceLen, setMinSilenceLen] = useState<number>(1.5);
-  const [silenceThresh, setSilenceThresh] = useState<number>(-35);
+  const [minSilenceLen, setMinSilenceLen] = useState<number>(1);
+  const [silenceThresh, setSilenceThresh] = useState<number>(-30);
+  const [padding, setPadding] = useState<number>(0.2);
   const [intervals, setIntervals] = useState<Array<Interval>>([]);
 
   const handleFileChange = useAudioFileInput(
@@ -29,6 +30,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
     inputFile,
     minSilenceLen,
     silenceThresh,
+    padding,
     setIntervals
   );
   const { waveformRef, handleScroll, handlePlayPauseClick, isPlaying } =
@@ -41,8 +43,10 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
       <InputParameters
         minSilenceLen={minSilenceLen}
         silenceThresh={silenceThresh}
+        padding={padding}
         setMinSilenceLen={setMinSilenceLen}
         setSilenceThresh={setSilenceThresh}
+        setPadding={setPadding}
       />
 
       <button

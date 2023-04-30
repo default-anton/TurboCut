@@ -5,6 +5,7 @@ export function useSilenceDetection(
   inputFile: File | null,
   minSilenceLen: number,
   silenceThresh: number,
+  padding: number,
   setIntervals: Dispatch<SetStateAction<Array<Interval>>>
 ) {
   return async () => {
@@ -12,7 +13,8 @@ export function useSilenceDetection(
       const silentIntervals = await window.electron.getSilentIntervals(
         inputFile.path,
         minSilenceLen,
-        silenceThresh
+        silenceThresh,
+        padding
       );
       setIntervals(silentIntervals);
     }
