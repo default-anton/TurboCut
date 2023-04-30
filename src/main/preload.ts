@@ -19,6 +19,9 @@ const electronHandler = {
       padding
     );
   },
+  convertToMonoMp3(inputPath: string, outputPath: string): Promise<void> {
+    return ipcRenderer.invoke('convertToMonoMp3', inputPath, outputPath);
+  },
 };
 
 contextBridge.exposeInMainWorld('electron', electronHandler);

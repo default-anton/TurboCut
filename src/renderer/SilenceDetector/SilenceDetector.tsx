@@ -7,6 +7,7 @@ import Waveform from './components/Waveform';
 import PlayPauseButton from './components/PlayPauseButton';
 import { useAudioFileInput } from './hooks/useAudioFileInput';
 import { useSilenceDetection } from './hooks/useSilenceDetection';
+import { useConvertToMonoMp3 } from './hooks/useConvertToMonoMp3';
 import { useWaveSurfer } from './hooks/useWaveSurfer';
 
 import './SilenceDetector.scss';
@@ -33,8 +34,9 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
     padding,
     setIntervals
   );
+  const { outputPath } = useConvertToMonoMp3(inputFile, setIsLoading);
   const { waveformRef, handleScroll, handlePlayPauseClick, isPlaying } =
-    useWaveSurfer(inputFile, isLoading, setIsLoading, intervals);
+    useWaveSurfer(outputPath, isLoading, setIsLoading, intervals);
 
   return (
     <div className="silence-detector">

@@ -15,6 +15,7 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import getSilentIntervals from './getSilentIntervals';
+import convertToMonoMp3 from './convertToMonoMp3';
 
 class AppUpdater {
   constructor() {
@@ -126,8 +127,20 @@ app
     // expose getSilentIntervals to the renderer process by using ipcMain.handle
     ipcMain.handle(
       'getSilentIntervals',
-      async (_event, ...args: Parameters<typeof getSilentIntervals>) => {
+      async (
+        _event,
+        ...args: Parameters<typeof getSilentIntervals>
+      ): ReturnType<typeof getSilentIntervals> => {
         return getSilentIntervals(...args);
+      }
+    );
+    ipcMain.handle(
+      'convertToMonoMp3',
+      async (
+        _event,
+        ...args: Parameters<typeof convertToMonoMp3>
+      ): ReturnType<typeof convertToMonoMp3> => {
+        return convertToMonoMp3(...args);
       }
     );
 

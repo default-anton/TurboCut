@@ -7,7 +7,7 @@ import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
 import { Interval } from '../../../shared/types';
 
 export function useWaveSurfer(
-  inputFile: File | null,
+  filePath: string | null,
   isLoading: boolean,
   setIsLoading: (value: boolean) => void,
   intervals: Array<Interval>
@@ -40,7 +40,7 @@ export function useWaveSurfer(
   }, [zoomLevel]);
 
   useEffect(() => {
-    if (!waveformRef.current || !inputFile) return;
+    if (!waveformRef.current || !filePath) return;
 
     wavesurferRef.current = WaveSurfer.create({
       container: waveformRef.current,
@@ -62,7 +62,7 @@ export function useWaveSurfer(
       ],
     });
 
-    wavesurferRef.current.loadBlob(inputFile);
+    wavesurferRef.current.load(`file://${filePath}`);
 
     wavesurferRef.current.on('ready', () => {
       setIsLoading(false);
@@ -98,7 +98,7 @@ export function useWaveSurfer(
       wavesurferRef.current?.destroy();
       wavesurferRef.current?.un('audioprocess', onAudioProcess);
     };
-  }, [inputFile, setIsLoading]);
+  }, [filePath, setIsLoading]);
 
   useEffect(() => {
     if (!wavesurferRef.current) return;
