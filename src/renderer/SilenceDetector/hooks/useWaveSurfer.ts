@@ -5,6 +5,8 @@ import TimelinePlugin from 'wavesurfer.js/dist/plugin/wavesurfer.timeline.min';
 import CursorPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.cursor.min';
 import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
 import { Interval } from '../../../shared/types';
+import { message } from 'antd';
+import { CREATE_OPTIMIZED_AUDIO_FILE } from 'renderer/messages';
 
 export function useWaveSurfer(
   filePath: string | null,
@@ -13,7 +15,6 @@ export function useWaveSurfer(
   intervals: Array<Interval>
 ) {
   const skipRegionInProgress = useRef(false);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
 
   const waveformRef = useRef<HTMLDivElement>(null);
@@ -22,7 +23,6 @@ export function useWaveSurfer(
   const handlePlayPauseClick = useCallback(() => {
     if (wavesurferRef.current) {
       wavesurferRef.current.playPause();
-      setIsPlaying((prev) => !prev);
     }
   }, []);
 
@@ -67,6 +67,12 @@ export function useWaveSurfer(
 
     wavesurferRef.current.on('ready', () => {
       setIsLoading(false);
+      message.open({
+        key: CREATE_OPTIMIZED_AUDIO_FILE,
+        type: 'success',
+        content: 'Optimized audio file created',
+        duration: 2,
+      });
     });
 
     const onAudioProcess = () => {
@@ -134,8 +140,6 @@ export function useWaveSurfer(
   return {
     waveformRef,
     handleScroll,
-    handlePlayPauseClick,
-    isPlaying,
   };
 }
 

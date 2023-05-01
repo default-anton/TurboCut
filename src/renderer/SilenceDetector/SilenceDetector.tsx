@@ -4,13 +4,14 @@ import AudioFileInput from './components/AudioFileInput';
 import InputParameters from './components/InputParameters';
 import AudioWaveformAnimation from './components/AudioWaveformAnimation';
 import Waveform from './components/Waveform';
-import PlayPauseButton from './components/PlayPauseButton';
 import { useAudioFileInput } from './hooks/useAudioFileInput';
 import { useSilenceDetection } from './hooks/useSilenceDetection';
 import { useConvertToMonoMp3 } from './hooks/useConvertToMonoMp3';
 import { useWaveSurfer } from './hooks/useWaveSurfer';
+import { Button, Layout, Space } from 'antd';
 
 import './SilenceDetector.scss';
+import { Content, Footer, Header } from 'antd/es/layout/layout';
 
 interface SilenceDetectorProps {}
 
@@ -35,43 +36,49 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
     setIntervals
   );
   const { outputPath } = useConvertToMonoMp3(inputFile, setIsLoading);
-  const { waveformRef, handleScroll, handlePlayPauseClick, isPlaying } =
+  const { waveformRef, handleScroll } =
     useWaveSurfer(outputPath, isLoading, setIsLoading, intervals);
 
   return (
     <div className="silence-detector">
-      <AudioFileInput inputFile={inputFile} onChange={handleFileChange} />
+      <Space direction="vertical" style={{ width: '100%' }} size={[0, 48]}>
+        <Layout>
+          <Header />
 
-      <InputParameters
-        minSilenceLen={minSilenceLen}
-        silenceThresh={silenceThresh}
-        padding={padding}
-        setMinSilenceLen={setMinSilenceLen}
-        setSilenceThresh={setSilenceThresh}
-        setPadding={setPadding}
-      />
+          <Content>
+            <Space
+              direction="vertical"
+              size="middle"
+              style={{ display: 'flex' }}
+            >
+              <AudioFileInput onChange={handleFileChange} />
+              <AudioWaveformAnimation isLoading={isLoading} />
+              <Waveform
+                waveformRef={waveformRef}
+                onWheel={handleScroll}
+                isLoading={isLoading}
+              />
+              <Button
+                type="primary"
+                onClick={handleDetectSilenceClick}
+                disabled={!inputFile}
+              >
+                Detect silence
+              </Button>
+              <InputParameters
+                minSilenceLen={minSilenceLen}
+                silenceThresh={silenceThresh}
+                padding={padding}
+                setMinSilenceLen={setMinSilenceLen}
+                setSilenceThresh={setSilenceThresh}
+                setPadding={setPadding}
+              />
+            </Space>
+          </Content>
 
-      <button
-        type="button"
-        onClick={handleDetectSilenceClick}
-        disabled={!inputFile}
-      >
-        Detect silence
-      </button>
-
-      <AudioWaveformAnimation isLoading={isLoading} />
-
-      <Waveform
-        waveformRef={waveformRef}
-        onWheel={handleScroll}
-        isLoading={isLoading}
-      />
-
-      <PlayPauseButton
-        onClick={handlePlayPauseClick}
-        isPlaying={isPlaying}
-        disabled={!inputFile}
-      />
+          <Footer />
+        </Layout>
+      </Space>
     </div>
   );
 };
