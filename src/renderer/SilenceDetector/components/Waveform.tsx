@@ -1,5 +1,7 @@
 import React from 'react';
 
+import styles from './Waveform.module.scss';
+
 interface WaveformProps {
   waveformRef: React.RefObject<HTMLDivElement>;
   onWheel: (event: React.WheelEvent<HTMLDivElement>) => void;
@@ -13,14 +15,14 @@ export const Waveform: React.FC<WaveformProps> = ({
 }) => (
   <>
     <div
-      className="waveform"
+      className={styles.waveform}
       ref={waveformRef}
       onWheel={onWheel}
       style={{ visibility: isLoading ? 'hidden' : 'visible' }}
     />
     <div
       id="waveform-timeline"
-      className="waveform-timeline"
+      className={styles['waveform-timeline']}
       style={{ visibility: isLoading ? 'hidden' : 'visible' }}
     />
   </>

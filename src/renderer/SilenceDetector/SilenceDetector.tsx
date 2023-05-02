@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Layout, Space } from 'antd';
+import { Button, Layout, Space, Modal } from 'antd';
 import { Content, Footer, Header } from 'antd/es/layout/layout';
 
 import { Interval } from '../../shared/types';
@@ -12,7 +12,7 @@ import { useSilenceDetection } from './hooks/useSilenceDetection';
 import { useConvertToMonoMp3 } from './hooks/useConvertToMonoMp3';
 import { useWaveSurfer } from './hooks/useWaveSurfer';
 
-import './SilenceDetector.scss';
+import styles from './SilenceDetector.module.scss';
 
 interface SilenceDetectorProps {}
 
@@ -23,6 +23,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
   const [silenceThresh, setSilenceThresh] = useState<number>(-30);
   const [padding, setPadding] = useState<number>(0.2);
   const [intervals, setIntervals] = useState<Array<Interval>>([]);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
 
   const handleFileChange = useAudioFileInput(
     setInputFile,
@@ -44,8 +45,21 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
     intervals
   );
 
+  const showModal = () => {
+    setModalVisible(true);
+  };
+
+  const handleOk = () => {
+    handleDetectSilenceClick();
+    setModalVisible(false);
+  };
+
+  const handleCancel = () => {
+    setModalVisible(false);
+  };
+
   return (
-    <div className="silence-detector">
+    <div className={styles['silence-detector']}>
       <Space
         direction="vertical"
         style={{ width: '100%', height: '100%' }}
@@ -67,20 +81,29 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
                 onWheel={handleScroll}
                 isLoading={isLoading}
               />
-              {inputFile &&
-                !isLoading && [
-                  <Button type="primary" onClick={handleDetectSilenceClick}>
+              {inputFile && !isLoading && (
+                <>
+                  <Button type="primary" onClick={showModal}>
                     Detect silence
-                  </Button>,
-                  <InputParameters
-                    minSilenceLen={minSilenceLen}
-                    silenceThresh={silenceThresh}
-                    padding={padding}
-                    setMinSilenceLen={setMinSilenceLen}
-                    setSilenceThresh={setSilenceThresh}
-                    setPadding={setPadding}
-                  />,
-                ]}
+                  </Button>
+                  <Modal
+                    title="Silence detection parameters"
+                    visible={modalVisible}
+                    onOk={handleOk}
+                    onCancel={handleCancel}
+                    okText="Submit"
+                  >
+                    <InputParameters
+                      minSilenceLen={minSilenceLen}
+                      silenceThresh={silenceThresh}
+                      padding={padding}
+                      setMinSilenceLen={setMinSilenceLen}
+                      setSilenceThresh={setSilenceThresh}
+                      setPadding={setPadding}
+                    />
+                  </Modal>
+                </>
+              )}
             </Space>
           </Content>
 
