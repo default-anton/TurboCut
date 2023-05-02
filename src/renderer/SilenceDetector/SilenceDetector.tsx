@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Layout, Space, Modal } from 'antd';
 import { Content, Footer, Header } from 'antd/es/layout/layout';
+import { AudioOutlined } from '@ant-design/icons';
 
 import { Interval } from '../../shared/types';
 import AudioFileInput from './components/AudioFileInput';
@@ -60,56 +61,50 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
 
   return (
     <div className={styles['silence-detector']}>
-      <Space
-        direction="vertical"
-        style={{ width: '100%', height: '100%' }}
-        size={[0, 48]}
-      >
-        <Layout>
-          <Header />
-
-          <Content>
-            <Space
-              direction="vertical"
-              size="middle"
-              style={{ display: 'flex', justifyContent: 'center' }}
-            >
-              <AudioFileInput onChange={handleFileChange} />
-              <AudioWaveformAnimation isLoading={isLoading} />
-              <Waveform
-                waveformRef={waveformRef}
-                onWheel={handleScroll}
-                isLoading={isLoading}
-              />
-              {inputFile && !isLoading && (
-                <>
-                  <Button type="primary" onClick={showModal}>
-                    Detect silence
-                  </Button>
-                  <Modal
-                    title="Silence detection parameters"
-                    visible={modalVisible}
-                    onOk={handleOk}
-                    onCancel={handleCancel}
-                    okText="Submit"
-                  >
-                    <InputParameters
-                      minSilenceLen={minSilenceLen}
-                      silenceThresh={silenceThresh}
-                      padding={padding}
-                      setMinSilenceLen={setMinSilenceLen}
-                      setSilenceThresh={setSilenceThresh}
-                      setPadding={setPadding}
-                    />
-                  </Modal>
-                </>
-              )}
-            </Space>
-          </Content>
-
-          <Footer />
-        </Layout>
-      </Space>
+      <Layout>
+        <Header>
+          <h1 className={styles['header-title']}>Silence Cutter</h1>
+        </Header>
+        <Content className={styles['content']}>
+          <div className={styles['content-wrapper']}>
+            <AudioFileInput onChange={handleFileChange} />
+            <AudioWaveformAnimation isLoading={isLoading} />
+            <Waveform
+              waveformRef={waveformRef}
+              onWheel={handleScroll}
+              isLoading={isLoading}
+            />
+            {inputFile && !isLoading && (
+              <>
+                <Button
+                  type="primary"
+                  onClick={showModal}
+                  icon={<AudioOutlined />}
+                >
+                  Detect silence
+                </Button>
+                <Modal
+                  title="Silence detection parameters"
+                  visible={modalVisible}
+                  onOk={handleOk}
+                  onCancel={handleCancel}
+                  okText="Submit"
+                >
+                  <InputParameters
+                    minSilenceLen={minSilenceLen}
+                    silenceThresh={silenceThresh}
+                    padding={padding}
+                    setMinSilenceLen={setMinSilenceLen}
+                    setSilenceThresh={setSilenceThresh}
+                    setPadding={setPadding}
+                  />
+                </Modal>
+              </>
+            )}
+          </div>
+        </Content>
+        <Footer />
+      </Layout>
     </div>
   );
 };
