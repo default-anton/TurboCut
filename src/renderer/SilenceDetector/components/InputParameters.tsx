@@ -1,4 +1,12 @@
 import React from 'react';
+import { Form, InputNumber, Row, Col } from 'antd';
+import {
+  ClockCircleOutlined,
+  AudioOutlined,
+  BorderOutlined,
+} from '@ant-design/icons';
+
+import styles from './InputParameters.module.scss';
 
 interface InputParametersProps {
   minSilenceLen: number;
@@ -17,41 +25,47 @@ export const InputParameters: React.FC<InputParametersProps> = ({
   padding,
   setPadding,
 }) => (
-  <div className="input-parameters">
-    <div className="input-min-silence-len">
-      <label htmlFor="input-min-silence-len">
-        Minimum Silence Length:
-        <input
-          id="input-min-silence-len"
-          type="number"
-          value={minSilenceLen}
-          onChange={(event) => setMinSilenceLen(parseFloat(event.target.value))}
-        />
-      </label>
-    </div>
-    <div className="input-silence-thresh">
-      <label htmlFor="input-silence-thresh">
-        Silence Threshold:
-        <input
-          id="input-silence-thresh"
-          type="number"
-          value={silenceThresh}
-          onChange={(event) => setSilenceThresh(parseFloat(event.target.value))}
-        />
-      </label>
-    </div>
-    <div className="input-padding">
-      <label htmlFor="input-padding">
-        Padding:
-        <input
-          id="input-padding"
-          type="number"
-          value={padding}
-          onChange={(event) => setPadding(parseFloat(event.target.value))}
-        />
-      </label>
-    </div>
-  </div>
+  <Form layout="vertical">
+    <Row gutter={16}>
+      <Col span={24}>
+        <Form.Item label="Minimum Silence Length" extra="Seconds">
+          <InputNumber
+            value={minSilenceLen}
+            onChange={(value) => value && setMinSilenceLen(value)}
+            step={0.1}
+            min={0.1}
+            className={styles['input-number']}
+            addonBefore={<ClockCircleOutlined />}
+          />
+        </Form.Item>
+      </Col>
+      <Col span={24}>
+        <Form.Item label="Silence Threshold" extra="dB">
+          <InputNumber
+            value={silenceThresh}
+            onChange={(value) => value && setSilenceThresh(value)}
+            step={0.1}
+            max={0}
+            min={-100}
+            className={styles['input-number']}
+            addonBefore={<AudioOutlined />}
+          />
+        </Form.Item>
+      </Col>
+      <Col span={24}>
+        <Form.Item label="Padding" extra="Seconds">
+          <InputNumber
+            value={padding}
+            onChange={(value) => value && setPadding(value)}
+            step={0.1}
+            min={0}
+            className={styles['input-number']}
+            addonBefore={<BorderOutlined />}
+          />
+        </Form.Item>
+      </Col>
+    </Row>
+  </Form>
 );
 
 export default InputParameters;
