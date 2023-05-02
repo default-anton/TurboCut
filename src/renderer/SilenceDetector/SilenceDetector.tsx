@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Layout, Space, Modal } from 'antd';
+import { message, Button, Layout, Modal } from 'antd';
 import { Content, Footer, Header } from 'antd/es/layout/layout';
 import { AudioOutlined } from '@ant-design/icons';
 
@@ -12,6 +12,7 @@ import { useAudioFileInput } from './hooks/useAudioFileInput';
 import { useSilenceDetection } from './hooks/useSilenceDetection';
 import { useConvertToMonoMp3 } from './hooks/useConvertToMonoMp3';
 import { useWaveSurfer } from './hooks/useWaveSurfer';
+import { DETECT_SILENCE } from '../messages';
 
 import styles from './SilenceDetector.module.scss';
 
@@ -36,7 +37,23 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
     minSilenceLen,
     silenceThresh,
     padding,
-    setIntervals
+    setIntervals,
+    () => {
+      message.open({
+        key: DETECT_SILENCE,
+        type: 'loading',
+        content: 'Detecting silence...',
+        duration: 0,
+      });
+    },
+    () => {
+      message.open({
+        key: DETECT_SILENCE,
+        type: 'success',
+        content: 'Silence detected!',
+        duration: 2,
+      });
+    }
   );
   const { outputPath } = useConvertToMonoMp3(inputFile, setIsLoading);
   const { waveformRef, handleScroll } = useWaveSurfer(
@@ -88,7 +105,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
                   visible={modalVisible}
                   onOk={handleOk}
                   onCancel={handleCancel}
-                  okText="Submit"
+                  okText="Detect"
                 >
                   <InputParameters
                     minSilenceLen={minSilenceLen}
