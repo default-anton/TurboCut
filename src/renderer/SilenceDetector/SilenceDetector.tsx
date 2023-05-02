@@ -46,7 +46,11 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
 
   return (
     <div className="silence-detector">
-      <Space direction="vertical" style={{ width: '100%' }} size={[0, 48]}>
+      <Space
+        direction="vertical"
+        style={{ width: '100%', height: '100%' }}
+        size={[0, 48]}
+      >
         <Layout>
           <Header />
 
@@ -54,7 +58,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
             <Space
               direction="vertical"
               size="middle"
-              style={{ display: 'flex' }}
+              style={{ display: 'flex', justifyContent: 'center' }}
             >
               <AudioFileInput onChange={handleFileChange} />
               <AudioWaveformAnimation isLoading={isLoading} />
