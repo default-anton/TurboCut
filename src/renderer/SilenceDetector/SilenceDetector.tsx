@@ -14,7 +14,7 @@ import { useConvertToMonoMp3 } from './hooks/useConvertToMonoMp3';
 import { useWaveSurfer } from './hooks/useWaveSurfer';
 import { DETECT_SILENCE } from '../messages';
 
-import styles from './SilenceDetector.module.scss';
+import './SilenceDetector.scss';
 
 interface SilenceDetectorProps {}
 
