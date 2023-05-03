@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { message, Button, Layout, Modal } from 'antd';
-import { Content, Footer, Header } from 'antd/es/layout/layout';
+import { message, Button, Layout, Modal, Row, Col, Space, Card } from 'antd';
+import { Content, Footer } from 'antd/es/layout/layout';
 import { AudioOutlined } from '@ant-design/icons';
 
 import { Interval } from '../../shared/types';
@@ -19,6 +19,7 @@ import styles from './SilenceDetector.module.scss';
 interface SilenceDetectorProps {}
 
 const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
+  const [isDetectingSilence, setIsDetectingSilence] = useState<boolean>(false);
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [minSilenceLen, setMinSilenceLen] = useState<number>(1);
@@ -47,6 +48,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
       });
     },
     () => {
+      setIsDetectingSilence(false);
       message.open({
         key: DETECT_SILENCE,
         type: 'success',
@@ -64,6 +66,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
   );
 
   const showModal = () => {
+    setIsDetectingSilence(true);
     setModalVisible(true);
   };
 
@@ -73,28 +76,45 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
   };
 
   const handleCancel = () => {
+    setIsDetectingSilence(false);
     setModalVisible(false);
   };
 
   return (
-    <div className={styles['silence-detector']}>
-      <Layout>
-        <Header className={styles.header}>
-          <div className={styles['header-title']}>
-            <h1>Silence Cutter</h1>
-          </div>
-        </Header>
-        <Content className={styles.content}>
-          <div className={styles['content-wrapper']}>
-            <AudioFileInput onChange={handleFileChange} />
-            <AudioWaveformAnimation isLoading={isLoading} />
+    <Layout>
+      <Content>
+        <Row justify="center">
+          <Col style={{ width: '80%', maxWidth: '1200px' }}>
+            <Space
+              direction="vertical"
+              size="middle"
+              style={{ display: 'flex' }}
+            >
+              <Card title="Video or Audio file" size="small">
+                <AudioFileInput
+                  loading={isLoading || isDetectingSilence}
+                  onChange={handleFileChange}
+                />
+              </Card>
+              <AudioWaveformAnimation loading={isLoading} />
+            </Space>
+          </Col>
+        </Row>
+        <Waveform
+          waveformRef={waveformRef}
+          onWheel={handleScroll}
+          isLoading={isLoading}
+        />
+        <Row justify="center">
+          <Col style={{ width: '80%', maxWidth: '1200px' }}>
             {inputFile && !isLoading && (
               <>
                 <Button
                   type="primary"
                   onClick={showModal}
                   icon={<AudioOutlined />}
-                  className={styles['detect-silence-button']}
+                  loading={isDetectingSilence}
+                  style={{ marginTop: '1rem' }}
                 >
                   Detect silence
                 </Button>
@@ -116,16 +136,11 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
                 </Modal>
               </>
             )}
-            <Waveform
-              waveformRef={waveformRef}
-              onWheel={handleScroll}
-              isLoading={isLoading}
-            />
-          </div>
-        </Content>
-        <Footer />
-      </Layout>
-    </div>
+          </Col>
+        </Row>
+      </Content>
+      <Footer />
+    </Layout>
   );
 };
 

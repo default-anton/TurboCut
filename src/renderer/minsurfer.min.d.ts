@@ -1,6 +1,6 @@
-declare module 'wavesurfer.js/dist/plugin/wavesurfer.cursor.min' {
-  const CursorPlugin: any;
-  export default CursorPlugin;
+declare module 'wavesurfer.js/dist/plugin/wavesurfer.playhead.min' {
+  const PlayheadPlugin: any;
+  export default PlayheadPlugin;
 }
 
 declare module 'wavesurfer.js/dist/plugin/wavesurfer.timeline.min' {
