@@ -79,30 +79,28 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
   return (
     <div className={styles['silence-detector']}>
       <Layout>
-        <Header>
-          <h1 className={styles['header-title']}>Silence Cutter</h1>
+        <Header className={styles.header}>
+          <div className={styles['header-title']}>
+            <h1>Silence Cutter</h1>
+          </div>
         </Header>
-        <Content className={styles['content']}>
+        <Content className={styles.content}>
           <div className={styles['content-wrapper']}>
             <AudioFileInput onChange={handleFileChange} />
             <AudioWaveformAnimation isLoading={isLoading} />
-            <Waveform
-              waveformRef={waveformRef}
-              onWheel={handleScroll}
-              isLoading={isLoading}
-            />
             {inputFile && !isLoading && (
               <>
                 <Button
                   type="primary"
                   onClick={showModal}
                   icon={<AudioOutlined />}
+                  className={styles['detect-silence-button']}
                 >
                   Detect silence
                 </Button>
                 <Modal
                   title="Silence detection parameters"
-                  visible={modalVisible}
+                  open={modalVisible}
                   onOk={handleOk}
                   onCancel={handleCancel}
                   okText="Detect"
@@ -118,6 +116,11 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
                 </Modal>
               </>
             )}
+            <Waveform
+              waveformRef={waveformRef}
+              onWheel={handleScroll}
+              isLoading={isLoading}
+            />
           </div>
         </Content>
         <Footer />
