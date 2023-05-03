@@ -64,8 +64,10 @@ export function useWaveSurfer(
       ],
     });
 
-    wavesurferRef.current.load(`file://${filePath}`);
+    // set initial zoom level
+    wavesurferRef.current.zoom(zoomLevel);
 
+    wavesurferRef.current.load(`file://${filePath}`);
     wavesurferRef.current.on('ready', () => {
       setIsLoading(false);
       message.open({
@@ -80,6 +82,7 @@ export function useWaveSurfer(
       if (!wavesurferRef.current || skipRegionInProgress.current) return;
 
       const currentTime = wavesurferRef.current.getCurrentTime();
+      const duration = wavesurferRef.current.getDuration();
       const regions = wavesurferRef.current.regions.list;
 
       Object.entries(regions).forEach(([, region]) => {
@@ -89,9 +92,7 @@ export function useWaveSurfer(
         ) {
           if (region.start <= currentTime && region.end >= currentTime) {
             skipRegionInProgress.current = true;
-            wavesurferRef.current!.seekTo(
-              region.end / wavesurferRef.current!.getDuration()
-            );
+            wavesurferRef.current!.seekTo(region.end / duration);
             setTimeout(() => {
               skipRegionInProgress.current = false;
             }, 0);
@@ -106,7 +107,7 @@ export function useWaveSurfer(
       wavesurferRef.current?.destroy();
       wavesurferRef.current?.un('audioprocess', onAudioProcess);
     };
-  }, [filePath, setIsLoading]);
+  }, [filePath, setIsLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!wavesurferRef.current) return;
@@ -127,6 +128,7 @@ export function useWaveSurfer(
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === ' ') {
+        event.preventDefault();
         handlePlayPauseClick();
       }
     };
