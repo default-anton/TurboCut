@@ -3,26 +3,21 @@ import { InboxOutlined } from '@ant-design/icons';
 import Dragger from 'antd/es/upload/Dragger';
 
 import type { RcFile, UploadFile } from 'antd/es/upload/interface';
-import { message } from 'antd';
-import { CREATE_OPTIMIZED_AUDIO_FILE } from 'renderer/messages';
 
 interface AudioFileInputProps {
   onChange: (file: File) => void;
+  loading?: boolean;
 }
 
-export const AudioFileInput: React.FC<AudioFileInputProps> = ({ onChange }) => {
+export const AudioFileInput: React.FC<AudioFileInputProps> = ({
+  onChange,
+  loading
+}) => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   const beforeUpload = (file: RcFile): boolean => {
     setFileList([file]);
     onChange(file);
-
-    message.open({
-      key: CREATE_OPTIMIZED_AUDIO_FILE,
-      type: 'loading',
-      content: 'Creating optimized audio file...',
-      duration: 0,
-    });
 
     return false;
   };
@@ -35,6 +30,7 @@ export const AudioFileInput: React.FC<AudioFileInputProps> = ({ onChange }) => {
       beforeUpload={beforeUpload}
       showUploadList={{ showRemoveIcon: false, showDownloadIcon: false }}
       fileList={fileList}
+      disabled={loading}
     >
       <p className="ant-upload-drag-icon">
         <InboxOutlined />
@@ -45,6 +41,10 @@ export const AudioFileInput: React.FC<AudioFileInputProps> = ({ onChange }) => {
       <p className="ant-upload-hint">Video or audio files are supported</p>
     </Dragger>
   );
+};
+
+AudioFileInput.defaultProps = {
+  loading: false
 };
 
 export default AudioFileInput;
