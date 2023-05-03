@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import WaveSurferRegions from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.js';
 import TimelinePlugin from 'wavesurfer.js/dist/plugin/wavesurfer.timeline.min';
-import CursorPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.cursor.min';
+import PlayheadPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.playhead.min';
 import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
 import { Interval } from '../../../shared/types';
 import { message } from 'antd';
@@ -47,8 +47,9 @@ export function useWaveSurfer(
       waveColor: 'violet',
       progressColor: 'purple',
       height: 256,
+      scrollParent: true,
       plugins: [
-        CursorPlugin.create({
+        PlayheadPlugin.create({
           showTime: true,
           opacity: 1,
           customShowTimeStyle: {
