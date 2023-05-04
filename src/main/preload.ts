@@ -2,25 +2,25 @@
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer } from 'electron';
 
-import { Interval } from '../shared/types';
+import convertToMono from './convertToMono';
+import createEDLWithSilenceRemoved from './exporters/davinci';
+import getSilentIntervals from './getSilentIntervals';
 
 const electronHandler = {
-  getSilentIntervals(
-    inputFile: string,
-    minSilenceLen: number,
-    silenceThresh: number,
-    padding: number
-  ): Promise<Array<Interval>> {
-    return ipcRenderer.invoke(
-      'getSilentIntervals',
-      inputFile,
-      minSilenceLen,
-      silenceThresh,
-      padding
-    );
+  getSilentIntervals: (
+    ...args: Parameters<typeof getSilentIntervals>
+  ): ReturnType<typeof getSilentIntervals> => {
+    return ipcRenderer.invoke('getSilentIntervals', ...args);
   },
-  convertToMono(inputPath: string, outputPath: string): Promise<void> {
-    return ipcRenderer.invoke('convertToMono', inputPath, outputPath);
+  createEDLWithSilenceRemoved: (
+    ...args: Parameters<typeof createEDLWithSilenceRemoved>
+  ): ReturnType<typeof createEDLWithSilenceRemoved> => {
+    return ipcRenderer.invoke('createEDLWithSilenceRemoved', ...args);
+  },
+  convertToMono: (
+    ...args: Parameters<typeof convertToMono>
+  ): ReturnType<typeof convertToMono> => {
+    return ipcRenderer.invoke('convertToMono', ...args);
   },
 };
 

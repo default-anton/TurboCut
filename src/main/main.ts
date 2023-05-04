@@ -15,6 +15,7 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import getSilentIntervals from './getSilentIntervals';
+import createEDLWithSilenceRemoved from './exporters/davinci';
 import convertToMono from './convertToMono';
 
 class AppUpdater {
@@ -133,6 +134,15 @@ app
         ...args: Parameters<typeof getSilentIntervals>
       ): ReturnType<typeof getSilentIntervals> => {
         return getSilentIntervals(...args);
+      }
+    );
+    ipcMain.handle(
+      'createEDLWithSilenceRemoved',
+      async (
+        _event,
+        ...args: Parameters<typeof createEDLWithSilenceRemoved>
+      ): ReturnType<typeof createEDLWithSilenceRemoved> => {
+        return createEDLWithSilenceRemoved(...args);
       }
     );
     ipcMain.handle(

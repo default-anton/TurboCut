@@ -10,6 +10,7 @@ module.exports = {
     'import/no-import-module-exports': 'off',
     'react/function-component-definition': 'off',
     'consistent-return': 'off',
+    'no-plusplus': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

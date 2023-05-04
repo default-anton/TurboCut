@@ -4,9 +4,10 @@ import WaveSurferRegions from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.
 import TimelinePlugin from 'wavesurfer.js/dist/plugin/wavesurfer.timeline.min';
 import PlayheadPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.playhead.min';
 import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
-import { Interval } from '../../../shared/types';
 import { message } from 'antd';
 import { CREATE_OPTIMIZED_AUDIO_FILE } from 'renderer/messages';
+
+import type { Interval } from '../../../shared/types';
 
 export function useWaveSurfer(
   filePath: string | null,
@@ -16,6 +17,7 @@ export function useWaveSurfer(
 ) {
   const skipRegionInProgress = useRef(false);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [duration, setDuration] = useState(0);
 
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
@@ -70,6 +72,7 @@ export function useWaveSurfer(
     wavesurferRef.current.load(`file://${filePath}`);
     wavesurferRef.current.on('ready', () => {
       setIsLoading(false);
+      setDuration(wavesurferRef.current!.getDuration());
       message.open({
         key: CREATE_OPTIMIZED_AUDIO_FILE,
         type: 'success',
@@ -82,7 +85,7 @@ export function useWaveSurfer(
       if (!wavesurferRef.current || skipRegionInProgress.current) return;
 
       const currentTime = wavesurferRef.current.getCurrentTime();
-      const duration = wavesurferRef.current.getDuration();
+      const videoDuration = wavesurferRef.current.getDuration();
       const regions = wavesurferRef.current.regions.list;
 
       Object.entries(regions).forEach(([, region]) => {
@@ -92,7 +95,7 @@ export function useWaveSurfer(
         ) {
           if (region.start <= currentTime && region.end >= currentTime) {
             skipRegionInProgress.current = true;
-            wavesurferRef.current!.seekTo(region.end / duration);
+            wavesurferRef.current!.seekTo(region.end / videoDuration);
             setTimeout(() => {
               skipRegionInProgress.current = false;
             }, 0);
@@ -143,6 +146,7 @@ export function useWaveSurfer(
   return {
     waveformRef,
     handleScroll,
+    duration
   };
 }
 
