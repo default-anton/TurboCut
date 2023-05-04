@@ -1,4 +1,5 @@
 import fs from 'fs';
+import ffmpeg, { FfprobeData } from 'fluent-ffmpeg';
 import { Interval, VideoInfo } from 'shared/types';
 
 function generateEDL(
@@ -25,10 +26,10 @@ function generateEDL(
   let recordStart = 0;
   intervals.forEach((interval, index) => {
     const srcStart = Math.round(
-      (interval.start - sourceStartTimecode) * frameRate
+      (interval.start + sourceStartTimecode) * frameRate
     );
     const srcEnd = Math.round(
-      (interval.end ?? 0 - sourceStartTimecode) * frameRate
+      ((interval.end ?? 0) + sourceStartTimecode) * frameRate
     );
 
     const recStart = recordStart;
@@ -78,12 +79,54 @@ function getNonSilentIntervals(
   return nonSilentIntervals;
 }
 
+async function getStartTimecode(
+  inputFile: string
+): Promise<string | undefined> {
+  const probeData = await new Promise<FfprobeData>((resolve, reject) => {
+    ffmpeg.ffprobe(inputFile, (err, data) => {
+      if (err) reject(err);
+      else resolve(data);
+    });
+  });
+
+  const formatTags = probeData.format.tags;
+  const startTimecodeFormat = formatTags?.timecode;
+
+  const videoStream = probeData.streams.find(
+    (stream: any) => stream.codec_type === 'video'
+  );
+  const startTimecodeStreamStart = videoStream?.start_time;
+  const startTimecodeStream = videoStream?.tags?.timecode;
+
+  const qtStream = probeData.streams.find(
+    (stream: any) => stream.codec_type === 'data'
+  );
+  const startTimecodeQt = qtStream?.tags?.timecode;
+
+  return (
+    startTimecodeFormat ||
+    startTimecodeStream ||
+    startTimecodeQt ||
+    startTimecodeStreamStart
+  );
+}
+
+function timecodeToSeconds(timecode: string, frameRate: number): number {
+  const [hours, minutes, seconds, frames] = timecode.split(':').map(Number);
+  return hours * 60 * 60 + minutes * 60 + seconds + frames / frameRate;
+}
+
 export default async function createEDLWithSilenceRemoved(
   silentIntervals: Array<Interval>,
   videoInfo: VideoInfo,
   outputPath: string,
   clipName: string
 ): Promise<void> {
+  const startTimecode = await getStartTimecode(videoInfo.path);
+  const startTimecodeSeconds = startTimecode
+    ? Math.round(timecodeToSeconds(startTimecode, videoInfo.frameRate))
+    : 0;
+
   return new Promise((resolve, reject) => {
     const nonSilentIntervals = getNonSilentIntervals(
       silentIntervals,
@@ -94,7 +137,8 @@ export default async function createEDLWithSilenceRemoved(
       'Silence Removed',
       clipName,
       nonSilentIntervals,
-      videoInfo.frameRate
+      videoInfo.frameRate,
+      startTimecodeSeconds
     );
 
     fs.writeFile(outputPath, edl, 'utf8', (err) => {
