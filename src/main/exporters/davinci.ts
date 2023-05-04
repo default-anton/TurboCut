@@ -48,6 +48,36 @@ function generateEDL(
   return edl;
 }
 
+function getNonSilentIntervals(
+  silentIntervals: Array<Interval>,
+  videoDuration: number
+): Array<Interval> {
+  const nonSilentIntervals: Array<Interval> = [];
+
+  // Start from the beginning of the video
+  let currentStart = 0;
+
+  silentIntervals.forEach((silentInterval) => {
+    // If there is a gap between the current start time and the beginning of the silent interval, add a non-silent interval
+    if (currentStart < silentInterval.start) {
+      nonSilentIntervals.push({
+        start: currentStart,
+        end: silentInterval.start,
+      });
+    }
+
+    // Move the current start time to the end of the silent interval
+    currentStart = silentInterval.end ?? videoDuration;
+  });
+
+  // If there is a gap between the last silent interval and the end of the video, add a non-silent interval
+  if (currentStart < videoDuration) {
+    nonSilentIntervals.push({ start: currentStart, end: null });
+  }
+
+  return nonSilentIntervals;
+}
+
 export default async function createEDLWithSilenceRemoved(
   silentIntervals: Array<Interval>,
   videoInfo: VideoInfo,
@@ -55,12 +85,18 @@ export default async function createEDLWithSilenceRemoved(
   clipName: string
 ): Promise<void> {
   return new Promise((resolve, reject) => {
+    const nonSilentIntervals = getNonSilentIntervals(
+      silentIntervals,
+      videoInfo.duration
+    );
+
     const edl = generateEDL(
       'Silence Removed',
       clipName,
-      silentIntervals,
+      nonSilentIntervals,
       videoInfo.frameRate
     );
+
     fs.writeFile(outputPath, edl, 'utf8', (err) => {
       if (err) {
         reject(err);
