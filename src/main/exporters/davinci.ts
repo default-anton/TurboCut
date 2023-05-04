@@ -5,7 +5,8 @@ function generateEDL(
   title: string,
   sourceClipName: string,
   intervals: Array<Interval>,
-  frameRate: number = 24
+  frameRate: number = 23.976,
+  sourceStartTimecode: number = 0
 ): string {
   function formatTimecode(frames: number): string {
     const frame = Math.round(frames) % Math.round(frameRate);
@@ -23,8 +24,12 @@ function generateEDL(
 
   let recordStart = 0;
   intervals.forEach((interval, index) => {
-    const srcStart = Math.round(interval.start * frameRate);
-    const srcEnd = Math.round((interval.end ?? 0) * frameRate);
+    const srcStart = Math.round(
+      (interval.start - sourceStartTimecode) * frameRate
+    );
+    const srcEnd = Math.round(
+      (interval.end ?? 0 - sourceStartTimecode) * frameRate
+    );
 
     const recStart = recordStart;
     const recEnd = recordStart + srcEnd - srcStart;
@@ -49,14 +54,13 @@ export default async function createEDLWithSilenceRemoved(
   outputPath: string,
   clipName: string
 ): Promise<void> {
-  const edl = generateEDL(
-    'Silence Removed',
-    clipName,
-    silentIntervals,
-    videoInfo.frameRate
-  );
-
   return new Promise((resolve, reject) => {
+    const edl = generateEDL(
+      'Silence Removed',
+      clipName,
+      silentIntervals,
+      videoInfo.frameRate
+    );
     fs.writeFile(outputPath, edl, 'utf8', (err) => {
       if (err) {
         reject(err);
