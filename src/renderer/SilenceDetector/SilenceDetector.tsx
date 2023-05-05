@@ -87,14 +87,18 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
     });
 
     setExportModalOpen(false);
-    await window.electron.createEDLWithSilenceRemoved(
+    const exported = await window.electron.createEDLWithSilenceRemoved(
       intervals,
       { duration, frameRate, path: inputFile.path },
       clipName
     );
 
-    message.success({ content: 'EDL file exported!', key: 'exporting' });
     setIsExporting(false);
+    if (exported) {
+      message.success({ content: 'EDL file exported!', key: 'exporting' });
+    } else {
+      message.warning({ content: 'Export cancelled', key: 'exporting' });
+    }
   }, [inputFile, intervals, duration, frameRate]);
 
   const showDetectSilenceModal = () => {

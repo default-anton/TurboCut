@@ -121,7 +121,7 @@ export default async function createEDLWithSilenceRemoved(
   silentIntervals: Array<Interval>,
   videoInfo: VideoInfo,
   clipName: string
-): Promise<void> {
+): Promise<boolean> {
   // Show the save file dialog and get the user's chosen path
   const result = await dialog.showSaveDialog({
     title: 'Save File',
@@ -130,7 +130,7 @@ export default async function createEDLWithSilenceRemoved(
   });
 
   if (result.canceled || result.filePath === undefined) {
-    return;
+    return false;
   }
 
   const startTimecode = await getStartTimecode(videoInfo.path);
@@ -156,7 +156,7 @@ export default async function createEDLWithSilenceRemoved(
       if (err) {
         reject(err);
       } else {
-        resolve();
+        resolve(true);
       }
     });
   });
