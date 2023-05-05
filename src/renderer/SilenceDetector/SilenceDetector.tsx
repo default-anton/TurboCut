@@ -22,6 +22,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [isDetectingSilence, setIsDetectingSilence] = useState<boolean>(false);
   const [frameRate, setFrameRate] = useState<number>(23.976);
   const [minSilenceLen, setMinSilenceLen] = useState<number>(1);
   const [silenceThresh, setSilenceThresh] = useState<number>(-30);
@@ -44,6 +45,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
     setIntervals,
     () => {
       setDetectSilenceModalOpen(false);
+      setIsDetectingSilence(true);
       message.open({
         key: DETECT_SILENCE,
         type: 'loading',
@@ -52,6 +54,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
       });
     },
     () => {
+      setIsDetectingSilence(false);
       message.open({
         key: DETECT_SILENCE,
         type: 'success',
@@ -135,36 +138,34 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
         />
         <Row justify="center">
           <Col style={{ width: '80%', maxWidth: '1200px' }}>
-            {inputFile && !isLoading && (
-              <>
-                <Button
-                  type="primary"
-                  onClick={showDetectSilenceModal}
-                  icon={<AudioOutlined />}
-                  style={{ marginTop: '1rem' }}
-                >
-                  Detect silence
-                </Button>
-                <Modal
-                  title="Silence detection parameters"
-                  open={detectSilenceModalOpen}
-                  onOk={() => handleDetectSilenceClick()}
-                  onCancel={() => {
-                    setDetectSilenceModalOpen(false);
-                  }}
-                  okText="Detect"
-                >
-                  <DetectSilenceForm
-                    minSilenceLen={minSilenceLen}
-                    silenceThresh={silenceThresh}
-                    padding={padding}
-                    setMinSilenceLen={setMinSilenceLen}
-                    setSilenceThresh={setSilenceThresh}
-                    setPadding={setPadding}
-                  />
-                </Modal>
-              </>
-            )}
+            <Button
+              disabled={!inputFile || isLoading || isDetectingSilence}
+              loading={isDetectingSilence}
+              type="primary"
+              onClick={showDetectSilenceModal}
+              icon={<AudioOutlined />}
+              style={{ marginTop: '1rem' }}
+            >
+              Detect silence
+            </Button>
+            <Modal
+              title="Silence detection parameters"
+              open={detectSilenceModalOpen}
+              onOk={() => handleDetectSilenceClick()}
+              onCancel={() => {
+                setDetectSilenceModalOpen(false);
+              }}
+              okText="Detect"
+            >
+              <DetectSilenceForm
+                minSilenceLen={minSilenceLen}
+                silenceThresh={silenceThresh}
+                padding={padding}
+                setMinSilenceLen={setMinSilenceLen}
+                setSilenceThresh={setSilenceThresh}
+                setPadding={setPadding}
+              />
+            </Modal>
           </Col>
         </Row>
         <Row justify="center">
@@ -174,6 +175,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
               onClick={showExportModal}
               icon={<DownloadOutlined />}
               loading={isExporting}
+              disabled={!inputFile || isLoading || isExporting}
               style={{ marginTop: '1rem' }}
             >
               Export to Davinci Resolve
