@@ -1,6 +1,6 @@
 import ffmpeg from 'fluent-ffmpeg';
 
-const convertToMono = (
+const convertToMono = async (
   inputPath: string,
   outputPath: string
 ): Promise<void> => {

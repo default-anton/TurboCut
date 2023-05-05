@@ -7,17 +7,17 @@ import createEDLWithSilenceRemoved from './exporters/davinci';
 import getSilentIntervals from './getSilentIntervals';
 
 const electronHandler = {
-  getSilentIntervals: (
+  getSilentIntervals: async (
     ...args: Parameters<typeof getSilentIntervals>
   ): ReturnType<typeof getSilentIntervals> => {
     return ipcRenderer.invoke('getSilentIntervals', ...args);
   },
-  createEDLWithSilenceRemoved: (
+  createEDLWithSilenceRemoved: async (
     ...args: Parameters<typeof createEDLWithSilenceRemoved>
   ): ReturnType<typeof createEDLWithSilenceRemoved> => {
     return ipcRenderer.invoke('createEDLWithSilenceRemoved', ...args);
   },
-  convertToMono: (
+  convertToMono: async (
     ...args: Parameters<typeof convertToMono>
   ): ReturnType<typeof convertToMono> => {
     return ipcRenderer.invoke('convertToMono', ...args);

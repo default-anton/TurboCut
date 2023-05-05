@@ -2,7 +2,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import { Interval } from '../shared/types';
 
-const getSilentIntervals = (
+const getSilentIntervals = async (
   inputFile: string,
   minSilenceLen: number,
   silenceThresh: number,
