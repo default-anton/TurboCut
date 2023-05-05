@@ -7,7 +7,6 @@ import { Interval } from '../../shared/types';
 import AudioFileInput from './components/AudioFileInput';
 import DetectSilenceForm from './components/DetectSilenceForm';
 import ExportForm from './components/ExportForm';
-import AudioWaveformAnimation from './components/AudioWaveformAnimation';
 import Waveform from './components/Waveform';
 import { useAudioFileInput } from './hooks/useAudioFileInput';
 import { useSilenceDetection } from './hooks/useSilenceDetection';
@@ -20,7 +19,6 @@ import './SilenceDetector.scss';
 interface SilenceDetectorProps {}
 
 const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
-  const [isDetectingSilence, setIsDetectingSilence] = useState<boolean>(false);
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -45,7 +43,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
     padding,
     setIntervals,
     () => {
-      setIsDetectingSilence(true);
+      setDetectSilenceModalOpen(false);
       message.open({
         key: DETECT_SILENCE,
         type: 'loading',
@@ -54,14 +52,12 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
       });
     },
     () => {
-      setIsDetectingSilence(false);
       message.open({
         key: DETECT_SILENCE,
         type: 'success',
         content: 'Silence detected!',
         duration: 2,
       });
-      setDetectSilenceModalOpen(false);
     }
   );
   const { outputPath: audioFileOutputPath } = useConvertToMonoMp3(
@@ -81,7 +77,8 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
       return;
     }
 
-    const exportOutputPath = inputFile.path.replace(/\.[^/.]+$/, '.edl');
+    // const clipName should basename of inputFile
+    const clipName = inputFile.path.split('/').pop() as string;
     setIsExporting(true);
     message.loading({
       content: 'Exporting EDL file...',
@@ -89,19 +86,15 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
       key: 'exporting',
     });
 
+    setExportModalOpen(false);
     await window.electron.createEDLWithSilenceRemoved(
       intervals,
       { duration, frameRate, path: inputFile.path },
-      exportOutputPath,
-      inputFile.path.split('/').pop() || ''
+      clipName
     );
 
-    message.success({
-      content: `EDL file exported! File saved at ${exportOutputPath}`,
-      key: 'exporting',
-    });
+    message.success({ content: 'EDL file exported!', key: 'exporting' });
     setIsExporting(false);
-    setExportModalOpen(false);
   }, [inputFile, intervals, duration, frameRate]);
 
   const showDetectSilenceModal = () => {
@@ -128,7 +121,6 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
                   onChange={handleFileChange}
                 />
               </Card>
-              <AudioWaveformAnimation loading={isLoading} />
             </Space>
           </Col>
         </Row>
@@ -154,13 +146,11 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
                   open={detectSilenceModalOpen}
                   onOk={() => handleDetectSilenceClick()}
                   onCancel={() => {
-                    setIsDetectingSilence(false);
                     setDetectSilenceModalOpen(false);
                   }}
                   okText="Detect"
                 >
                   <DetectSilenceForm
-                    loading={isDetectingSilence}
                     minSilenceLen={minSilenceLen}
                     silenceThresh={silenceThresh}
                     padding={padding}
@@ -193,11 +183,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
               }}
               okText="Export"
             >
-              <ExportForm
-                loading={isDetectingSilence}
-                frameRate={frameRate}
-                setFrameRate={setFrameRate}
-              />
+              <ExportForm frameRate={frameRate} setFrameRate={setFrameRate} />
             </Modal>
           </Col>
         </Row>

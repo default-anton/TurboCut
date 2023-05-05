@@ -1,6 +1,7 @@
 import fs from 'fs';
 import ffmpeg, { FfprobeData } from 'fluent-ffmpeg';
 import { Interval, VideoInfo } from 'shared/types';
+import { dialog } from 'electron';
 
 function generateEDL(
   title: string,
@@ -119,9 +120,19 @@ function timecodeToSeconds(timecode: string, frameRate: number): number {
 export default async function createEDLWithSilenceRemoved(
   silentIntervals: Array<Interval>,
   videoInfo: VideoInfo,
-  outputPath: string,
   clipName: string
 ): Promise<void> {
+  // Show the save file dialog and get the user's chosen path
+  const result = await dialog.showSaveDialog({
+    title: 'Save File',
+    defaultPath: `${videoInfo.path.split('/').pop()}.edl`,
+    filters: [{ name: 'EDL', extensions: ['edl'] }],
+  });
+
+  if (result.canceled || result.filePath === undefined) {
+    return;
+  }
+
   const startTimecode = await getStartTimecode(videoInfo.path);
   const startTimecodeSeconds = startTimecode
     ? Math.round(timecodeToSeconds(startTimecode, videoInfo.frameRate))
@@ -141,7 +152,7 @@ export default async function createEDLWithSilenceRemoved(
       startTimecodeSeconds
     );
 
-    fs.writeFile(outputPath, edl, 'utf8', (err) => {
+    fs.writeFile(result.filePath!, edl, 'utf8', (err) => {
       if (err) {
         reject(err);
       } else {
