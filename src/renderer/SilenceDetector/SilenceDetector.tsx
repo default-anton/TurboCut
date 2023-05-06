@@ -25,6 +25,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
   const [isDetectingSilence, setIsDetectingSilence] = useState<boolean>(false);
   const [frameRate, setFrameRate] = useState<number>(23.976);
   const [minSilenceLen, setMinSilenceLen] = useState<number>(1);
+  const [minNonSilenceLen, setMinNonSilenceLen] = useState<number>(1);
   const [silenceThresh, setSilenceThresh] = useState<number>(-30);
   const [padding, setPadding] = useState<number>(0.2);
   const [intervals, setIntervals] = useState<Array<Interval>>([]);
@@ -40,6 +41,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
   const handleDetectSilenceClick = useSilenceDetection(
     inputFile,
     minSilenceLen,
+    minNonSilenceLen,
     silenceThresh,
     padding,
     setIntervals,
@@ -159,9 +161,11 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
             >
               <DetectSilenceForm
                 minSilenceLen={minSilenceLen}
+                minNonSilenceLen={minNonSilenceLen}
                 silenceThresh={silenceThresh}
                 padding={padding}
                 setMinSilenceLen={setMinSilenceLen}
+                setMinNonSilenceLen={setMinNonSilenceLen}
                 setSilenceThresh={setSilenceThresh}
                 setPadding={setPadding}
               />

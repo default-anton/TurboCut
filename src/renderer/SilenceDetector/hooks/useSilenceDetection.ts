@@ -4,6 +4,7 @@ import { Interval } from '../../../shared/types';
 export function useSilenceDetection(
   inputFile: File | null,
   minSilenceLen: number,
+  minNonSilenceLen: number,
   silenceThresh: number,
   padding: number,
   setIntervals: Dispatch<SetStateAction<Array<Interval>>>,
@@ -17,7 +18,8 @@ export function useSilenceDetection(
         inputFile.path,
         minSilenceLen,
         silenceThresh,
-        padding
+        padding,
+        minNonSilenceLen
       );
       setIntervals(silentIntervals);
       after();

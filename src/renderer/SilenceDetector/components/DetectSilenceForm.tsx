@@ -11,6 +11,8 @@ import styles from './DetectSilenceForm.module.scss';
 interface DetectSilenceFormProps {
   minSilenceLen: number;
   setMinSilenceLen: (value: number) => void;
+  minNonSilenceLen: number;
+  setMinNonSilenceLen: (value: number) => void;
   silenceThresh: number;
   setSilenceThresh: (value: number) => void;
   padding: number;
@@ -20,6 +22,8 @@ interface DetectSilenceFormProps {
 export const DetectSilenceForm: React.FC<DetectSilenceFormProps> = ({
   minSilenceLen,
   setMinSilenceLen,
+  minNonSilenceLen,
+  setMinNonSilenceLen,
   silenceThresh,
   setSilenceThresh,
   padding,
@@ -34,6 +38,16 @@ export const DetectSilenceForm: React.FC<DetectSilenceFormProps> = ({
             onChange={(value) => value && setMinSilenceLen(value)}
             step={0.1}
             min={0.1}
+            className={styles['input-number']}
+            addonBefore={<ClockCircleOutlined />}
+          />
+        </Form.Item>
+        <Form.Item label="Minimum Non-Silence Length" extra="Seconds">
+          <InputNumber
+            value={minNonSilenceLen}
+            onChange={(value) => value && setMinNonSilenceLen(value)}
+            step={0.1}
+            min={0.0}
             className={styles['input-number']}
             addonBefore={<ClockCircleOutlined />}
           />

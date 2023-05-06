@@ -6,7 +6,8 @@ const getSilentIntervals = async (
   inputFile: string,
   minSilenceLen: number,
   silenceThresh: number,
-  padding: number
+  padding: number,
+  minNonSilenceLen: number
 ): Promise<Array<Interval>> => {
   return new Promise((resolve, reject) => {
     const silenceIntervals: Array<Interval> = [];
@@ -20,7 +21,49 @@ const getSilentIntervals = async (
       .audioBitrate('192k')
       .audioFilters(`silencedetect=n=${silenceThresh}dB:d=${minSilenceLen}`)
       .on('end', () => {
-        resolve(silenceIntervals);
+        if (silenceIntervals.length === 0) {
+          resolve([]);
+          fs.unlinkSync(outputAudioFile);
+          return;
+        }
+
+        // Extend silence intervals to fill ultra-short non-silence intervals
+        const extendedSilenceIntervals: Array<Interval> = [
+          { ...silenceIntervals[0] },
+        ];
+        let i = 0;
+
+        while (i < silenceIntervals.length - 1) {
+          // Create a shallow copy to avoid modifying the original interval
+          const currentInterval =
+            extendedSilenceIntervals[extendedSilenceIntervals.length - 1];
+          const nextInterval = silenceIntervals[i + 1];
+          const nonSilenceDuration = nextInterval.start - currentInterval.end!;
+
+          if (nonSilenceDuration < minNonSilenceLen) {
+            currentInterval.end = nextInterval.end;
+          } else if (nextInterval.end! > currentInterval.end!) {
+            extendedSilenceIntervals.push({ ...nextInterval });
+          }
+
+          i++;
+        }
+
+        // Add the last silence interval to the list if it hasn't been merged already
+        if (i === silenceIntervals.length - 1) {
+          const currentInterval =
+            extendedSilenceIntervals[extendedSilenceIntervals.length - 1];
+          const nextInterval = silenceIntervals[i];
+          const nonSilenceDuration = nextInterval.start - currentInterval.end!;
+
+          if (nonSilenceDuration >= minNonSilenceLen) {
+            extendedSilenceIntervals.push({ ...nextInterval });
+          } else {
+            currentInterval.end = nextInterval.end;
+          }
+        }
+
+        resolve(extendedSilenceIntervals);
         fs.unlinkSync(outputAudioFile);
       })
       .on('stderr', (line: string) => {
