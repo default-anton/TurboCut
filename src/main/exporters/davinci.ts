@@ -3,26 +3,20 @@ import ffmpeg, { FfprobeData } from 'fluent-ffmpeg';
 import { Interval, VideoInfo } from 'shared/types';
 import { dialog } from 'electron';
 
+const floor = (num: number): number => Math.floor(num * 1000) / 1000;
+
 function generateEDL(
   title: string,
   sourceClipName: string,
   intervals: Array<Interval>,
   frameRate: number,
-  sourceStartTimecode: number = 0
+  sourceTimecodeInSeconds: number = 0
 ): string {
-  const frameRateDenominator = 1000;
-  const frameRateNumerator = Math.round(frameRate * frameRateDenominator);
-
   function formatTimecode(frames: number): string {
-    const totalSeconds = Math.floor(
-      (frames * frameRateDenominator) / frameRateNumerator
-    );
-    const frame = Math.floor(
-      frames - (totalSeconds * frameRateNumerator) / frameRateDenominator
-    );
-    const seconds = totalSeconds % 60;
-    const minutes = Math.floor(totalSeconds / 60) % 60;
-    const hours = Math.floor(totalSeconds / 3600);
+    const frame = Math.floor(frames % frameRate);
+    const seconds = Math.floor((frames / frameRate) % 60);
+    const minutes = Math.floor((frames / (frameRate * 60)) % 60);
+    const hours = Math.floor(frames / (frameRate * 60 * 60));
 
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
       2,
@@ -34,16 +28,14 @@ function generateEDL(
 
   let recordStart = 0;
   intervals.forEach((interval, index) => {
-    const srcStart = Math.round(
-      ((interval.start + sourceStartTimecode) * frameRateNumerator) /
-        frameRateDenominator
+    const srcStart = floor(
+      (interval.start + sourceTimecodeInSeconds) * frameRate
     );
-    const srcEnd = Math.round(
-      (((interval.end ?? 0) + sourceStartTimecode) * frameRateNumerator) /
-        frameRateDenominator
-    );
+    const srcEnd = floor((interval.end + sourceTimecodeInSeconds) * frameRate);
     const recStart = recordStart;
-    const recEnd = recordStart + srcEnd - srcStart;
+    const recEnd = floor(
+      recordStart + (interval.end - interval.start) * frameRate
+    );
 
     edl += `${String(index + 1).padStart(
       3,
@@ -110,9 +102,11 @@ async function getStartTimecodeAndFrameRate(
 
   const frameRate =
     videoStream && videoStream.avg_frame_rate
-      ? videoStream.avg_frame_rate
-          .split('/')
-          .reduce((a, b) => parseInt(a, 10) / parseInt(b, 10))
+      ? Math.floor(
+          videoStream.avg_frame_rate
+            .split('/')
+            .reduce((a, b) => parseInt(a, 10) / parseInt(b, 10)) * 1000
+        ) / 1000
       : 23.976;
 
   const qtStream = probeData.streams.find(
@@ -132,7 +126,7 @@ async function getStartTimecodeAndFrameRate(
 
 function timecodeToSeconds(timecode: string, frameRate: number): number {
   const [hours, minutes, seconds, frames] = timecode.split(':').map(Number);
-  return hours * 60 * 60 + minutes * 60 + seconds + frames / frameRate;
+  return hours * 60 * 60 + minutes * 60 + seconds + floor(frames / frameRate);
 }
 
 export default async function createEDLWithSilenceRemoved(
@@ -155,8 +149,9 @@ export default async function createEDLWithSilenceRemoved(
   const { startTimecode, frameRate } = await getStartTimecodeAndFrameRate(
     videoInfo.path
   );
+  console.log('startTimecode, frameRate', startTimecode, frameRate);
   const startTimecodeSeconds = startTimecode
-    ? timecodeToSeconds(startTimecode, frameRate)
+    ? floor(timecodeToSeconds(startTimecode, frameRate))
     : 0;
 
   return new Promise((resolve, reject) => {
@@ -168,7 +163,7 @@ export default async function createEDLWithSilenceRemoved(
     const edl = generateEDL(
       'Silence Removed',
       clipName,
-      nonSilentIntervals,
+      silentIntervals,
       frameRate,
       startTimecodeSeconds
     );
