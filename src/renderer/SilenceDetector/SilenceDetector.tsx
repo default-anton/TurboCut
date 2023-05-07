@@ -1,12 +1,11 @@
 import React, { useCallback, useState } from 'react';
 import { message, Button, Layout, Modal, Row, Col, Space, Card } from 'antd';
 import { Content, Footer } from 'antd/es/layout/layout';
-import { AudioOutlined, DownloadOutlined } from '@ant-design/icons';
+import { AudioOutlined } from '@ant-design/icons';
 
 import { Interval } from '../../shared/types';
 import AudioFileInput from './components/AudioFileInput';
 import DetectSilenceForm from './components/DetectSilenceForm';
-import ExportForm from './components/ExportForm';
 import Waveform from './components/Waveform';
 import { useAudioFileInput } from './hooks/useAudioFileInput';
 import { useSilenceDetection } from './hooks/useSilenceDetection';
@@ -15,6 +14,7 @@ import { useWaveSurfer } from './hooks/useWaveSurfer';
 import { DETECT_SILENCE } from '../messages';
 
 import './SilenceDetector.scss';
+import ExportButton, { ExportKey } from './components/ExportButton';
 
 interface SilenceDetectorProps {}
 
@@ -23,7 +23,6 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [isDetectingSilence, setIsDetectingSilence] = useState<boolean>(false);
-  const [frameRate, setFrameRate] = useState<number>(23.976);
   const [minSilenceLen, setMinSilenceLen] = useState<number>(1);
   const [minNonSilenceLen, setMinNonSilenceLen] = useState<number>(0.8);
   const [silenceThresh, setSilenceThresh] = useState<number>(-33);
@@ -31,7 +30,6 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
   const [intervals, setIntervals] = useState<Array<Interval>>([]);
   const [detectSilenceModalOpen, setDetectSilenceModalOpen] =
     useState<boolean>(false);
-  const [exportModalOpen, setExportModalOpen] = useState<boolean>(false);
 
   const handleFileChange = useAudioFileInput(
     setInputFile,
@@ -82,36 +80,37 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
       return;
     }
 
-    // const clipName should basename of inputFile
     const clipName = inputFile.path.split('/').pop() as string;
     setIsExporting(true);
     message.loading({
-      content: 'Exporting EDL file...',
+      content: 'Exporting to Davinci Resolve...',
       duration: 0,
       key: 'exporting',
     });
 
-    setExportModalOpen(false);
     const exported = await window.electron.createEDLWithSilenceRemoved(
+      'Export to DaVinci Resolve',
       intervals,
-      { duration, frameRate, path: inputFile.path },
+      { duration, frameRate: 23.976, path: inputFile.path },
       clipName
     );
 
     setIsExporting(false);
     if (exported) {
-      message.success({ content: 'EDL file exported!', key: 'exporting' });
+      message.success({ content: 'File exported!', key: 'exporting' });
     } else {
       message.warning({ content: 'Export cancelled', key: 'exporting' });
     }
-  }, [inputFile, intervals, duration, frameRate]);
+  }, [inputFile, intervals, duration]);
 
   const showDetectSilenceModal = () => {
     setDetectSilenceModalOpen(true);
   };
 
-  const showExportModal = () => {
-    setExportModalOpen(true);
+  const handleExport = (key: ExportKey) => {
+    if (key === 'davinci_resolve') {
+      exportToDavinciResolve();
+    }
   };
 
   return (
@@ -139,66 +138,52 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
           isLoading={isLoading}
         />
         <Row justify="center">
-          <Col style={{ width: '80%', maxWidth: '1200px' }}>
-            <Button
-              disabled={!inputFile || isLoading || isDetectingSilence}
-              loading={isDetectingSilence}
-              type="primary"
-              onClick={showDetectSilenceModal}
-              icon={<AudioOutlined />}
-              style={{ marginTop: '1rem' }}
-            >
-              Detect silence
-            </Button>
-            <Modal
-              title="Silence detection parameters"
-              open={detectSilenceModalOpen}
-              onOk={() => handleDetectSilenceClick()}
-              onCancel={() => {
-                setDetectSilenceModalOpen(false);
-              }}
-              okText="Detect"
-            >
-              <DetectSilenceForm
-                minSilenceLen={minSilenceLen}
-                minNonSilenceLen={minNonSilenceLen}
-                silenceThresh={silenceThresh}
-                padding={padding}
-                setMinSilenceLen={setMinSilenceLen}
-                setMinNonSilenceLen={setMinNonSilenceLen}
-                setSilenceThresh={setSilenceThresh}
-                setPadding={setPadding}
+          <Col style={{ width: '80%', maxWidth: '1200px', marginTop: '1rem' }}>
+            <Space direction="horizontal" size="middle">
+              <Button
+                disabled={!inputFile || isLoading || isDetectingSilence}
+                loading={isDetectingSilence}
+                type="primary"
+                onClick={showDetectSilenceModal}
+                icon={<AudioOutlined />}
+              >
+                Detect silence
+              </Button>
+              <ExportButton
+                handleExport={handleExport}
+                loading={isExporting}
+                disabled={
+                  intervals.length === 0 ||
+                  !inputFile ||
+                  isLoading ||
+                  isExporting
+                }
               />
-            </Modal>
-          </Col>
-        </Row>
-        <Row justify="center">
-          <Col style={{ width: '80%', maxWidth: '1200px' }}>
-            <Button
-              type="primary"
-              onClick={showExportModal}
-              icon={<DownloadOutlined />}
-              loading={isExporting}
-              disabled={!inputFile || isLoading || isExporting}
-              style={{ marginTop: '1rem' }}
-            >
-              Export to Davinci Resolve
-            </Button>
-            <Modal
-              title="Export Davinci Resolve EDL"
-              open={exportModalOpen}
-              onOk={() => exportToDavinciResolve()}
-              onCancel={() => {
-                setExportModalOpen(false);
-              }}
-              okText="Export"
-            >
-              <ExportForm frameRate={frameRate} setFrameRate={setFrameRate} />
-            </Modal>
+            </Space>
           </Col>
         </Row>
       </Content>
       <Footer />
+      <Modal
+        title="Silence detection parameters"
+        open={detectSilenceModalOpen}
+        onOk={() => handleDetectSilenceClick()}
+        onCancel={() => {
+          setDetectSilenceModalOpen(false);
+        }}
+        okText="Detect"
+      >
+        <DetectSilenceForm
+          minSilenceLen={minSilenceLen}
+          minNonSilenceLen={minNonSilenceLen}
+          silenceThresh={silenceThresh}
+          padding={padding}
+          setMinSilenceLen={setMinSilenceLen}
+          setMinNonSilenceLen={setMinNonSilenceLen}
+          setSilenceThresh={setSilenceThresh}
+          setPadding={setPadding}
+        />
+      </Modal>
     </Layout>
   );
 };

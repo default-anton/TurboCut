@@ -118,13 +118,14 @@ function timecodeToSeconds(timecode: string, frameRate: number): number {
 }
 
 export default async function createEDLWithSilenceRemoved(
+  title: string,
   silentIntervals: Array<Interval>,
   videoInfo: VideoInfo,
   clipName: string
 ): Promise<boolean> {
   // Show the save file dialog and get the user's chosen path
   const result = await dialog.showSaveDialog({
-    title: 'Save File',
+    title,
     defaultPath: `${videoInfo.path.split('/').pop()}.edl`,
     filters: [{ name: 'EDL', extensions: ['edl'] }],
   });
