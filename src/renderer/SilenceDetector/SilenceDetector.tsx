@@ -25,8 +25,8 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
   const [isDetectingSilence, setIsDetectingSilence] = useState<boolean>(false);
   const [frameRate, setFrameRate] = useState<number>(23.976);
   const [minSilenceLen, setMinSilenceLen] = useState<number>(1);
-  const [minNonSilenceLen, setMinNonSilenceLen] = useState<number>(1);
-  const [silenceThresh, setSilenceThresh] = useState<number>(-30);
+  const [minNonSilenceLen, setMinNonSilenceLen] = useState<number>(0.8);
+  const [silenceThresh, setSilenceThresh] = useState<number>(-33);
   const [padding, setPadding] = useState<number>(0.2);
   const [intervals, setIntervals] = useState<Array<Interval>>([]);
   const [detectSilenceModalOpen, setDetectSilenceModalOpen] =
