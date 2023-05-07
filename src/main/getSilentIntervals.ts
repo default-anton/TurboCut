@@ -13,6 +13,7 @@ const getSilentIntervals = async (
     const silenceIntervals: Array<Interval> = [];
     // use a temporary mono audio file in tmp to detect silence
     const outputAudioFile = `${inputFile}.mono.wav`;
+    let intervalStart: number | null = null;
 
     ffmpeg(inputFile)
       .noVideo()
@@ -38,11 +39,11 @@ const getSilentIntervals = async (
           const currentInterval =
             extendedSilenceIntervals[extendedSilenceIntervals.length - 1];
           const nextInterval = silenceIntervals[i + 1];
-          const nonSilenceDuration = nextInterval.start - currentInterval.end!;
+          const nonSilenceDuration = nextInterval.start - currentInterval.end;
 
           if (nonSilenceDuration < minNonSilenceLen) {
             currentInterval.end = nextInterval.end;
-          } else if (nextInterval.end! > currentInterval.end!) {
+          } else if (nextInterval.end > currentInterval.end) {
             extendedSilenceIntervals.push({ ...nextInterval });
           }
 
@@ -54,7 +55,7 @@ const getSilentIntervals = async (
           const currentInterval =
             extendedSilenceIntervals[extendedSilenceIntervals.length - 1];
           const nextInterval = silenceIntervals[i];
-          const nonSilenceDuration = nextInterval.start - currentInterval.end!;
+          const nonSilenceDuration = nextInterval.start - currentInterval.end;
 
           if (nonSilenceDuration >= minNonSilenceLen) {
             extendedSilenceIntervals.push({ ...nextInterval });
@@ -72,14 +73,13 @@ const getSilentIntervals = async (
 
         if (silenceStartRegex.test(line)) {
           const [, start] = line.match(silenceStartRegex) as RegExpMatchArray;
-          silenceIntervals.push({
-            start: parseFloat(start) + padding,
-            end: null,
-          });
+          intervalStart = parseFloat(start) + padding;
         } else if (silenceEndRegex.test(line)) {
           const [, end] = line.match(silenceEndRegex) as RegExpMatchArray;
-          silenceIntervals[silenceIntervals.length - 1].end =
-            parseFloat(end) - padding;
+          silenceIntervals.push({
+            start: intervalStart!,
+            end: parseFloat(end) - padding,
+          });
         }
       })
       .on('error', (err: Error) => {
