@@ -110,6 +110,8 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
   const handleExport = (key: ExportKey) => {
     if (key === 'davinci_resolve') {
       exportToDavinciResolve();
+    } else {
+      message.error('Export method not implemented yet');
     }
   };
 
