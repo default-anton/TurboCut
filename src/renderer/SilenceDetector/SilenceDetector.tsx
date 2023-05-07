@@ -91,7 +91,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
     const exported = await window.electron.createEDLWithSilenceRemoved(
       'Export to DaVinci Resolve',
       intervals,
-      { duration, frameRate: 23.976, path: inputFile.path },
+      { duration, path: inputFile.path },
       clipName
     );
 
