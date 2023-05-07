@@ -70,12 +70,12 @@ function getNonSilentIntervals(
     }
 
     // Move the current start time to the end of the silent interval
-    currentStart = silentInterval.end ?? videoDuration;
+    currentStart = silentInterval.end;
   });
 
   // If there is a gap between the last silent interval and the end of the video, add a non-silent interval
   if (currentStart < videoDuration) {
-    nonSilentIntervals.push({ start: currentStart, end: null });
+    nonSilentIntervals.push({ start: currentStart, end: videoDuration });
   }
 
   return nonSilentIntervals;
