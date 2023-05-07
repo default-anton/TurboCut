@@ -85,7 +85,6 @@ export function useWaveSurfer(
       if (!wavesurferRef.current || skipRegionInProgress.current) return;
 
       const currentTime = wavesurferRef.current.getCurrentTime();
-      const videoDuration = wavesurferRef.current.getDuration();
       const regions = wavesurferRef.current.regions.list;
 
       Object.entries(regions).forEach(([, region]) => {
@@ -95,7 +94,7 @@ export function useWaveSurfer(
         ) {
           if (region.start <= currentTime && region.end >= currentTime) {
             skipRegionInProgress.current = true;
-            wavesurferRef.current!.seekTo(region.end / videoDuration);
+            wavesurferRef.current!.seekTo(region.end / duration);
             setTimeout(() => {
               skipRegionInProgress.current = false;
             }, 0);
@@ -110,7 +109,7 @@ export function useWaveSurfer(
       wavesurferRef.current?.destroy();
       wavesurferRef.current?.un('audioprocess', onAudioProcess);
     };
-  }, [filePath, setIsLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filePath, setIsLoading, duration]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!wavesurferRef.current) return;
