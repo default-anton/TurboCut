@@ -3,15 +3,18 @@ import ffmpeg, { FfprobeData } from 'fluent-ffmpeg';
 import { Interval, VideoInfo } from 'shared/types';
 import { dialog } from 'electron';
 
-function framesToTimecode(frames: number, frameRate: number = 23.976): string {
+// Convert the timecode of the video to seconds.
+function framesToTimecode(frames: number, frameRate: number): string {
+  // Rounding the frame rate to the nearest integer is necessary to avoid floating point errors
   const fps = Math.round(frameRate);
-  // Calculate hours, minutes, and seconds
+  // Calculate the number of hours, minutes, seconds, and frames
   const hours = Math.floor(frames / (3600 * fps));
   const minutes = Math.floor((frames % (3600 * fps)) / (60 * fps));
   const seconds = Math.floor(((frames % (3600 * fps)) % (60 * fps)) / fps);
   const frs = Math.floor(((frames % (3600 * fps)) % (60 * fps)) % fps);
 
-  // Format the Timecode as HH:MM:SS:FF
+  // Format the timecode string as HH:MM:SS:FF (hours, minutes, seconds, frames)
+  // This is necessary to ensure that the timecode is parsed correctly by DaVinci Resolve.
   const timecode = `${hours.toString().padStart(2, '0')}:${minutes
     .toString()
     .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${frs
@@ -21,17 +24,16 @@ function framesToTimecode(frames: number, frameRate: number = 23.976): string {
   return timecode;
 }
 
-function timecodeToSeconds(timecode: string, frameRate: number): number {
-  // Extract hours, minutes, seconds, and frames from the timecode string
+function framesToSeconds(frames: number, frameRate: number): number {
+  // Rounding the frame rate to the nearest integer is necessary to avoid floating point errors
+  return Math.round((frames / frameRate) * 10) / 10;
+}
+
+function timecodeToFrames(timecode: string, frameRate: number): number {
   const [hours, minutes, seconds, frames] = timecode.split(/[:;]/).map(Number);
-  return (
-    Math.round(
-      (Math.floor(
-        (hours * 3600 + minutes * 60 + seconds) * Math.round(frameRate) + frames
-      ) /
-        frameRate) *
-        10
-    ) / 10
+  // Rounding the frame rate to the nearest integer is necessary to avoid floating point errors
+  return Math.floor(
+    (hours * 3600 + minutes * 60 + seconds) * Math.round(frameRate) + frames
   );
 }
 
@@ -40,23 +42,32 @@ function generateEDL(
   sourceClipName: string,
   intervals: Array<Interval>,
   frameRate: number,
-  sourceTimecodeInSeconds: number = 0
+  timecodeInSeconds: number
 ): string {
+  // The EDL header. The FCM (frame count mode) is set to NON-DROP FRAME.
   let edl = `TITLE: ${title}\nFCM: NON-DROP FRAME\n\n`;
 
+  // recordStartFrames is the number of frames since the beginning of the video
+  // at which the next clip should be inserted. It is incremented by the number of frames in each clip.
   let recordStartFrames = 0;
   intervals.forEach((interval, index) => {
+    // srcStartFrames and srcEndFrames are the start and end frames of the clip in the source video.
+    // timecodeInSeconds is the offset of the source video in seconds.
     const srcStartFrames = Math.floor(
-      (interval.start + sourceTimecodeInSeconds) * frameRate
+      (interval.start + timecodeInSeconds) * frameRate
     );
     const srcEndFrames = Math.floor(
-      (interval.end + sourceTimecodeInSeconds) * frameRate
+      (interval.end + timecodeInSeconds) * frameRate
     );
+    // recStartFrames and recEndFrames are the start and end frames of the clip in the EDL.
     const recStartFrames = recordStartFrames;
     const recEndFrames = Math.floor(
       recordStartFrames + (interval.end - interval.start) * frameRate
     );
 
+    // "AX" represents an auxiliary track
+    // "V" stands for "video"
+    // "C" indicates a basic cut transition
     edl += `${String(index + 1).padStart(
       3,
       '0'
@@ -69,6 +80,7 @@ function generateEDL(
     )} ${framesToTimecode(recEndFrames, frameRate)}\n`;
     edl += `* FROM CLIP NAME: ${sourceClipName}\n\n`;
 
+    // Increment the number of frames since the beginning of the video at which the next clip should be inserted.
     recordStartFrames = recEndFrames;
   });
 
@@ -106,7 +118,7 @@ function getNonSilentIntervals(
 }
 
 async function getVideoMetadata(inputFile: string): Promise<{
-  startTimecode: string | undefined;
+  startTimecode: string;
   frameRate: number;
   videoDuration: number;
 }> {
@@ -151,7 +163,8 @@ async function getVideoMetadata(inputFile: string): Promise<{
       startTimecodeFormat ||
       startTimecodeStream ||
       startTimecodeQt ||
-      startTimecodeStreamStart,
+      startTimecodeStreamStart ||
+      0,
   };
 }
 
@@ -176,9 +189,8 @@ export default async function createEDLWithSilenceRemoved(
     videoInfo.path
   );
 
-  const startTimecodeSeconds = startTimecode
-    ? timecodeToSeconds(startTimecode, frameRate)
-    : 0;
+  const frames = timecodeToFrames(startTimecode, frameRate);
+  const timecodeInSeconds = framesToSeconds(frames, frameRate);
 
   return new Promise((resolve, reject) => {
     const nonSilentIntervals = getNonSilentIntervals(
@@ -191,7 +203,7 @@ export default async function createEDLWithSilenceRemoved(
       clipName,
       nonSilentIntervals,
       frameRate,
-      startTimecodeSeconds
+      timecodeInSeconds
     );
 
     const json = JSON.stringify(silentIntervals, null, 2);
