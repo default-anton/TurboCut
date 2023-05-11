@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { message, Button, Layout, Modal, Row, Col, Space, Card } from 'antd';
 import { Content, Footer } from 'antd/es/layout/layout';
 import { AudioOutlined } from '@ant-design/icons';
@@ -9,8 +9,7 @@ import DetectSilenceForm from './components/DetectSilenceForm';
 import Waveform from './components/Waveform';
 import { useAudioFileInput } from './hooks/useAudioFileInput';
 import { useSilenceDetection } from './hooks/useSilenceDetection';
-import { useConvertToMonoMp3 } from './hooks/useConvertToMonoMp3';
-import { useWaveSurfer } from './hooks/useWaveSurfer';
+import { useWaveform } from './hooks/useWaveform';
 import { DETECT_SILENCE } from '../messages';
 
 import styles from './SilenceDetector.module.scss';
@@ -20,8 +19,6 @@ import { useExport } from './hooks/useExport';
 interface SilenceDetectorProps {}
 
 const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
-  const [inputFile, setInputFile] = useState<File | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isDetectingSilence, setIsDetectingSilence] = useState<boolean>(false);
   const [minSilenceLen, setMinSilenceLen] = useState<number>(1);
   const [minNonSilenceLen, setMinNonSilenceLen] = useState<number>(0.8);
@@ -30,12 +27,12 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
   const [intervals, setIntervals] = useState<Array<Interval>>([]);
   const [detectSilenceModalOpen, setDetectSilenceModalOpen] =
     useState<boolean>(false);
+  const resetIntervals = useCallback(() => {
+    setIntervals([]);
+  }, []);
 
-  const handleFileChange = useAudioFileInput(
-    setInputFile,
-    setIsLoading,
-    setIntervals
-  );
+  const { inputFile, setInputFile, isLoading, stopLoading, pathToAudioFile } =
+    useAudioFileInput(resetIntervals);
   const handleDetectSilenceClick = useSilenceDetection(
     inputFile,
     minSilenceLen,
@@ -63,14 +60,10 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
       });
     }
   );
-  const { outputPath: audioFileOutputPath } = useConvertToMonoMp3(
-    inputFile,
-    setIsLoading
-  );
-  const { waveformRef, handleScroll, duration } = useWaveSurfer(
-    audioFileOutputPath,
+  const { waveformRef, handleScroll, duration } = useWaveform(
+    pathToAudioFile,
     isLoading,
-    setIsLoading,
+    stopLoading,
     intervals
   );
   const { exportTimeline, isExporting } = useExport(
@@ -94,10 +87,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
               style={{ display: 'flex' }}
             >
               <Card size="small">
-                <AudioFileInput
-                  loading={isLoading}
-                  onChange={handleFileChange}
-                />
+                <AudioFileInput loading={isLoading} onChange={setInputFile} />
               </Card>
             </Space>
           </Col>

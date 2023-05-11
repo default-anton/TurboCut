@@ -9,10 +9,10 @@ import { CREATE_OPTIMIZED_AUDIO_FILE } from 'renderer/messages';
 
 import type { Interval } from '../../../shared/types';
 
-export function useWaveSurfer(
+export function useWaveform(
   filePath: string | null,
   isLoading: boolean,
-  setIsLoading: (value: boolean) => void,
+  stopLoading: () => void,
   intervals: Array<Interval>
 ) {
   const skipRegionInProgress = useRef(false);
@@ -71,7 +71,7 @@ export function useWaveSurfer(
 
     wavesurferRef.current.load(`file://${filePath}`);
     wavesurferRef.current.on('ready', () => {
-      setIsLoading(false);
+      stopLoading();
       setDuration(wavesurferRef.current!.getDuration());
       message.open({
         key: CREATE_OPTIMIZED_AUDIO_FILE,
@@ -109,7 +109,7 @@ export function useWaveSurfer(
       wavesurferRef.current?.destroy();
       wavesurferRef.current?.un('audioprocess', onAudioProcess);
     };
-  }, [filePath, setIsLoading, duration]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filePath, stopLoading, duration]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!wavesurferRef.current) return;
@@ -149,4 +149,4 @@ export function useWaveSurfer(
   };
 }
 
-export default useWaveSurfer;
+export default useWaveform;
