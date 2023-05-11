@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import { message, Button, Layout, Modal, Row, Col, Space, Card } from 'antd';
 import { Content, Footer } from 'antd/es/layout/layout';
 import { AudioOutlined } from '@ant-design/icons';
@@ -14,14 +14,14 @@ import { useWaveSurfer } from './hooks/useWaveSurfer';
 import { DETECT_SILENCE } from '../messages';
 
 import styles from './SilenceDetector.module.scss';
-import ExportButton, { ExportKey } from './components/ExportButton';
+import ExportButton from './components/ExportButton';
+import { useExport } from './hooks/useExport';
 
 interface SilenceDetectorProps {}
 
 const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isExporting, setIsExporting] = useState<boolean>(false);
   const [isDetectingSilence, setIsDetectingSilence] = useState<boolean>(false);
   const [minSilenceLen, setMinSilenceLen] = useState<number>(1);
   const [minNonSilenceLen, setMinNonSilenceLen] = useState<number>(0.8);
@@ -55,7 +55,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
     },
     () => {
       setIsDetectingSilence(false);
-      message.op({
+      message.open({
         key: DETECT_SILENCE,
         type: 'success',
         content: 'Silence detected!',
@@ -73,46 +73,14 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
     setIsLoading,
     intervals
   );
-
-  const exportToDavinciResolve = useCallback(async () => {
-    if (!inputFile) {
-      message.error('Please select a file first');
-      return;
-    }
-
-    const clipName = inputFile.path.split('/').pop() as string;
-    setIsExporting(true);
-    message.loading({
-      content: 'Exporting to Davinci Resolve...',
-      duration: 0,
-      key: 'exporting',
-    });
-
-    const exported = await window.electron.createEDLWithSilenceRemoved(
-      'Export to DaVinci Resolve',
-      intervals,
-      { duration, path: inputFile.path },
-      clipName
-    );
-
-    setIsExporting(false);
-    if (exported) {
-      message.success({ content: 'File exported!', key: 'exporting' });
-    } else {
-      message.warning({ content: 'Export cancelled', key: 'exporting' });
-    }
-  }, [inputFile, intervals, duration]);
+  const { exportTimeline, isExporting } = useExport(
+    inputFile,
+    intervals,
+    duration
+  );
 
   const showDetectSilenceModal = () => {
     setDetectSilenceModalOpen(true);
-  };
-
-  const handleExport = (key: ExportKey) => {
-    if (key === 'davinci_resolve') {
-      exportToDavinciResolve();
-    } else {
-      message.error('Export method not implemented yet');
-    }
   };
 
   return (
@@ -152,7 +120,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
                 Detect silence
               </Button>
               <ExportButton
-                handleExport={handleExport}
+                handleExport={exportTimeline}
                 loading={isExporting}
                 disabled={
                   intervals.length === 0 ||

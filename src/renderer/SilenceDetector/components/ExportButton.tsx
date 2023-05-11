@@ -1,29 +1,25 @@
 import React from 'react';
 import type { MenuProps } from 'antd';
 import { Dropdown, Space } from 'antd';
-
-export type ExportKey =
-  | 'davinci_resolve'
-  | 'adobe_preimere_pro'
-  | 'final_cut_pro';
+import { Editor } from 'shared/types';
 
 const ITEMS: MenuProps['items'] = [
   {
     label: 'to Davinci Resolve',
-    key: 'davinci_resolve' as ExportKey,
+    key: Editor.DaVinciResolve,
   },
   {
     label: 'to Adobe Premiere Pro',
-    key: 'adobe_preimere_pro' as ExportKey,
+    key: Editor.PremierePro,
   },
   {
     label: 'to Final Cut Pro',
-    key: 'final_cut_pro' as ExportKey,
+    key: Editor.FinalCutPro,
   },
 ];
 
 interface ExportButtonProps {
-  handleExport: (key: ExportKey) => void;
+  handleExport: (editor: Editor) => void;
   loading: boolean;
   disabled: boolean;
 }
@@ -34,10 +30,10 @@ const ExportButton: React.FC<ExportButtonProps> = ({
   disabled,
 }) => {
   const handleMenuClick: MenuProps['onClick'] = (e) => {
-    handleExport(e.key as ExportKey);
+    handleExport(e.key as Editor);
   };
 
-  const handleButtonClick = () => handleExport(ITEMS[0]!.key as ExportKey);
+  const handleButtonClick = () => handleExport(ITEMS[0]!.key as Editor);
 
   const menuProps = {
     items: ITEMS,
