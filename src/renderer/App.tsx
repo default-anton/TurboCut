@@ -1,8 +1,9 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
-import SilenceDetector from './SilenceDetector';
+import { message } from 'antd';
 
 import 'antd/dist/reset.css';
-import { message } from 'antd';
+
+import SilenceDetector from './SilenceDetector';
 
 export default function App() {
   const [, contextHolder] = message.useMessage();

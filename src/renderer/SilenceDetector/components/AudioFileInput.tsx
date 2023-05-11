@@ -11,7 +11,7 @@ interface AudioFileInputProps {
 
 export const AudioFileInput: React.FC<AudioFileInputProps> = ({
   onChange,
-  loading
+  loading,
 }) => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
@@ -44,7 +44,7 @@ export const AudioFileInput: React.FC<AudioFileInputProps> = ({
 };
 
 AudioFileInput.defaultProps = {
-  loading: false
+  loading: false,
 };
 
 export default AudioFileInput;

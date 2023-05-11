@@ -145,7 +145,7 @@ export function useWaveSurfer(
   return {
     waveformRef,
     handleScroll,
-    duration
+    duration,
   };
 }
 

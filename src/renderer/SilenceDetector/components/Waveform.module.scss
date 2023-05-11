@@ -14,7 +14,11 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: linear-gradient(135deg, rgba(100, 116, 245, 0.1) 0%, rgba(124, 131, 253, 0.1) 100%);
+    background-image: linear-gradient(
+      135deg,
+      rgba(100, 116, 245, 0.1) 0%,
+      rgba(124, 131, 253, 0.1) 100%
+    );
     opacity: 0;
     transition: opacity 0.3s ease;
   }

@@ -13,7 +13,7 @@ import { useConvertToMonoMp3 } from './hooks/useConvertToMonoMp3';
 import { useWaveSurfer } from './hooks/useWaveSurfer';
 import { DETECT_SILENCE } from '../messages';
 
-import './SilenceDetector.scss';
+import styles from './SilenceDetector.module.scss';
 import ExportButton, { ExportKey } from './components/ExportButton';
 
 interface SilenceDetectorProps {}
@@ -55,7 +55,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
     },
     () => {
       setIsDetectingSilence(false);
-      message.open({
+      message.op({
         key: DETECT_SILENCE,
         type: 'success',
         content: 'Silence detected!',
@@ -119,13 +119,13 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
     <Layout>
       <Content>
         <Row justify="center">
-          <Col style={{ width: '80%', maxWidth: '1200px' }}>
+          <Col className={styles.col}>
             <Space
               direction="vertical"
               size="middle"
               style={{ display: 'flex' }}
             >
-              <Card title="Video or Audio file" size="small">
+              <Card size="small">
                 <AudioFileInput
                   loading={isLoading}
                   onChange={handleFileChange}
@@ -140,7 +140,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = () => {
           isLoading={isLoading}
         />
         <Row justify="center">
-          <Col style={{ width: '80%', maxWidth: '1200px', marginTop: '1rem' }}>
+          <Col className={styles.col}>
             <Space direction="horizontal" size="middle">
               <Button
                 disabled={!inputFile || isLoading || isDetectingSilence}
