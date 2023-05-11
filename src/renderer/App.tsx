@@ -1,4 +1,3 @@
-import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import { message } from 'antd';
 
 import 'antd/dist/reset.css';
@@ -11,11 +10,7 @@ export default function App() {
   return (
     <>
       {contextHolder}
-      <Router>
-        <Routes>
-          <Route path="/" element={<SilenceDetector />} />
-        </Routes>
-      </Router>
+      <SilenceDetector />
     </>
   );
 }
