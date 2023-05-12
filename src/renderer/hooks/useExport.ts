@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { message } from 'antd';
 
-import { Interval, Editor } from 'shared/types';
+import { Interval, Editor } from '../../shared/types';
 
 export function useExport(
   inputFile: File | null,

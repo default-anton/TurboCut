@@ -9,7 +9,7 @@ import { message } from 'antd';
 import { CREATE_OPTIMIZED_AUDIO_FILE } from 'renderer/messages';
 import { useCreateOptimizedAudioFile } from './useCreateOptimizedAudioFile';
 
-export function useAudioFileInput(resetIntervals: () => void): {
+export function useAudioFileInput(): {
   inputFile: File | null;
   setInputFile: Dispatch<SetStateAction<File | null>>;
   stopLoading: () => void;
@@ -25,19 +25,18 @@ export function useAudioFileInput(resetIntervals: () => void): {
     if (!inputFile) return;
 
     setIsLoading(true);
-    resetIntervals();
     message.open({
       key: CREATE_OPTIMIZED_AUDIO_FILE,
       type: 'loading',
       content: 'Creating optimized audio file...',
       duration: 0,
     });
-  }, [inputFile, resetIntervals]);
+  }, [inputFile]);
 
   return {
     inputFile,
     setInputFile,
-    stopLoading: stopLoading,
+    stopLoading,
     isLoading,
     pathToAudioFile: pathToOptimizedAudioFile,
   };

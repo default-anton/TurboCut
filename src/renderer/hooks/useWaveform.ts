@@ -7,7 +7,7 @@ import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
 import { message } from 'antd';
 import { CREATE_OPTIMIZED_AUDIO_FILE } from 'renderer/messages';
 
-import type { Interval } from '../../../shared/types';
+import type { Interval } from '../../shared/types';
 
 export function useWaveform(
   filePath: string | null,
