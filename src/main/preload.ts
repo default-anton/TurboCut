@@ -5,6 +5,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import convertToMono from './convertToMono';
 import createEDLWithSilenceRemoved from './exporters/davinci';
 import getSilentIntervals from './getSilentIntervals';
+import { transcribe } from './openai';
 
 const electronHandler = {
   getSilentIntervals: async (
@@ -21,6 +22,11 @@ const electronHandler = {
     ...args: Parameters<typeof convertToMono>
   ): ReturnType<typeof convertToMono> => {
     return ipcRenderer.invoke('convertToMono', ...args);
+  },
+  transcribe: async (
+    ...args: Parameters<typeof transcribe>
+  ): ReturnType<typeof transcribe> => {
+    return ipcRenderer.invoke('transcribe', ...args);
   },
 };
 

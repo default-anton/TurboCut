@@ -17,6 +17,7 @@ import { resolveHtmlPath } from './util';
 import getSilentIntervals from './getSilentIntervals';
 import createEDLWithSilenceRemoved from './exporters/davinci';
 import convertToMono from './convertToMono';
+import { transcribe } from './openai';
 
 class AppUpdater {
   constructor() {
@@ -152,6 +153,15 @@ app
         ...args: Parameters<typeof convertToMono>
       ): ReturnType<typeof convertToMono> => {
         return convertToMono(...args);
+      }
+    );
+    ipcMain.handle(
+      'transcribe',
+      async (
+        _event,
+        ...args: Parameters<typeof transcribe>
+      ): ReturnType<typeof transcribe> => {
+        return transcribe(...args);
       }
     );
 

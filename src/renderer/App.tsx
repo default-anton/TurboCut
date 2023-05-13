@@ -5,6 +5,7 @@ import AudioFileInput from './components/AudioFileInput';
 import Waveform from './components/Waveform';
 import ExportButton from './components/ExportButton';
 import SilenceDetector from './components/SilenceDetector';
+import Transcribe from './components/Transcribe';
 
 import { useAudioFileInput } from './hooks/useAudioFileInput';
 import { useWaveform } from './hooks/useWaveform';
@@ -71,6 +72,10 @@ export default function App() {
                     isLoading ||
                     isExporting
                   }
+                />
+                <Transcribe
+                  disabled={!inputFile || !pathToAudioFile || isLoading}
+                  pathToAudioFile={pathToAudioFile}
                 />
               </Space>
             </Col>
