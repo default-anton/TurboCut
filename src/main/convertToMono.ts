@@ -9,7 +9,7 @@ const convertToMono = async (
       .noVideo()
       .audioFrequency(44100)
       .audioChannels(1)
-      .audioBitrate('192k')
+      .audioBitrate('64k')
       .output(outputPath)
       .on('end', () => {
         resolve();

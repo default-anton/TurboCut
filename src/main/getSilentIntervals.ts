@@ -19,12 +19,12 @@ const getSilentIntervals = async (
       .noVideo()
       .audioFrequency(44100)
       .audioChannels(1)
-      .audioBitrate('192k')
+      .audioBitrate('64k')
       .audioFilters(`silencedetect=n=${silenceThresh}dB:d=${minSilenceLen}`)
       .on('end', () => {
         if (silenceIntervals.length === 0) {
-          resolve([]);
           fs.unlinkSync(outputAudioFile);
+          resolve([]);
           return;
         }
 
