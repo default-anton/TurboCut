@@ -1,19 +1,41 @@
 {
-  "description": "Youtube AI",
+  "description": "Film Flare AI",
   "keywords": [
-
+    "video editing",
+    "audio editing",
+    "transcription",
+    "silence removal",
+    "automatic chapters",
+    "electron",
+    "cross-platform",
+    "Whisper API",
+    "OpenAI",
+    "ChatGPT",
+    "language models",
+    "AI",
+    "YouTube",
+    "YouTubers",
+    "video editor",
+    "podcast editor",
+    "content creator",
+    "Davinci Resolve",
+    "Adobe Premiere",
+    "Final Cut Pro",
+    "multimedia",
+    "editing software",
+    "desktop application"
   ],
-  "homepage": "https://github.com/default-anton/youtuber-ai",
+  "homepage": "https://github.com/default-anton/FilmFlareAI",
   "bugs": {
-    "url": "https://github.com/default-anton/youtuber-ai/issues"
+    "url": "https://github.com/default-anton/FilmFlareAI/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/default-anton/youtuber-ai.git"
+    "url": "git+https://github.com/default-anton/FilmFlareAI.git"
   },
   "license": "MIT",
   "author": {
-    "name": "Youtuber AI maintainers",
+    "name": "Film Flare AI maintainers",
     "email": "hotk@hey.com"
   },
   "main": "./src/main/main.ts",
@@ -162,8 +184,8 @@
     "webpack-merge": "^5.8.0"
   },
   "build": {
-    "productName": "YoutuberAI",
-    "appId": "org.erb.YoutuberAI",
+    "productName": "FilmFlareAI",
+    "appId": "org.erb.FilmFlareAI",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
     "files": [
@@ -222,7 +244,7 @@
     "publish": {
       "provider": "github",
       "owner": "default-anton",
-      "repo": "youtuber-ai"
+      "repo": "FilmFlareAI"
     }
   },
   "devEngines": {
