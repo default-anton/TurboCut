@@ -1,6 +1,66 @@
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import { Interval } from '../shared/types';
+import { getNonSilentIntervals } from './exporters/davinci';
+
+const getVideoDuration = async (pathToFile: string): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(pathToFile, (err, metadata) => {
+      if (err) {
+        reject(err);
+      } else {
+        if (!metadata.format || !metadata.format.duration) {
+          reject(new Error('Could not get video duration'));
+          return;
+        }
+
+        resolve(metadata.format.duration);
+      }
+    });
+  });
+};
+
+const removeSilence = async (
+  pathToFile: string,
+  silentIntervals: Interval[]
+): Promise<Interval[]> => {
+  const videoDuration = await getVideoDuration(pathToFile);
+  const nonSilentIntervals = getNonSilentIntervals(
+    silentIntervals,
+    videoDuration
+  );
+
+  // Generate select filter string
+  const selectFilter = nonSilentIntervals
+    .map((interval) => `between(t,${interval.start},${interval.end})`)
+    .join('+');
+
+  // Set the output file path
+  const outputFilePath = `${pathToFile
+    .split('.')
+    .slice(0, -1)
+    .join('.')}_no_silence.mp3`;
+
+  // Create a new ffmpeg command
+  const command = ffmpeg(pathToFile)
+    .videoFilters(`select='${selectFilter}',setpts=N/FRAME_RATE/TB`)
+    .audioFilters(`aselect='${selectFilter}',asetpts=N/SR/TB`)
+    .noVideo()
+    .audioFrequency(44100)
+    .audioChannels(1)
+    .audioBitrate('64k')
+    .output(outputFilePath);
+
+  // Run the ffmpeg command
+  return new Promise((resolve, reject) => {
+    command
+      .on('end', () => resolve(silentIntervals))
+      .on('error', (err) => {
+        reject(err);
+      })
+      .run();
+  });
+};
 
 const getSilentIntervals = async (
   inputFile: string,
@@ -64,8 +124,8 @@ const getSilentIntervals = async (
           }
         }
 
-        resolve(extendedSilenceIntervals);
         fs.unlinkSync(outputAudioFile);
+        resolve(removeSilence(inputFile, extendedSilenceIntervals));
       })
       .on('stderr', (line: string) => {
         const silenceStartRegex = /silence_start: (\d+(\.\d+)?)/;

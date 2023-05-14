@@ -87,7 +87,7 @@ function generateEDL(
   return edl;
 }
 
-function getNonSilentIntervals(
+export function getNonSilentIntervals(
   silentIntervals: Array<Interval>,
   videoDuration: number
 ): Array<Interval> {
