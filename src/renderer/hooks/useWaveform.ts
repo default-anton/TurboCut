@@ -7,13 +7,13 @@ import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
 import { message } from 'antd';
 import { CREATE_OPTIMIZED_AUDIO_FILE } from 'renderer/messages';
 
-import type { Interval } from '../../shared/types';
+import type { Clip } from '../../shared/types';
 
 export function useWaveform(
   filePath: string | null,
   isLoading: boolean,
   stopLoading: () => void,
-  intervals: Array<Interval>
+  clips: Array<Clip>
 ) {
   const skipRegionInProgress = useRef(false);
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -116,16 +116,16 @@ export function useWaveform(
 
     wavesurferRef.current.clearRegions();
 
-    intervals.forEach((interval) => {
+    clips.forEach((clip) => {
       wavesurferRef.current!.addRegion({
-        start: interval.start,
-        end: interval.end,
+        start: clip.start,
+        end: clip.end,
         color: 'rgba(255, 0, 0, 0.2)',
         drag: false,
         resize: false,
       } as RegionParams);
     });
-  }, [intervals]);
+  }, [clips]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

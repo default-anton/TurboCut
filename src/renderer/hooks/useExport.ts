@@ -1,11 +1,11 @@
 import { useCallback, useState } from 'react';
 import { message } from 'antd';
 
-import { Interval, Editor } from '../../shared/types';
+import { Clip, Editor } from '../../shared/types';
 
 export function useExport(
   inputFile: File | null,
-  intervals: Interval[],
+  clips: Clip[],
   duration: number
 ): { exportTimeline: (editor: Editor) => Promise<void>; isExporting: boolean } {
   const [isExporting, setIsExporting] = useState(false);
@@ -32,7 +32,7 @@ export function useExport(
 
       const exported = await window.electron.createEDLWithSilenceRemoved(
         `Export to ${editor}`,
-        intervals,
+        clips,
         { duration, path: inputFile.path },
         clipName
       );
@@ -44,7 +44,7 @@ export function useExport(
         message.warning({ content: 'Export cancelled', key: 'exporting' });
       }
     },
-    [inputFile, intervals, duration]
+    [inputFile, clips, duration]
   );
 
   return { exportTimeline, isExporting };

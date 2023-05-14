@@ -1,6 +1,6 @@
 import fs from 'fs';
 import ffmpeg, { FfprobeData } from 'fluent-ffmpeg';
-import { Interval, VideoInfo } from 'shared/types';
+import { Clip, VideoInfo } from 'shared/types';
 import { dialog } from 'electron';
 
 // Convert the timecode of the video to seconds.
@@ -40,7 +40,7 @@ function timecodeToFrames(timecode: string, frameRate: number): number {
 function generateEDL(
   title: string,
   sourceClipName: string,
-  intervals: Array<Interval>,
+  clips: Array<Clip>,
   frameRate: number,
   timecodeInSeconds: number
 ): string {
@@ -50,19 +50,19 @@ function generateEDL(
   // recordStartFrames is the number of frames since the beginning of the video
   // at which the next clip should be inserted. It is incremented by the number of frames in each clip.
   let recordStartFrames = 0;
-  intervals.forEach((interval, index) => {
+  clips.forEach((clip, index) => {
     // srcStartFrames and srcEndFrames are the start and end frames of the clip in the source video.
     // timecodeInSeconds is the offset of the source video in seconds.
     const srcStartFrames = Math.floor(
-      (interval.start + timecodeInSeconds) * frameRate
+      (clip.start + timecodeInSeconds) * frameRate
     );
     const srcEndFrames = Math.floor(
-      (interval.end + timecodeInSeconds) * frameRate
+      (clip.end + timecodeInSeconds) * frameRate
     );
     // recStartFrames and recEndFrames are the start and end frames of the clip in the EDL.
     const recStartFrames = recordStartFrames;
     const recEndFrames = Math.floor(
-      recordStartFrames + (interval.end - interval.start) * frameRate
+      recordStartFrames + (clip.end - clip.start) * frameRate
     );
 
     // "AX" represents an auxiliary track
@@ -87,34 +87,34 @@ function generateEDL(
   return edl;
 }
 
-function getNonSilentIntervals(
-  silentIntervals: Array<Interval>,
+export function getNonSilentClips(
+  silentClips: Array<Clip>,
   videoDuration: number
-): Array<Interval> {
-  const nonSilentIntervals: Array<Interval> = [];
+): Array<Clip> {
+  const nonSilentClips: Array<Clip> = [];
 
   // Start from the beginning of the video
   let currentStart = 0;
 
-  silentIntervals.forEach((silentInterval) => {
-    // If there is a gap between the current start time and the beginning of the silent interval, add a non-silent interval
-    if (currentStart < silentInterval.start) {
-      nonSilentIntervals.push({
+  silentClips.forEach((silentClip) => {
+    // If there is a gap between the current start time and the beginning of the silent clip, add a non-silent clip
+    if (currentStart < silentClip.start) {
+      nonSilentClips.push({
         start: currentStart,
-        end: silentInterval.start,
+        end: silentClip.start,
       });
     }
 
-    // Move the current start time to the end of the silent interval
-    currentStart = silentInterval.end;
+    // Move the current start time to the end of the silent clip
+    currentStart = silentClip.end;
   });
 
-  // If there is a gap between the last silent interval and the end of the video, add a non-silent interval
+  // If there is a gap between the last silent clip and the end of the video, add a non-silent clip
   if (currentStart < videoDuration) {
-    nonSilentIntervals.push({ start: currentStart, end: videoDuration });
+    nonSilentClips.push({ start: currentStart, end: videoDuration });
   }
 
-  return nonSilentIntervals;
+  return nonSilentClips;
 }
 
 async function getVideoMetadata(inputFile: string): Promise<{
@@ -170,7 +170,7 @@ async function getVideoMetadata(inputFile: string): Promise<{
 
 export default async function createEDLWithSilenceRemoved(
   title: string,
-  silentIntervals: Array<Interval>,
+  silentClips: Array<Clip>,
   videoInfo: VideoInfo,
   clipName: string
 ): Promise<boolean> {
@@ -193,20 +193,20 @@ export default async function createEDLWithSilenceRemoved(
   const timecodeInSeconds = framesToSeconds(frames, frameRate);
 
   return new Promise((resolve, reject) => {
-    const nonSilentIntervals = getNonSilentIntervals(
-      silentIntervals,
+    const nonSilentClips = getNonSilentClips(
+      silentClips,
       videoDuration
     );
 
     const edl = generateEDL(
       'Silence Removed',
       clipName,
-      nonSilentIntervals,
+      nonSilentClips,
       frameRate,
       timecodeInSeconds
     );
 
-    const json = JSON.stringify(silentIntervals, null, 2);
+    const json = JSON.stringify(silentClips, null, 2);
     fs.writeFile(`${result.filePath}.json`, json, 'utf8', () => {
       fs.writeFile(result.filePath!, edl, 'utf8', (err) => {
         if (err) {

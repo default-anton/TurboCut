@@ -14,9 +14,13 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import getSilentIntervals from './getSilentIntervals';
+import {
+  getSilentClips,
+  compressAudioFile,
+  renderCompressedAudio,
+} from './ffmpeg';
 import createEDLWithSilenceRemoved from './exporters/davinci';
-import convertToMono from './convertToMono';
+import { transcribe } from './openai';
 
 class AppUpdater {
   constructor() {
@@ -126,14 +130,14 @@ app
   .whenReady()
   .then(() => {
     createWindow();
-    // expose getSilentIntervals to the renderer process by using ipcMain.handle
+    // expose getSilentClips to the renderer process by using ipcMain.handle
     ipcMain.handle(
-      'getSilentIntervals',
+      'getSilentClips',
       async (
         _event,
-        ...args: Parameters<typeof getSilentIntervals>
-      ): ReturnType<typeof getSilentIntervals> => {
-        return getSilentIntervals(...args);
+        ...args: Parameters<typeof getSilentClips>
+      ): ReturnType<typeof getSilentClips> => {
+        return getSilentClips(...args);
       }
     );
     ipcMain.handle(
@@ -146,12 +150,30 @@ app
       }
     );
     ipcMain.handle(
-      'convertToMono',
+      'compressAudioFile',
       async (
         _event,
-        ...args: Parameters<typeof convertToMono>
-      ): ReturnType<typeof convertToMono> => {
-        return convertToMono(...args);
+        ...args: Parameters<typeof compressAudioFile>
+      ): ReturnType<typeof compressAudioFile> => {
+        return compressAudioFile(...args);
+      }
+    );
+    ipcMain.handle(
+      'renderCompressedAudio',
+      async (
+        _event,
+        ...args: Parameters<typeof renderCompressedAudio>
+      ): ReturnType<typeof renderCompressedAudio> => {
+        return renderCompressedAudio(...args);
+      }
+    );
+    ipcMain.handle(
+      'transcribe',
+      async (
+        _event,
+        ...args: Parameters<typeof transcribe>
+      ): ReturnType<typeof transcribe> => {
+        return transcribe(...args);
       }
     );
 
