@@ -14,7 +14,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import getSilentIntervals from './getSilentIntervals';
+import { getSilentIntervals } from './ffmpeg';
 import createEDLWithSilenceRemoved from './exporters/davinci';
 import convertToMono from './convertToMono';
 import { transcribe } from './openai';

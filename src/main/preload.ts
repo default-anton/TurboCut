@@ -4,7 +4,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 import convertToMono from './convertToMono';
 import createEDLWithSilenceRemoved from './exporters/davinci';
-import getSilentIntervals from './getSilentIntervals';
+import { getSilentIntervals } from './ffmpeg';
 import { transcribe } from './openai';
 
 const electronHandler = {

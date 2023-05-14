@@ -20,7 +20,7 @@ const getVideoDuration = async (pathToFile: string): Promise<number> => {
   });
 };
 
-const removeSilence = async (
+export const removeSilence = async (
   pathToFile: string,
   silentIntervals: Interval[]
 ): Promise<Interval[]> => {
@@ -62,7 +62,7 @@ const removeSilence = async (
   });
 };
 
-const getSilentIntervals = async (
+export const getSilentIntervals = async (
   inputFile: string,
   minSilenceLen: number,
   silenceThresh: number,
@@ -149,5 +149,3 @@ const getSilentIntervals = async (
       .run();
   });
 };
-
-export default getSilentIntervals;
