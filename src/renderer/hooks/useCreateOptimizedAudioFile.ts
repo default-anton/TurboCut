@@ -15,7 +15,7 @@ export function useCreateOptimizedAudioFile(inputFile: File | null): {
         /\.[^/.]+$/,
         '.compressed.mono.wav'
       );
-      await window.electron.convertToMono(inputFile.path, outPath);
+      await window.electron.compressAudioFile(inputFile.path, outPath);
       setOutputPath(outPath);
     };
 

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Interval } from '../../shared/types';
+import { Clip } from '../../shared/types';
 
 export interface Settings {
   minSilenceLen: number;
@@ -9,14 +9,16 @@ export interface Settings {
 }
 
 export interface UseSilenceDetection {
-  silentIntervals: Array<Interval>;
+  silentClips: Array<Clip>;
+  nonSilentClips: Array<Clip>;
   detectSilence: (settings: Settings) => Promise<void>;
 }
 
 export function useSilenceDetection(
   inputFile: File | null
 ): UseSilenceDetection {
-  const [silentIntervals, setSilentIntervals] = useState<Array<Interval>>([]);
+  const [silentClips, setSilentClips] = useState<Array<Clip>>([]);
+  const [nonSilentClips, setNonSilentClips] = useState<Array<Clip>>([]);
 
   const detectSilence = useCallback(
     async ({
@@ -27,21 +29,24 @@ export function useSilenceDetection(
     }: Settings) => {
       if (!inputFile) return;
 
-      const intervals = await window.electron.getSilentIntervals(
-        inputFile.path,
-        minSilenceLen,
-        silenceThresh,
-        padding,
-        minNonSilenceLen
-      );
+      const { silentClips: sc, nonSilentClips: nsc } =
+        await window.electron.getSilentClips(
+          inputFile.path,
+          minSilenceLen,
+          silenceThresh,
+          padding,
+          minNonSilenceLen
+        );
 
-      setSilentIntervals(intervals);
+      setSilentClips(sc);
+      setNonSilentClips(nsc);
     },
     [inputFile]
   );
 
   return {
-    silentIntervals,
+    silentClips,
+    nonSilentClips,
     detectSilence,
   };
 }

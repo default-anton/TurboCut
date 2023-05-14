@@ -23,23 +23,24 @@ export default function App() {
   const [, contextHolder] = message.useMessage();
   const { inputFile, setInputFile, isLoading, stopLoading, pathToAudioFile } =
     useAudioFileInput();
-  const { silentIntervals, detectSilence } = useSilenceDetection(inputFile);
+  const { silentClips, nonSilentClips, detectSilence } =
+    useSilenceDetection(inputFile);
   const { waveformRef, handleScroll, duration } = useWaveform(
     pathToAudioFile,
     isLoading,
     stopLoading,
-    silentIntervals
+    silentClips
   );
   const { exportTimeline, isExporting } = useExport(
     inputFile,
-    silentIntervals,
+    silentClips,
     duration
   );
   const {
     isLoading: isTranscribing,
     transcription,
     transcribe,
-  } = useTranscription(pathToAudioFile);
+  } = useTranscription(pathToAudioFile, nonSilentClips);
   const [activeSegment, setActiveSegment] = useState<number>(0);
 
   return (
@@ -77,7 +78,7 @@ export default function App() {
                   handleExport={exportTimeline}
                   loading={isExporting}
                   disabled={
-                    silentIntervals.length === 0 ||
+                    silentClips.length === 0 ||
                     !inputFile ||
                     isLoading ||
                     isExporting

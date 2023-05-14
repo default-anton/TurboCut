@@ -1,8 +1,12 @@
 import { useCallback, useState } from 'react';
 import { message } from 'antd';
-import { Transcription } from 'shared/types';
 
-export function useTranscription(pathToAudioFile: string | null): {
+import { Clip, Transcription } from 'shared/types';
+
+export function useTranscription(
+  pathToAudioFile: string | null,
+  clips: Clip[]
+): {
   isLoading: boolean;
   transcription: Transcription | null;
   transcribe: (languageCode: string) => Promise<void>;
@@ -22,8 +26,22 @@ export function useTranscription(pathToAudioFile: string | null): {
       setIsLoading(true);
 
       try {
+        const pathToCompressedTimeline = `${pathToAudioFile
+          .split('.')
+          .slice(0, -1)
+          .join('.')}.timeline.compressed.mp3`;
+
+        await window.electron.renderCompressedAudio(
+          pathToAudioFile,
+          pathToCompressedTimeline,
+          clips
+        );
+
         setTranscription(
-          await window.electron.transcribe(pathToAudioFile, languageCode)
+          await window.electron.transcribe(
+            pathToCompressedTimeline,
+            languageCode
+          )
         );
       } catch (error) {
         message.error(`Transcription failed. ${error}`);
@@ -31,7 +49,7 @@ export function useTranscription(pathToAudioFile: string | null): {
         setIsLoading(false);
       }
     },
-    [pathToAudioFile]
+    [pathToAudioFile, clips]
   );
 
   return {

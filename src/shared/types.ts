@@ -1,4 +1,4 @@
-export type Interval = { start: number; end: number };
+export type Clip = { start: number; end: number };
 export type VideoInfo = { path: string; duration: number };
 export enum Editor {
   DaVinciResolve = 'DaVinci Resolve',

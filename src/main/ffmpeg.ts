@@ -1,7 +1,7 @@
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
-import { Interval } from '../shared/types';
-import { getNonSilentIntervals } from './exporters/davinci';
+import { Clip } from '../shared/types';
+import { getNonSilentClips } from './exporters/davinci';
 
 const getVideoDuration = async (pathToFile: string): Promise<number> => {
   return new Promise((resolve, reject) => {
@@ -20,41 +20,29 @@ const getVideoDuration = async (pathToFile: string): Promise<number> => {
   });
 };
 
-export const removeSilence = async (
-  pathToFile: string,
-  silentIntervals: Interval[]
-): Promise<Interval[]> => {
-  const videoDuration = await getVideoDuration(pathToFile);
-  const nonSilentIntervals = getNonSilentIntervals(
-    silentIntervals,
-    videoDuration
-  );
-
+export const renderCompressedAudio = async (
+  inPath: string,
+  outPath: string,
+  clips: Clip[]
+): Promise<void> => {
   // Generate select filter string
-  const selectFilter = nonSilentIntervals
-    .map((interval) => `between(t,${interval.start},${interval.end})`)
+  const selectFilter = clips
+    .map((clip) => `between(t,${clip.start},${clip.end})`)
     .join('+');
 
-  // Set the output file path
-  const outputFilePath = `${pathToFile
-    .split('.')
-    .slice(0, -1)
-    .join('.')}_no_silence.mp3`;
-
   // Create a new ffmpeg command
-  const command = ffmpeg(pathToFile)
-    .videoFilters(`select='${selectFilter}',setpts=N/FRAME_RATE/TB`)
+  const command = ffmpeg(inPath)
     .audioFilters(`aselect='${selectFilter}',asetpts=N/SR/TB`)
     .noVideo()
     .audioFrequency(44100)
     .audioChannels(1)
     .audioBitrate('64k')
-    .output(outputFilePath);
+    .output(outPath);
 
   // Run the ffmpeg command
   return new Promise((resolve, reject) => {
     command
-      .on('end', () => resolve(silentIntervals))
+      .on('end', () => resolve())
       .on('error', (err) => {
         reject(err);
       })
@@ -62,18 +50,23 @@ export const removeSilence = async (
   });
 };
 
-export const getSilentIntervals = async (
+export const getSilentClips = async (
   inputFile: string,
   minSilenceLen: number,
   silenceThresh: number,
   padding: number,
   minNonSilenceLen: number
-): Promise<Array<Interval>> => {
+): Promise<{
+  silentClips: Clip[];
+  nonSilentClips: Clip[];
+}> => {
+  const videoDuration = await getVideoDuration(inputFile);
+
   return new Promise((resolve, reject) => {
-    const silenceIntervals: Array<Interval> = [];
+    const silenceClips: Array<Clip> = [];
     // use a temporary mono audio file in tmp to detect silence
     const outputAudioFile = `${inputFile}.mono.wav`;
-    let intervalStart: number | null = null;
+    let clipStart: number | null = null;
 
     ffmpeg(inputFile)
       .noVideo()
@@ -82,50 +75,57 @@ export const getSilentIntervals = async (
       .audioBitrate('64k')
       .audioFilters(`silencedetect=n=${silenceThresh}dB:d=${minSilenceLen}`)
       .on('end', () => {
-        if (silenceIntervals.length === 0) {
+        if (silenceClips.length === 0) {
           fs.unlinkSync(outputAudioFile);
-          resolve([]);
+          resolve({
+            silentClips: [],
+            nonSilentClips: [{ start: 0, end: videoDuration }],
+          });
           return;
         }
 
-        // Extend silence intervals to fill ultra-short non-silence intervals
-        const extendedSilenceIntervals: Array<Interval> = [
-          { ...silenceIntervals[0] },
-        ];
+        // Extend silence clips to fill ultra-short non-silence clips
+        const extendedSilenceClips: Array<Clip> = [{ ...silenceClips[0] }];
         let i = 0;
 
-        while (i < silenceIntervals.length - 1) {
-          // Create a shallow copy to avoid modifying the original interval
-          const currentInterval =
-            extendedSilenceIntervals[extendedSilenceIntervals.length - 1];
-          const nextInterval = silenceIntervals[i + 1];
-          const nonSilenceDuration = nextInterval.start - currentInterval.end;
+        while (i < silenceClips.length - 1) {
+          // Create a shallow copy to avoid modifying the original clip
+          const currentClip =
+            extendedSilenceClips[extendedSilenceClips.length - 1];
+          const nextClip = silenceClips[i + 1];
+          const nonSilenceDuration = nextClip.start - currentClip.end;
 
           if (nonSilenceDuration < minNonSilenceLen) {
-            currentInterval.end = nextInterval.end;
-          } else if (nextInterval.end > currentInterval.end) {
-            extendedSilenceIntervals.push({ ...nextInterval });
+            currentClip.end = nextClip.end;
+          } else if (nextClip.end > currentClip.end) {
+            extendedSilenceClips.push({ ...nextClip });
           }
 
           i++;
         }
 
-        // Add the last silence interval to the list if it hasn't been merged already
-        if (i === silenceIntervals.length - 1) {
-          const currentInterval =
-            extendedSilenceIntervals[extendedSilenceIntervals.length - 1];
-          const nextInterval = silenceIntervals[i];
-          const nonSilenceDuration = nextInterval.start - currentInterval.end;
+        // Add the last silence clip to the list if it hasn't been merged already
+        if (i === silenceClips.length - 1) {
+          const currentClip =
+            extendedSilenceClips[extendedSilenceClips.length - 1];
+          const nextClip = silenceClips[i];
+          const nonSilenceDuration = nextClip.start - currentClip.end;
 
           if (nonSilenceDuration >= minNonSilenceLen) {
-            extendedSilenceIntervals.push({ ...nextInterval });
+            extendedSilenceClips.push({ ...nextClip });
           } else {
-            currentInterval.end = nextInterval.end;
+            currentClip.end = nextClip.end;
           }
         }
 
         fs.unlinkSync(outputAudioFile);
-        resolve(removeSilence(inputFile, extendedSilenceIntervals));
+        resolve({
+          silentClips: extendedSilenceClips,
+          nonSilentClips: getNonSilentClips(
+            extendedSilenceClips,
+            videoDuration
+          ),
+        });
       })
       .on('stderr', (line: string) => {
         const silenceStartRegex = /silence_start: (\d+(\.\d+)?)/;
@@ -133,11 +133,11 @@ export const getSilentIntervals = async (
 
         if (silenceStartRegex.test(line)) {
           const [, start] = line.match(silenceStartRegex) as RegExpMatchArray;
-          intervalStart = parseFloat(start) + padding;
+          clipStart = parseFloat(start) + padding;
         } else if (silenceEndRegex.test(line)) {
           const [, end] = line.match(silenceEndRegex) as RegExpMatchArray;
-          silenceIntervals.push({
-            start: intervalStart!,
+          silenceClips.push({
+            start: clipStart!,
             end: parseFloat(end) - padding,
           });
         }
@@ -146,6 +146,27 @@ export const getSilentIntervals = async (
         reject(err);
       })
       .output(outputAudioFile)
+      .run();
+  });
+};
+
+export const compressAudioFile = async (
+  inPath: string,
+  outPath: string
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inPath)
+      .noVideo()
+      .audioFrequency(44100)
+      .audioChannels(1)
+      .audioBitrate('64k')
+      .output(outPath)
+      .on('end', () => {
+        resolve();
+      })
+      .on('error', (err: Error) => {
+        reject(err);
+      })
       .run();
   });
 };

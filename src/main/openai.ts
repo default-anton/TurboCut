@@ -2,6 +2,7 @@ import fs from 'fs';
 
 import { Configuration, OpenAIApi } from 'openai';
 import type { Transcription } from '../shared/types';
+import { compressAudioFile } from './ffmpeg';
 
 const config = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
