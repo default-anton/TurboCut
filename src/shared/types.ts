@@ -7,9 +7,12 @@ export enum Editor {
 }
 
 export interface Segment {
+  segmentId: number;
   text: string;
   start: number;
   end: number;
 }
 
-export type Transcriber = (path: string, lang: string) => Promise<Segment[]>;
+export type Transcription = Segment[];
+
+export type Transcriber = (path: string, lang: string) => Promise<Transcription>;

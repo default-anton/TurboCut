@@ -1,7 +1,7 @@
 import fs from 'fs';
 
 import { Configuration, OpenAIApi } from 'openai';
-import type { Segment } from '../shared/types';
+import type { Transcription } from '../shared/types';
 
 const config = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -11,7 +11,7 @@ const openai = new OpenAIApi(config);
 export async function transcribe(
   path: string,
   lang: string
-): Promise<Segment[]> {
+): Promise<Transcription> {
   const response = await openai.createTranscription(
     fs.createReadStream(path) as any,
     'whisper-1',
@@ -33,5 +33,5 @@ export async function transcribe(
     JSON.stringify(response.data, null, 2)
   );
 
-  return response.data.segments as Segment[];
+  return response.data.segments as Transcription;
 }

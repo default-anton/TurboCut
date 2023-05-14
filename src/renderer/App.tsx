@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { message, Layout, Row, Col, Space, Card } from 'antd';
 import { Content, Footer } from 'antd/es/layout/layout';
 
@@ -5,14 +6,17 @@ import AudioFileInput from './components/AudioFileInput';
 import Waveform from './components/Waveform';
 import ExportButton from './components/ExportButton';
 import SilenceDetector from './components/SilenceDetector';
-import Transcribe from './components/Transcribe';
+import TranscriptionButton from './components/TranscriptionButton';
+import TranscriptionView from './components/TranscriptionView';
 
 import { useAudioFileInput } from './hooks/useAudioFileInput';
 import { useWaveform } from './hooks/useWaveform';
 import { useExport } from './hooks/useExport';
 import { useSilenceDetection } from './hooks/useSilenceDetection';
+import { useTranscription } from './hooks/useTranscription';
 
 import 'antd/dist/reset.css';
+
 import './App.scss';
 
 export default function App() {
@@ -31,6 +35,12 @@ export default function App() {
     silentIntervals,
     duration
   );
+  const {
+    isLoading: isTranscribing,
+    transcription,
+    transcribe,
+  } = useTranscription(pathToAudioFile);
+  const [activeSegment, setActiveSegment] = useState<number>(0);
 
   return (
     <>
@@ -73,13 +83,28 @@ export default function App() {
                     isExporting
                   }
                 />
-                <Transcribe
-                  disabled={!inputFile || !pathToAudioFile || isLoading}
-                  pathToAudioFile={pathToAudioFile}
+                <TranscriptionButton
+                  loading={isTranscribing}
+                  disabled={
+                    !inputFile || !pathToAudioFile || isLoading || isExporting
+                  }
+                  onTranscribe={transcribe}
                 />
               </Space>
             </Col>
           </Row>
+          {transcription && (
+            <Row justify="center">
+              <Col className="col">
+                <Space direction="horizontal" size="middle">
+                  <TranscriptionView
+                    transcription={transcription}
+                    activeSegment={activeSegment}
+                  />
+                </Space>
+              </Col>
+            </Row>
+          )}
         </Content>
         <Footer />
       </Layout>
