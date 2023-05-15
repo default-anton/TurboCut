@@ -5,18 +5,18 @@ import { AudioOutlined } from '@ant-design/icons';
 import DetectSilenceForm from './DetectSilenceForm';
 import { DETECT_SILENCE } from '../messages';
 import { UseSilenceDetection } from '../hooks/useSilenceDetection';
+import { useProjectConfig } from '../hooks/useProjectConfig';
 
 interface SilenceDetectorProps {
-  inputFile: File | null;
   loading: boolean;
   detectSilence: UseSilenceDetection['detectSilence'];
 }
 
 const SilenceDetector: React.FC<SilenceDetectorProps> = ({
-  inputFile,
   loading,
   detectSilence,
 }) => {
+  const { projectConfig: { filePath } = {} } = useProjectConfig();
   const [isDetectingSilence, setIsDetectingSilence] = useState<boolean>(false);
   const [minSilenceLen, setMinSilenceLen] = useState<number>(1);
   const [minNonSilenceLen, setMinNonSilenceLen] = useState<number>(0.8);
@@ -59,7 +59,7 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = ({
   return (
     <>
       <Button
-        disabled={!inputFile || loading || isDetectingSilence}
+        disabled={!filePath || loading || isDetectingSilence}
         loading={isDetectingSilence}
         type="primary"
         onClick={showDetectSilenceModal}

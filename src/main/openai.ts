@@ -1,8 +1,8 @@
 import fs from 'fs';
+import { writeFile } from 'fs/promises';
 
 import { Configuration, OpenAIApi } from 'openai';
 import type { Transcription } from '../shared/types';
-import { compressAudioFile } from './ffmpeg';
 
 const config = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -29,7 +29,7 @@ export async function transcribe(
 
   console.log(response.data);
 
-  fs.writeFileSync(
+  await writeFile(
     path.replace('.mp3', '.json'),
     JSON.stringify(response.data, null, 2)
   );

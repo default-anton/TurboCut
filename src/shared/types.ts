@@ -15,4 +15,14 @@ export interface Segment {
 
 export type Transcription = Segment[];
 
-export type Transcriber = (path: string, lang: string) => Promise<Transcription>;
+export type Transcriber = (
+  path: string,
+  lang: string
+) => Promise<Transcription>;
+
+export interface ProjectConfig {
+  name: string;
+  dir: string;
+  clips: Clip[];
+  filePath: string;
+}

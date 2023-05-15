@@ -51,7 +51,7 @@ export const renderCompressedAudio = async (
 };
 
 export const getSilentClips = async (
-  inputFile: string,
+  filePath: string,
   minSilenceLen: number,
   silenceThresh: number,
   padding: number,
@@ -60,15 +60,15 @@ export const getSilentClips = async (
   silentClips: Clip[];
   nonSilentClips: Clip[];
 }> => {
-  const videoDuration = await getVideoDuration(inputFile);
+  const videoDuration = await getVideoDuration(filePath);
 
   return new Promise((resolve, reject) => {
     const silenceClips: Array<Clip> = [];
     // use a temporary mono audio file in tmp to detect silence
-    const outputAudioFile = `${inputFile}.mono.wav`;
+    const outputAudioFile = `${filePath}.mono.wav`;
     let clipStart: number | null = null;
 
-    ffmpeg(inputFile)
+    ffmpeg(filePath)
       .noVideo()
       .audioFrequency(44100)
       .audioChannels(1)

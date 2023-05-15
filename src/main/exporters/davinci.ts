@@ -1,7 +1,7 @@
-import fs from 'fs';
 import ffmpeg, { FfprobeData } from 'fluent-ffmpeg';
 import { Clip, VideoInfo } from 'shared/types';
 import { dialog } from 'electron';
+import { writeFile } from 'fs/promises';
 
 // Convert the timecode of the video to seconds.
 function framesToTimecode(frames: number, frameRate: number): string {
@@ -56,9 +56,7 @@ function generateEDL(
     const srcStartFrames = Math.floor(
       (clip.start + timecodeInSeconds) * frameRate
     );
-    const srcEndFrames = Math.floor(
-      (clip.end + timecodeInSeconds) * frameRate
-    );
+    const srcEndFrames = Math.floor((clip.end + timecodeInSeconds) * frameRate);
     // recStartFrames and recEndFrames are the start and end frames of the clip in the EDL.
     const recStartFrames = recordStartFrames;
     const recEndFrames = Math.floor(
@@ -117,13 +115,13 @@ export function getNonSilentClips(
   return nonSilentClips;
 }
 
-async function getVideoMetadata(inputFile: string): Promise<{
+async function getVideoMetadata(filePath: string): Promise<{
   startTimecode: string;
   frameRate: number;
   videoDuration: number;
 }> {
   const probeData = await new Promise<FfprobeData>((resolve, reject) => {
-    ffmpeg.ffprobe(inputFile, (err, data) => {
+    ffmpeg.ffprobe(filePath, (err, data) => {
       if (err) reject(err);
       else resolve(data);
     });
@@ -192,29 +190,19 @@ export default async function createEDLWithSilenceRemoved(
   const frames = timecodeToFrames(startTimecode, frameRate);
   const timecodeInSeconds = framesToSeconds(frames, frameRate);
 
-  return new Promise((resolve, reject) => {
-    const nonSilentClips = getNonSilentClips(
-      silentClips,
-      videoDuration
-    );
+  const nonSilentClips = getNonSilentClips(silentClips, videoDuration);
 
-    const edl = generateEDL(
-      'Silence Removed',
-      clipName,
-      nonSilentClips,
-      frameRate,
-      timecodeInSeconds
-    );
+  const edl = generateEDL(
+    'Silence Removed',
+    clipName,
+    nonSilentClips,
+    frameRate,
+    timecodeInSeconds
+  );
 
-    const json = JSON.stringify(silentClips, null, 2);
-    fs.writeFile(`${result.filePath}.json`, json, 'utf8', () => {
-      fs.writeFile(result.filePath!, edl, 'utf8', (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(true);
-        }
-      });
-    });
-  });
+  const json = JSON.stringify(silentClips, null, 2);
+  await writeFile(`${result.filePath}.json`, json, 'utf8');
+  await writeFile(result.filePath!, edl, 'utf8');
+
+  return true;
 }

@@ -8,6 +8,12 @@ import {
   compressAudioFile,
   renderCompressedAudio,
 } from './ffmpeg';
+import {
+  showSaveDialog,
+  openProject,
+  createProject,
+  updateProject,
+} from './projects';
 import { transcribe } from './openai';
 
 const electronHandler = {
@@ -35,6 +41,26 @@ const electronHandler = {
     ...args: Parameters<typeof transcribe>
   ): ReturnType<typeof transcribe> => {
     return ipcRenderer.invoke('transcribe', ...args);
+  },
+  showSaveDialog: async (
+    ...args: Parameters<typeof showSaveDialog>
+  ): ReturnType<typeof showSaveDialog> => {
+    return ipcRenderer.invoke('showSaveDialog', ...args);
+  },
+  openProject: async (
+    ...args: Parameters<typeof openProject>
+  ): ReturnType<typeof openProject> => {
+    return ipcRenderer.invoke('openProject', ...args);
+  },
+  createProject: async (
+    ...args: Parameters<typeof createProject>
+  ): ReturnType<typeof createProject> => {
+    return ipcRenderer.invoke('createProject', ...args);
+  },
+  updateProject: async (
+    ...args: Parameters<typeof updateProject>
+  ): ReturnType<typeof updateProject> => {
+    return ipcRenderer.invoke('updateProject', ...args);
   },
 };
 

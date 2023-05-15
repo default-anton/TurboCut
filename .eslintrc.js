@@ -11,6 +11,7 @@ module.exports = {
     'react/function-component-definition': 'off',
     'consistent-return': 'off',
     'no-plusplus': 'off',
+    'no-bitwise': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

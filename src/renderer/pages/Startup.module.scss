@@ -1,0 +1,49 @@
+.startupPage {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f2f5;
+
+  .startupCard {
+    width: 420px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    background: #ffffff;
+
+    h1 {
+      text-align: center;
+      color: #001529;
+      margin-bottom: 20px;
+    }
+
+    .buttonSpace {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .button {
+      width: 100%;
+      margin-top: 10px;
+      transition: background-color 0.3s;
+
+      &:hover {
+        background-color: #1890ff;
+        color: #ffffff;
+      }
+    }
+
+    .createButton {
+      background-color: #52c41a;
+      border-color: #52c41a;
+
+      &:hover {
+        background-color: #40a9ff !important;
+        color: #ffffff !important;
+        border-color: #40a9ff !important;
+      }
+    }
+  }
+}

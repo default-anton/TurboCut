@@ -19,6 +19,12 @@ import {
   compressAudioFile,
   renderCompressedAudio,
 } from './ffmpeg';
+import {
+  showSaveDialog,
+  openProject,
+  createProject,
+  updateProject,
+} from './projects';
 import createEDLWithSilenceRemoved from './exporters/davinci';
 import { transcribe } from './openai';
 
@@ -174,6 +180,42 @@ app
         ...args: Parameters<typeof transcribe>
       ): ReturnType<typeof transcribe> => {
         return transcribe(...args);
+      }
+    );
+    ipcMain.handle(
+      'showSaveDialog',
+      async (
+        _event,
+        ...args: Parameters<typeof showSaveDialog>
+      ): ReturnType<typeof showSaveDialog> => {
+        return showSaveDialog(...args);
+      }
+    );
+    ipcMain.handle(
+      'openProject',
+      async (
+        _event,
+        ...args: Parameters<typeof openProject>
+      ): ReturnType<typeof openProject> => {
+        return openProject(...args);
+      }
+    );
+    ipcMain.handle(
+      'createProject',
+      async (
+        _event,
+        ...args: Parameters<typeof createProject>
+      ): ReturnType<typeof createProject> => {
+        return createProject(...args);
+      }
+    );
+    ipcMain.handle(
+      'updateProject',
+      async (
+        _event,
+        ...args: Parameters<typeof updateProject>
+      ): ReturnType<typeof updateProject> => {
+        return updateProject(...args);
       }
     );
 
