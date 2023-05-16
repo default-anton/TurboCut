@@ -7,6 +7,8 @@ import {
   FC,
   useMemo,
 } from 'react';
+import { message } from 'antd';
+
 import { ProjectConfig } from '../../shared/types';
 
 type ProjectActions = {
@@ -32,10 +34,32 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
     undefined
   );
   const openProject = useCallback(async () => {
-    setProjectConfig(await window.electron.openProject());
+    try {
+      const newProjectConfig = await window.electron.openProject();
+      // User cancelled the open project dialog
+      if (!newProjectConfig) {
+        return;
+      }
+
+      setProjectConfig(newProjectConfig);
+      message.success('Project opened successfully');
+    } catch (e: any) {
+      message.error(`Failed to open project: ${e.message}`);
+    }
   }, []);
   const createProject = useCallback(async () => {
-    setProjectConfig(await window.electron.createProject());
+    try {
+      const newProjectConfig = await window.electron.createProject();
+      // User cancelled the open project dialog
+      if (!newProjectConfig) {
+        return;
+      }
+
+      setProjectConfig(newProjectConfig);
+      message.success('Project created successfully');
+    } catch (e: any) {
+      message.error(`Failed to create project: ${e.message}`);
+    }
   }, []);
   const setProjectFilePath = useCallback(
     async (filePath: string) => {

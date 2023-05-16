@@ -1,9 +1,12 @@
 import { access, constants, mkdir, readFile, writeFile } from 'fs/promises';
 import path from 'path';
 
+import checkDiskSpace from 'check-disk-space';
 import { app, dialog } from 'electron';
 
 import { ProjectConfig } from '../shared/types';
+
+const MIN_DISK_SPACE_IN_BYTES = 100 * 1024 * 1024; // 100 MB
 
 export async function openProject(): Promise<ProjectConfig | undefined> {
   const result = await dialog.showOpenDialog({
@@ -19,7 +22,16 @@ export async function openProject(): Promise<ProjectConfig | undefined> {
 
   const configPath = result.filePaths[0];
 
-  return JSON.parse(await readFile(configPath, 'utf-8')) as ProjectConfig;
+  try {
+    await access(configPath, constants.R_OK | constants.W_OK);
+    const config = await readFile(configPath, 'utf-8');
+
+    return JSON.parse(config) as ProjectConfig;
+  } catch (error) {
+    throw new Error(
+      'The selected file is either inaccessible, lacks sufficient permissions, or is not a valid project file'
+    );
+  }
 }
 
 export async function createProject(): Promise<ProjectConfig | undefined> {
@@ -35,7 +47,19 @@ export async function createProject(): Promise<ProjectConfig | undefined> {
   }
 
   const dir = path.dirname(result.filePath);
-  await access(dir, constants.R_OK | constants.W_OK);
+
+  try {
+    await access(dir, constants.R_OK | constants.W_OK);
+    const { free: available } = await checkDiskSpace(dir);
+
+    if (available < MIN_DISK_SPACE_IN_BYTES) {
+      throw new Error('Insufficient space in the selected directory');
+    }
+  } catch (error) {
+    throw new Error(
+      'The selected directory is either inaccessible, lacks sufficient permissions, or has insufficient space'
+    );
+  }
 
   const config: ProjectConfig = {
     name: path.basename(result.filePath, '.ffai'),
@@ -44,8 +68,17 @@ export async function createProject(): Promise<ProjectConfig | undefined> {
     clips: [],
   };
 
-  await mkdir(path.join(dir, 'cache'));
-  await writeFile(result.filePath, JSON.stringify(config, null, 2));
+  try {
+    await mkdir(path.join(dir, 'cache'));
+  } catch (error) {
+    throw new Error('Unable to create cache directory');
+  }
+
+  try {
+    await writeFile(result.filePath, JSON.stringify(config, null, 2));
+  } catch (error) {
+    throw new Error('Unable to create project file');
+  }
 
   return config;
 }
