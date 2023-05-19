@@ -8,7 +8,7 @@ interface WaveformProps {
   isLoading: boolean;
 }
 
-export const Waveform: React.FC<WaveformProps> = ({
+const Waveform: React.FC<WaveformProps> = ({
   waveformRef,
   onWheel,
   isLoading,

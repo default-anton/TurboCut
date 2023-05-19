@@ -1,26 +1,22 @@
 import { useEffect, useState } from 'react';
+import { useProjectConfig } from './useProjectConfig';
 
-export function useCreateOptimizedAudioFile(inputFile: File | null): {
+export function useCreateOptimizedAudioFile(): {
   pathToOptimizedAudioFile: string | null;
 } {
   const [outputPath, setOutputPath] = useState<string | null>(null);
+  const { projectConfig: { filePath, dir } = {} } = useProjectConfig();
 
   useEffect(() => {
-    if (!inputFile) return;
+    if (!filePath || !dir) return;
 
     const convert = async () => {
-      // outputPath is located in the same directory as the input file, but it has a suffix of ".compressed.mono.wav".
-      // inputFile.path is the absolute path of the input file which can be any video or audio file that ffmpeg supports.
-      const outPath = inputFile.path.replace(
-        /\.[^/.]+$/,
-        '.compressed.mono.wav'
-      );
-      await window.electron.compressAudioFile(inputFile.path, outPath);
+      const outPath = await window.electron.compressAudioFile(filePath, dir);
       setOutputPath(outPath);
     };
 
     convert();
-  }, [inputFile]);
+  }, [filePath, dir]);
 
   return { pathToOptimizedAudioFile: outputPath };
 }

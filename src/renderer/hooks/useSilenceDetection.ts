@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Clip } from '../../shared/types';
+import { useProjectConfig } from './useProjectConfig';
 
 export interface Settings {
   minSilenceLen: number;
@@ -10,15 +11,12 @@ export interface Settings {
 
 export interface UseSilenceDetection {
   silentClips: Array<Clip>;
-  nonSilentClips: Array<Clip>;
   detectSilence: (settings: Settings) => Promise<void>;
 }
 
-export function useSilenceDetection(
-  inputFile: File | null
-): UseSilenceDetection {
+export function useSilenceDetection(): UseSilenceDetection {
+  const { updateClips, projectConfig: { filePath } = {} } = useProjectConfig();
   const [silentClips, setSilentClips] = useState<Array<Clip>>([]);
-  const [nonSilentClips, setNonSilentClips] = useState<Array<Clip>>([]);
 
   const detectSilence = useCallback(
     async ({
@@ -27,11 +25,11 @@ export function useSilenceDetection(
       padding,
       minNonSilenceLen,
     }: Settings) => {
-      if (!inputFile) return;
+      if (!filePath) return;
 
       const { silentClips: sc, nonSilentClips: nsc } =
         await window.electron.getSilentClips(
-          inputFile.path,
+          filePath,
           minSilenceLen,
           silenceThresh,
           padding,
@@ -39,14 +37,13 @@ export function useSilenceDetection(
         );
 
       setSilentClips(sc);
-      setNonSilentClips(nsc);
+      await updateClips(nsc);
     },
-    [inputFile]
+    [filePath, updateClips]
   );
 
   return {
     silentClips,
-    nonSilentClips,
     detectSilence,
   };
 }

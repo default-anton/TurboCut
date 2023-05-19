@@ -1,7 +1,7 @@
-import fs from 'fs';
 import ffmpeg, { FfprobeData } from 'fluent-ffmpeg';
 import { Clip, VideoInfo } from 'shared/types';
 import { dialog } from 'electron';
+import { writeFile } from 'fs/promises';
 
 // Convert the timecode of the video to seconds.
 function framesToTimecode(frames: number, frameRate: number): string {
@@ -56,9 +56,7 @@ function generateEDL(
     const srcStartFrames = Math.floor(
       (clip.start + timecodeInSeconds) * frameRate
     );
-    const srcEndFrames = Math.floor(
-      (clip.end + timecodeInSeconds) * frameRate
-    );
+    const srcEndFrames = Math.floor((clip.end + timecodeInSeconds) * frameRate);
     // recStartFrames and recEndFrames are the start and end frames of the clip in the EDL.
     const recStartFrames = recordStartFrames;
     const recEndFrames = Math.floor(
@@ -87,50 +85,18 @@ function generateEDL(
   return edl;
 }
 
-export function getNonSilentClips(
-  silentClips: Array<Clip>,
-  videoDuration: number
-): Array<Clip> {
-  const nonSilentClips: Array<Clip> = [];
-
-  // Start from the beginning of the video
-  let currentStart = 0;
-
-  silentClips.forEach((silentClip) => {
-    // If there is a gap between the current start time and the beginning of the silent clip, add a non-silent clip
-    if (currentStart < silentClip.start) {
-      nonSilentClips.push({
-        start: currentStart,
-        end: silentClip.start,
-      });
-    }
-
-    // Move the current start time to the end of the silent clip
-    currentStart = silentClip.end;
-  });
-
-  // If there is a gap between the last silent clip and the end of the video, add a non-silent clip
-  if (currentStart < videoDuration) {
-    nonSilentClips.push({ start: currentStart, end: videoDuration });
-  }
-
-  return nonSilentClips;
-}
-
-async function getVideoMetadata(inputFile: string): Promise<{
+async function getVideoMetadata(filePath: string): Promise<{
   startTimecode: string;
   frameRate: number;
-  videoDuration: number;
 }> {
   const probeData = await new Promise<FfprobeData>((resolve, reject) => {
-    ffmpeg.ffprobe(inputFile, (err, data) => {
+    ffmpeg.ffprobe(filePath, (err, data) => {
       if (err) reject(err);
       else resolve(data);
     });
   });
 
   // Duration of the entire file (in seconds)
-  const videoDuration = probeData.format.duration;
   const videoStream = probeData.streams.find(
     (stream: any) => stream.codec_type === 'video'
   );
@@ -152,13 +118,8 @@ async function getVideoMetadata(inputFile: string): Promise<{
   const startTimecodeQt = qtStream?.tags?.timecode;
   const startTimecodeStreamStart = videoStream?.start_time;
 
-  if (!videoDuration) {
-    throw new Error('Could not determine video duration');
-  }
-
   return {
     frameRate,
-    videoDuration,
     startTimecode:
       startTimecodeFormat ||
       startTimecodeStream ||
@@ -168,9 +129,9 @@ async function getVideoMetadata(inputFile: string): Promise<{
   };
 }
 
-export default async function createEDLWithSilenceRemoved(
+export default async function createEDL(
   title: string,
-  silentClips: Array<Clip>,
+  clips: Array<Clip>,
   videoInfo: VideoInfo,
   clipName: string
 ): Promise<boolean> {
@@ -185,36 +146,20 @@ export default async function createEDLWithSilenceRemoved(
     return false;
   }
 
-  const { startTimecode, frameRate, videoDuration } = await getVideoMetadata(
-    videoInfo.path
+  const { startTimecode, frameRate } = await getVideoMetadata(videoInfo.path);
+
+  const startFrame = timecodeToFrames(startTimecode, frameRate);
+  const startTimecodeInSeconds = framesToSeconds(startFrame, frameRate);
+
+  const edl = generateEDL(
+    'Silence Removed',
+    clipName,
+    clips,
+    frameRate,
+    startTimecodeInSeconds
   );
 
-  const frames = timecodeToFrames(startTimecode, frameRate);
-  const timecodeInSeconds = framesToSeconds(frames, frameRate);
+  await writeFile(result.filePath!, edl, 'utf8');
 
-  return new Promise((resolve, reject) => {
-    const nonSilentClips = getNonSilentClips(
-      silentClips,
-      videoDuration
-    );
-
-    const edl = generateEDL(
-      'Silence Removed',
-      clipName,
-      nonSilentClips,
-      frameRate,
-      timecodeInSeconds
-    );
-
-    const json = JSON.stringify(silentClips, null, 2);
-    fs.writeFile(`${result.filePath}.json`, json, 'utf8', () => {
-      fs.writeFile(result.filePath!, edl, 'utf8', (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(true);
-        }
-      });
-    });
-  });
+  return true;
 }

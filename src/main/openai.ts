@@ -2,7 +2,6 @@ import fs from 'fs';
 
 import { Configuration, OpenAIApi } from 'openai';
 import type { Transcription } from '../shared/types';
-import { compressAudioFile } from './ffmpeg';
 
 const config = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -10,11 +9,11 @@ const config = new Configuration({
 const openai = new OpenAIApi(config);
 
 export async function transcribe(
-  path: string,
+  pathToAudioFile: string,
   lang: string
 ): Promise<Transcription> {
   const response = await openai.createTranscription(
-    fs.createReadStream(path) as any,
+    fs.createReadStream(pathToAudioFile) as any,
     'whisper-1',
     undefined,
     'verbose_json',
@@ -27,12 +26,7 @@ export async function transcribe(
     throw new Error('OpenAI transcription failed');
   }
 
-  console.log(response.data);
-
-  fs.writeFileSync(
-    path.replace('.mp3', '.json'),
-    JSON.stringify(response.data, null, 2)
-  );
-
-  return response.data.segments as Transcription;
+  return (response.data as any).segments as Transcription;
 }
+
+export default transcribe;

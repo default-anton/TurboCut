@@ -1,28 +1,21 @@
-import {
-  useState,
-  useEffect,
-  Dispatch,
-  SetStateAction,
-  useCallback,
-} from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { message } from 'antd';
 import { CREATE_OPTIMIZED_AUDIO_FILE } from 'renderer/messages';
 import { useCreateOptimizedAudioFile } from './useCreateOptimizedAudioFile';
+import { useProjectConfig } from './useProjectConfig';
 
 export function useAudioFileInput(): {
-  inputFile: File | null;
-  setInputFile: Dispatch<SetStateAction<File | null>>;
   stopLoading: () => void;
   isLoading: boolean;
   pathToAudioFile: string | null;
 } {
-  const [inputFile, setInputFile] = useState<File | null>(null);
+  const { projectConfig: { filePath } = {} } = useProjectConfig();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { pathToOptimizedAudioFile } = useCreateOptimizedAudioFile(inputFile);
+  const { pathToOptimizedAudioFile } = useCreateOptimizedAudioFile();
   const stopLoading = useCallback(() => setIsLoading(false), []);
 
   useEffect(() => {
-    if (!inputFile) return;
+    if (!filePath) return;
 
     setIsLoading(true);
     message.open({
@@ -31,11 +24,9 @@ export function useAudioFileInput(): {
       content: 'Creating optimized audio file...',
       duration: 0,
     });
-  }, [inputFile]);
+  }, [filePath]);
 
   return {
-    inputFile,
-    setInputFile,
     stopLoading,
     isLoading,
     pathToAudioFile: pathToOptimizedAudioFile,

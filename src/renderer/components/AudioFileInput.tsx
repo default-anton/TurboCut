@@ -3,21 +3,19 @@ import { InboxOutlined } from '@ant-design/icons';
 import Dragger from 'antd/es/upload/Dragger';
 
 import type { RcFile, UploadFile } from 'antd/es/upload/interface';
+import { useProjectConfig } from '../hooks/useProjectConfig';
 
 interface AudioFileInputProps {
-  onChange: (file: File) => void;
   loading?: boolean;
 }
 
-export const AudioFileInput: React.FC<AudioFileInputProps> = ({
-  onChange,
-  loading,
-}) => {
+const AudioFileInput: React.FC<AudioFileInputProps> = ({ loading }) => {
+  const { updateFilePath } = useProjectConfig();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   const beforeUpload = (file: RcFile): boolean => {
     setFileList([file]);
-    onChange(file);
+    updateFilePath(file.path);
 
     return false;
   };

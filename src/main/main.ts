@@ -17,9 +17,15 @@ import { resolveHtmlPath } from './util';
 import {
   getSilentClips,
   compressAudioFile,
-  renderCompressedAudio,
+  renderTimelineAudio,
 } from './ffmpeg';
-import createEDLWithSilenceRemoved from './exporters/davinci';
+import {
+  showSaveDialog,
+  openProject,
+  createProject,
+  updateProject,
+} from './projects';
+import createEDL from './exporters/davinci';
 import { transcribe } from './openai';
 
 class AppUpdater {
@@ -141,12 +147,12 @@ app
       }
     );
     ipcMain.handle(
-      'createEDLWithSilenceRemoved',
+      'createEDL',
       async (
         _event,
-        ...args: Parameters<typeof createEDLWithSilenceRemoved>
-      ): ReturnType<typeof createEDLWithSilenceRemoved> => {
-        return createEDLWithSilenceRemoved(...args);
+        ...args: Parameters<typeof createEDL>
+      ): ReturnType<typeof createEDL> => {
+        return createEDL(...args);
       }
     );
     ipcMain.handle(
@@ -159,12 +165,12 @@ app
       }
     );
     ipcMain.handle(
-      'renderCompressedAudio',
+      'renderTimelineAudio',
       async (
         _event,
-        ...args: Parameters<typeof renderCompressedAudio>
-      ): ReturnType<typeof renderCompressedAudio> => {
-        return renderCompressedAudio(...args);
+        ...args: Parameters<typeof renderTimelineAudio>
+      ): ReturnType<typeof renderTimelineAudio> => {
+        return renderTimelineAudio(...args);
       }
     );
     ipcMain.handle(
@@ -174,6 +180,42 @@ app
         ...args: Parameters<typeof transcribe>
       ): ReturnType<typeof transcribe> => {
         return transcribe(...args);
+      }
+    );
+    ipcMain.handle(
+      'showSaveDialog',
+      async (
+        _event,
+        ...args: Parameters<typeof showSaveDialog>
+      ): ReturnType<typeof showSaveDialog> => {
+        return showSaveDialog(...args);
+      }
+    );
+    ipcMain.handle(
+      'openProject',
+      async (
+        _event,
+        ...args: Parameters<typeof openProject>
+      ): ReturnType<typeof openProject> => {
+        return openProject(...args);
+      }
+    );
+    ipcMain.handle(
+      'createProject',
+      async (
+        _event,
+        ...args: Parameters<typeof createProject>
+      ): ReturnType<typeof createProject> => {
+        return createProject(...args);
+      }
+    );
+    ipcMain.handle(
+      'updateProject',
+      async (
+        _event,
+        ...args: Parameters<typeof updateProject>
+      ): ReturnType<typeof updateProject> => {
+        return updateProject(...args);
       }
     );
 

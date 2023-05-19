@@ -1,18 +1,19 @@
 import { useCallback, useState } from 'react';
 import { message } from 'antd';
 
-import { Clip, Editor } from '../../shared/types';
+import { Editor } from '../../shared/types';
+import { useProjectConfig } from './useProjectConfig';
 
-export function useExport(
-  inputFile: File | null,
-  clips: Clip[],
-  duration: number
-): { exportTimeline: (editor: Editor) => Promise<void>; isExporting: boolean } {
+export function useExport(duration: number): {
+  exportTimeline: (editor: Editor) => Promise<void>;
+  isExporting: boolean;
+} {
+  const { projectConfig: { filePath, clips } = {} } = useProjectConfig();
   const [isExporting, setIsExporting] = useState(false);
 
   const exportTimeline = useCallback(
     async (editor: Editor) => {
-      if (!inputFile) {
+      if (!filePath) {
         message.error('Please select a file first');
         return;
       }
@@ -22,7 +23,7 @@ export function useExport(
         return;
       }
 
-      const clipName = inputFile.path.split('/').pop() as string;
+      const clipName = filePath.split('/').pop() as string;
       setIsExporting(true);
       message.loading({
         content: `Exporting to ${editor}...`,
@@ -30,10 +31,10 @@ export function useExport(
         key: 'exporting',
       });
 
-      const exported = await window.electron.createEDLWithSilenceRemoved(
+      const exported = await window.electron.createEDL(
         `Export to ${editor}`,
-        clips,
-        { duration, path: inputFile.path },
+        clips || [],
+        { duration, path: filePath },
         clipName
       );
 
@@ -44,7 +45,7 @@ export function useExport(
         message.warning({ content: 'Export cancelled', key: 'exporting' });
       }
     },
-    [inputFile, clips, duration]
+    [filePath, clips, duration]
   );
 
   return { exportTimeline, isExporting };
