@@ -111,7 +111,7 @@ export const showSaveDialog = async (
   if (result.canceled || result.filePath === undefined) return;
 
   const dir = path.dirname(result.filePath);
-  access(dir, constants.R_OK | constants.W_OK);
+  await access(dir, constants.R_OK | constants.W_OK);
 
   return result.filePath;
 };

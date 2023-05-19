@@ -1,14 +1,13 @@
 import { useCallback, useState } from 'react';
 import { message } from 'antd';
 
-import { Clip } from '../../shared/types';
 import { useProjectConfig } from './useProjectConfig';
 
 export function useTranscription(pathToAudioFile: string | null): {
   isLoading: boolean;
   transcribe: (languageCode: string) => Promise<void>;
 } {
-  const { projectConfig: { clips } = {} } = useProjectConfig();
+  const { projectConfig: { clips, dir } = {} } = useProjectConfig();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { updateTranscription } = useProjectConfig();
 
@@ -22,18 +21,14 @@ export function useTranscription(pathToAudioFile: string | null): {
       setIsLoading(true);
 
       try {
-        const pathToCompressedTimeline = `${pathToAudioFile
-          .split('.')
-          .slice(0, -1)
-          .join('.')}.timeline.compressed.mp3`;
-
-        await window.electron.renderCompressedAudio(
-          pathToAudioFile,
-          pathToCompressedTimeline,
-          clips || []
-        );
+        const pathTotimelineAudioFile =
+          await window.electron.renderTimelineAudio(
+            pathToAudioFile,
+            dir!,
+            clips || []
+          );
         const transcription = await window.electron.transcribe(
-          pathToCompressedTimeline,
+          pathTotimelineAudioFile,
           languageCode
         );
         await updateTranscription(transcription);
@@ -43,7 +38,7 @@ export function useTranscription(pathToAudioFile: string | null): {
         setIsLoading(false);
       }
     },
-    [pathToAudioFile, clips, updateTranscription]
+    [pathToAudioFile, clips, dir, updateTranscription]
   );
 
   return {

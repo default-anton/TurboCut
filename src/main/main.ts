@@ -17,7 +17,7 @@ import { resolveHtmlPath } from './util';
 import {
   getSilentClips,
   compressAudioFile,
-  renderCompressedAudio,
+  renderTimelineAudio,
 } from './ffmpeg';
 import {
   showSaveDialog,
@@ -165,12 +165,12 @@ app
       }
     );
     ipcMain.handle(
-      'renderCompressedAudio',
+      'renderTimelineAudio',
       async (
         _event,
-        ...args: Parameters<typeof renderCompressedAudio>
-      ): ReturnType<typeof renderCompressedAudio> => {
-        return renderCompressedAudio(...args);
+        ...args: Parameters<typeof renderTimelineAudio>
+      ): ReturnType<typeof renderTimelineAudio> => {
+        return renderTimelineAudio(...args);
       }
     );
     ipcMain.handle(

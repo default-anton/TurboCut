@@ -6,7 +6,7 @@ import createEDL from './exporters/davinci';
 import {
   getSilentClips,
   compressAudioFile,
-  renderCompressedAudio,
+  renderTimelineAudio,
 } from './ffmpeg';
 import {
   showSaveDialog,
@@ -32,10 +32,10 @@ const electronHandler = {
   ): ReturnType<typeof compressAudioFile> => {
     return ipcRenderer.invoke('compressAudioFile', ...args);
   },
-  renderCompressedAudio: async (
-    ...args: Parameters<typeof renderCompressedAudio>
-  ): ReturnType<typeof renderCompressedAudio> => {
-    return ipcRenderer.invoke('renderCompressedAudio', ...args);
+  renderTimelineAudio: async (
+    ...args: Parameters<typeof renderTimelineAudio>
+  ): ReturnType<typeof renderTimelineAudio> => {
+    return ipcRenderer.invoke('renderTimelineAudio', ...args);
   },
   transcribe: async (
     ...args: Parameters<typeof transcribe>

@@ -1,7 +1,9 @@
+import { createHash } from 'crypto';
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
+import { access, constants } from 'fs/promises';
+import path from 'path';
 import { Clip } from '../shared/types';
-import { getNonSilentClips } from './exporters/davinci';
 
 const getVideoDuration = async (pathToFile: string): Promise<number> => {
   return new Promise((resolve, reject) => {
@@ -20,17 +22,29 @@ const getVideoDuration = async (pathToFile: string): Promise<number> => {
   });
 };
 
-export const renderCompressedAudio = async (
+export const renderTimelineAudio = async (
   inPath: string,
-  outPath: string,
+  projectDir: string,
   clips: Clip[]
-): Promise<void> => {
-  // Generate select filter string
+): Promise<string> => {
+  const hash = createHash('sha256');
+  hash.update(JSON.stringify(clips) + inPath);
+  const clipsHash = hash.digest('hex');
+  const outPath = path.join(projectDir, 'cache', `${clipsHash}.timeline.mp3`);
+
+  try {
+    await access(outPath, constants.R_OK | constants.W_OK);
+
+    // If the file exists, return it
+    return outPath;
+  } catch (error) {
+    // If the file doesn't exist, render it
+  }
+
   const selectFilter = clips
     .map((clip) => `between(t,${clip.start},${clip.end})`)
     .join('+');
 
-  // Create a new ffmpeg command
   const command = ffmpeg(inPath)
     .audioFilters(`aselect='${selectFilter}',asetpts=N/SR/TB`)
     .noVideo()
@@ -42,12 +56,42 @@ export const renderCompressedAudio = async (
   // Run the ffmpeg command
   return new Promise((resolve, reject) => {
     command
-      .on('end', () => resolve())
+      .on('end', () => resolve(outPath))
       .on('error', (err) => {
         reject(err);
       })
       .run();
   });
+};
+
+const getNonSilentClips = (
+  silentClips: Array<Clip>,
+  videoDuration: number
+): Array<Clip> => {
+  const nonSilentClips: Array<Clip> = [];
+
+  // Start from the beginning of the video
+  let currentStart = 0;
+
+  silentClips.forEach((silentClip) => {
+    // If there is a gap between the current start time and the beginning of the silent clip, add a non-silent clip
+    if (currentStart < silentClip.start) {
+      nonSilentClips.push({
+        start: currentStart,
+        end: silentClip.start,
+      });
+    }
+
+    // Move the current start time to the end of the silent clip
+    currentStart = silentClip.end;
+  });
+
+  // If there is a gap between the last silent clip and the end of the video, add a non-silent clip
+  if (currentStart < videoDuration) {
+    nonSilentClips.push({ start: currentStart, end: videoDuration });
+  }
+
+  return nonSilentClips;
 };
 
 export const getSilentClips = async (
@@ -152,8 +196,22 @@ export const getSilentClips = async (
 
 export const compressAudioFile = async (
   inPath: string,
-  outPath: string
-): Promise<void> => {
+  projectDir: string
+): Promise<string> => {
+  const hash = createHash('sha256');
+  hash.update(inPath);
+  const inHash = hash.digest('hex');
+  const outPath = path.join(projectDir, 'cache', `${inHash}.compressed.wav`);
+
+  try {
+    await access(outPath, constants.R_OK | constants.W_OK);
+
+    // If the file exists, return it
+    return outPath;
+  } catch (error) {
+    // If the file doesn't exist, render it
+  }
+
   return new Promise((resolve, reject) => {
     ffmpeg(inPath)
       .noVideo()
@@ -162,7 +220,7 @@ export const compressAudioFile = async (
       .audioBitrate('64k')
       .output(outPath)
       .on('end', () => {
-        resolve();
+        resolve(outPath);
       })
       .on('error', (err: Error) => {
         reject(err);

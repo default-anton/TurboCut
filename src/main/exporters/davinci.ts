@@ -85,36 +85,6 @@ function generateEDL(
   return edl;
 }
 
-export function getNonSilentClips(
-  silentClips: Array<Clip>,
-  videoDuration: number
-): Array<Clip> {
-  const nonSilentClips: Array<Clip> = [];
-
-  // Start from the beginning of the video
-  let currentStart = 0;
-
-  silentClips.forEach((silentClip) => {
-    // If there is a gap between the current start time and the beginning of the silent clip, add a non-silent clip
-    if (currentStart < silentClip.start) {
-      nonSilentClips.push({
-        start: currentStart,
-        end: silentClip.start,
-      });
-    }
-
-    // Move the current start time to the end of the silent clip
-    currentStart = silentClip.end;
-  });
-
-  // If there is a gap between the last silent clip and the end of the video, add a non-silent clip
-  if (currentStart < videoDuration) {
-    nonSilentClips.push({ start: currentStart, end: videoDuration });
-  }
-
-  return nonSilentClips;
-}
-
 async function getVideoMetadata(filePath: string): Promise<{
   startTimecode: string;
   frameRate: number;
