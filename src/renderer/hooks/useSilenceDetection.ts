@@ -11,14 +11,12 @@ export interface Settings {
 
 export interface UseSilenceDetection {
   silentClips: Array<Clip>;
-  nonSilentClips: Array<Clip>;
   detectSilence: (settings: Settings) => Promise<void>;
 }
 
 export function useSilenceDetection(): UseSilenceDetection {
-  const { projectConfig: { filePath } = {} } = useProjectConfig();
+  const { updateClips, projectConfig: { filePath } = {} } = useProjectConfig();
   const [silentClips, setSilentClips] = useState<Array<Clip>>([]);
-  const [nonSilentClips, setNonSilentClips] = useState<Array<Clip>>([]);
 
   const detectSilence = useCallback(
     async ({
@@ -39,14 +37,13 @@ export function useSilenceDetection(): UseSilenceDetection {
         );
 
       setSilentClips(sc);
-      setNonSilentClips(nsc);
+      await updateClips(nsc);
     },
-    [filePath]
+    [filePath, updateClips]
   );
 
   return {
     silentClips,
-    nonSilentClips,
     detectSilence,
   };
 }

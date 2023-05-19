@@ -66,12 +66,15 @@ export async function createProject(): Promise<ProjectConfig | undefined> {
     dir,
     filePath: '',
     clips: [],
+    transcription: [],
   };
 
   try {
     await mkdir(path.join(dir, 'cache'));
-  } catch (error) {
-    throw new Error('Unable to create cache directory');
+  } catch (error: any) {
+    if (error.code !== 'EEXIST') {
+      throw new Error('Unable to create cache directory');
+    }
   }
 
   try {

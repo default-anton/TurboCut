@@ -2,7 +2,7 @@
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer } from 'electron';
 
-import createEDLWithSilenceRemoved from './exporters/davinci';
+import createEDL from './exporters/davinci';
 import {
   getSilentClips,
   compressAudioFile,
@@ -22,10 +22,10 @@ const electronHandler = {
   ): ReturnType<typeof getSilentClips> => {
     return ipcRenderer.invoke('getSilentClips', ...args);
   },
-  createEDLWithSilenceRemoved: async (
-    ...args: Parameters<typeof createEDLWithSilenceRemoved>
-  ): ReturnType<typeof createEDLWithSilenceRemoved> => {
-    return ipcRenderer.invoke('createEDLWithSilenceRemoved', ...args);
+  createEDL: async (
+    ...args: Parameters<typeof createEDL>
+  ): ReturnType<typeof createEDL> => {
+    return ipcRenderer.invoke('createEDL', ...args);
   },
   compressAudioFile: async (
     ...args: Parameters<typeof compressAudioFile>

@@ -18,21 +18,19 @@ import { useProjectConfig } from '../hooks/useProjectConfig';
 import 'antd/dist/reset.css';
 
 const Project: FC = () => {
-  const { projectConfig: { filePath } = {} } = useProjectConfig();
+  const { projectConfig: { filePath, transcription } = {} } =
+    useProjectConfig();
   const { isLoading, stopLoading, pathToAudioFile } = useAudioFileInput();
-  const { silentClips, nonSilentClips, detectSilence } = useSilenceDetection();
+  const { silentClips, detectSilence } = useSilenceDetection();
   const { waveformRef, handleScroll, duration } = useWaveform(
     pathToAudioFile,
     isLoading,
     stopLoading,
     silentClips
   );
-  const { exportTimeline, isExporting } = useExport(silentClips, duration);
-  const {
-    isLoading: isTranscribing,
-    transcription,
-    transcribe,
-  } = useTranscription(pathToAudioFile, nonSilentClips);
+  const { exportTimeline, isExporting } = useExport(duration);
+  const { isLoading: isTranscribing, transcribe } =
+    useTranscription(pathToAudioFile);
   const [activeSegment, setActiveSegment] = useState<number>(0);
 
   return (
@@ -61,12 +59,7 @@ const Project: FC = () => {
             <ExportButton
               handleExport={exportTimeline}
               loading={isExporting}
-              disabled={
-                silentClips.length === 0 ||
-                !filePath ||
-                isLoading ||
-                isExporting
-              }
+              disabled={!filePath || isLoading || isExporting}
             />
             <TranscriptionButton
               loading={isTranscribing}
@@ -95,4 +88,3 @@ const Project: FC = () => {
 };
 
 export default Project;
-

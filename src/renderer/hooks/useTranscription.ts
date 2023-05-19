@@ -1,20 +1,16 @@
 import { useCallback, useState } from 'react';
 import { message } from 'antd';
 
-import { Clip, Transcription } from 'shared/types';
+import { Clip } from '../../shared/types';
+import { useProjectConfig } from './useProjectConfig';
 
-export function useTranscription(
-  pathToAudioFile: string | null,
-  clips: Clip[]
-): {
+export function useTranscription(pathToAudioFile: string | null): {
   isLoading: boolean;
-  transcription: Transcription | null;
   transcribe: (languageCode: string) => Promise<void>;
 } {
+  const { projectConfig: { clips } = {} } = useProjectConfig();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [transcription, setTranscription] = useState<Transcription | null>(
-    null
-  );
+  const { updateTranscription } = useProjectConfig();
 
   const transcribe = useCallback(
     async (languageCode: string) => {
@@ -34,27 +30,24 @@ export function useTranscription(
         await window.electron.renderCompressedAudio(
           pathToAudioFile,
           pathToCompressedTimeline,
-          clips
+          clips || []
         );
-
-        setTranscription(
-          await window.electron.transcribe(
-            pathToCompressedTimeline,
-            languageCode
-          )
+        const transcription = await window.electron.transcribe(
+          pathToCompressedTimeline,
+          languageCode
         );
+        await updateTranscription(transcription);
       } catch (error) {
         message.error(`Transcription failed. ${error}`);
       } finally {
         setIsLoading(false);
       }
     },
-    [pathToAudioFile, clips]
+    [pathToAudioFile, clips, updateTranscription]
   );
 
   return {
     isLoading,
-    transcription,
     transcribe,
   };
 }

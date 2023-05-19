@@ -1,14 +1,14 @@
 import { useCallback, useState } from 'react';
 import { message } from 'antd';
 
-import { Clip, Editor } from '../../shared/types';
+import { Editor } from '../../shared/types';
 import { useProjectConfig } from './useProjectConfig';
 
-export function useExport(
-  clips: Clip[],
-  duration: number
-): { exportTimeline: (editor: Editor) => Promise<void>; isExporting: boolean } {
-  const { projectConfig: { filePath } = {} } = useProjectConfig();
+export function useExport(duration: number): {
+  exportTimeline: (editor: Editor) => Promise<void>;
+  isExporting: boolean;
+} {
+  const { projectConfig: { filePath, clips } = {} } = useProjectConfig();
   const [isExporting, setIsExporting] = useState(false);
 
   const exportTimeline = useCallback(
@@ -31,9 +31,9 @@ export function useExport(
         key: 'exporting',
       });
 
-      const exported = await window.electron.createEDLWithSilenceRemoved(
+      const exported = await window.electron.createEDL(
         `Export to ${editor}`,
-        clips,
+        clips || [],
         { duration, path: filePath },
         clipName
       );

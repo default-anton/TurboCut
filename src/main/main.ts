@@ -25,7 +25,7 @@ import {
   createProject,
   updateProject,
 } from './projects';
-import createEDLWithSilenceRemoved from './exporters/davinci';
+import createEDL from './exporters/davinci';
 import { transcribe } from './openai';
 
 class AppUpdater {
@@ -147,12 +147,12 @@ app
       }
     );
     ipcMain.handle(
-      'createEDLWithSilenceRemoved',
+      'createEDL',
       async (
         _event,
-        ...args: Parameters<typeof createEDLWithSilenceRemoved>
-      ): ReturnType<typeof createEDLWithSilenceRemoved> => {
-        return createEDLWithSilenceRemoved(...args);
+        ...args: Parameters<typeof createEDL>
+      ): ReturnType<typeof createEDL> => {
+        return createEDL(...args);
       }
     );
     ipcMain.handle(

@@ -9,13 +9,13 @@ interface AudioFileInputProps {
   loading?: boolean;
 }
 
-export const AudioFileInput: React.FC<AudioFileInputProps> = ({ loading }) => {
-  const { setProjectFilePath } = useProjectConfig();
+const AudioFileInput: React.FC<AudioFileInputProps> = ({ loading }) => {
+  const { updateFilePath } = useProjectConfig();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   const beforeUpload = (file: RcFile): boolean => {
     setFileList([file]);
-    setProjectFilePath(file.path);
+    updateFilePath(file.path);
 
     return false;
   };

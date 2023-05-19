@@ -9,12 +9,14 @@ import {
 } from 'react';
 import { message } from 'antd';
 
-import { ProjectConfig } from '../../shared/types';
+import { ProjectConfig, Transcription, Clip } from '../../shared/types';
 
 type ProjectActions = {
   openProject: () => void;
   createProject: () => void;
-  setProjectFilePath: (filePath: string) => Promise<void>;
+  updateFilePath: (filePath: string) => Promise<void>;
+  updateTranscription: (transcription: Transcription) => Promise<void>;
+  updateClips: (clips: Clip[]) => Promise<void>;
 };
 
 interface ProjectContextValue extends ProjectActions {
@@ -37,9 +39,7 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
     try {
       const newProjectConfig = await window.electron.openProject();
       // User cancelled the open project dialog
-      if (!newProjectConfig) {
-        return;
-      }
+      if (!newProjectConfig) return;
 
       setProjectConfig(newProjectConfig);
       message.success('Project opened successfully');
@@ -51,9 +51,7 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
     try {
       const newProjectConfig = await window.electron.createProject();
       // User cancelled the open project dialog
-      if (!newProjectConfig) {
-        return;
-      }
+      if (!newProjectConfig) return;
 
       setProjectConfig(newProjectConfig);
       message.success('Project created successfully');
@@ -61,13 +59,39 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
       message.error(`Failed to create project: ${e.message}`);
     }
   }, []);
-  const setProjectFilePath = useCallback(
+  const updateFilePath = useCallback(
     async (filePath: string) => {
-      if (projectConfig) {
-        const newProjectConfig = { ...projectConfig, filePath };
-        await window.electron.updateProject(newProjectConfig);
-        setProjectConfig(newProjectConfig);
-      }
+      if (!projectConfig) return;
+
+      const newProjectConfig = { ...projectConfig, filePath };
+      await window.electron.updateProject(newProjectConfig);
+      setProjectConfig(newProjectConfig);
+    },
+    [projectConfig]
+  );
+  const updateTranscription = useCallback(
+    async (transcription: Transcription) => {
+      if (!projectConfig) return;
+
+      const newProjectConfig = {
+        ...projectConfig,
+        transcription,
+      };
+      await window.electron.updateProject(newProjectConfig);
+      setProjectConfig(newProjectConfig);
+    },
+    [projectConfig]
+  );
+  const updateClips = useCallback(
+    async (clips: Clip[]) => {
+      if (!projectConfig) return;
+
+      const newProjectConfig = {
+        ...projectConfig,
+        clips,
+      };
+      await window.electron.updateProject(newProjectConfig);
+      setProjectConfig(newProjectConfig);
     },
     [projectConfig]
   );
@@ -77,9 +101,18 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
       projectConfig,
       openProject,
       createProject,
-      setProjectFilePath,
+      updateFilePath,
+      updateTranscription,
+      updateClips,
     }),
-    [projectConfig, openProject, createProject, setProjectFilePath]
+    [
+      projectConfig,
+      openProject,
+      createProject,
+      updateFilePath,
+      updateTranscription,
+      updateClips,
+    ]
   );
 
   // Provide the projectConfig and related functions to children

@@ -118,7 +118,6 @@ export function getNonSilentClips(
 async function getVideoMetadata(filePath: string): Promise<{
   startTimecode: string;
   frameRate: number;
-  videoDuration: number;
 }> {
   const probeData = await new Promise<FfprobeData>((resolve, reject) => {
     ffmpeg.ffprobe(filePath, (err, data) => {
@@ -128,7 +127,6 @@ async function getVideoMetadata(filePath: string): Promise<{
   });
 
   // Duration of the entire file (in seconds)
-  const videoDuration = probeData.format.duration;
   const videoStream = probeData.streams.find(
     (stream: any) => stream.codec_type === 'video'
   );
@@ -150,13 +148,8 @@ async function getVideoMetadata(filePath: string): Promise<{
   const startTimecodeQt = qtStream?.tags?.timecode;
   const startTimecodeStreamStart = videoStream?.start_time;
 
-  if (!videoDuration) {
-    throw new Error('Could not determine video duration');
-  }
-
   return {
     frameRate,
-    videoDuration,
     startTimecode:
       startTimecodeFormat ||
       startTimecodeStream ||
@@ -166,9 +159,9 @@ async function getVideoMetadata(filePath: string): Promise<{
   };
 }
 
-export default async function createEDLWithSilenceRemoved(
+export default async function createEDL(
   title: string,
-  silentClips: Array<Clip>,
+  clips: Array<Clip>,
   videoInfo: VideoInfo,
   clipName: string
 ): Promise<boolean> {
@@ -183,25 +176,19 @@ export default async function createEDLWithSilenceRemoved(
     return false;
   }
 
-  const { startTimecode, frameRate, videoDuration } = await getVideoMetadata(
-    videoInfo.path
-  );
+  const { startTimecode, frameRate } = await getVideoMetadata(videoInfo.path);
 
-  const frames = timecodeToFrames(startTimecode, frameRate);
-  const timecodeInSeconds = framesToSeconds(frames, frameRate);
-
-  const nonSilentClips = getNonSilentClips(silentClips, videoDuration);
+  const startFrame = timecodeToFrames(startTimecode, frameRate);
+  const startTimecodeInSeconds = framesToSeconds(startFrame, frameRate);
 
   const edl = generateEDL(
     'Silence Removed',
     clipName,
-    nonSilentClips,
+    clips,
     frameRate,
-    timecodeInSeconds
+    startTimecodeInSeconds
   );
 
-  const json = JSON.stringify(silentClips, null, 2);
-  await writeFile(`${result.filePath}.json`, json, 'utf8');
   await writeFile(result.filePath!, edl, 'utf8');
 
   return true;
