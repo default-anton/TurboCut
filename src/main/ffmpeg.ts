@@ -5,7 +5,7 @@ import { access, constants } from 'fs/promises';
 import path from 'path';
 import { Clip } from '../shared/types';
 
-const getVideoDuration = async (pathToFile: string): Promise<number> => {
+export const getVideoDuration = async (pathToFile: string): Promise<number> => {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(pathToFile, (err, metadata) => {
       if (err) {

@@ -9,7 +9,12 @@ import {
 } from 'react';
 import { message } from 'antd';
 
-import { ProjectConfig, Transcription, Clip } from '../../shared/types';
+import {
+  ProjectConfig,
+  Transcription,
+  Clip,
+  createEmptyProjectConfig,
+} from '../../shared/types';
 
 type ProjectActions = {
   openProject: () => void;
@@ -20,7 +25,7 @@ type ProjectActions = {
 };
 
 interface ProjectContextValue extends ProjectActions {
-  projectConfig: ProjectConfig | undefined;
+  projectConfig: ProjectConfig;
 }
 
 // Create a Context for the projectConfig
@@ -32,8 +37,8 @@ const ProjectConfigContext = createContext<ProjectContextValue | undefined>(
 export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [projectConfig, setProjectConfig] = useState<ProjectConfig | undefined>(
-    undefined
+  const [projectConfig, setProjectConfig] = useState<ProjectConfig>(() =>
+    createEmptyProjectConfig()
   );
   const openProject = useCallback(async () => {
     try {
@@ -63,7 +68,8 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
     async (filePath: string) => {
       if (!projectConfig) return;
 
-      const newProjectConfig = { ...projectConfig, filePath };
+      const fileDuration = await window.electron.getVideoDuration(filePath);
+      const newProjectConfig = { ...projectConfig, filePath, fileDuration };
       await window.electron.updateProject(newProjectConfig);
       setProjectConfig(newProjectConfig);
     },

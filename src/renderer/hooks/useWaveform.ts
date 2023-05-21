@@ -5,19 +5,32 @@ import TimelinePlugin from 'wavesurfer.js/dist/plugin/wavesurfer.timeline.min';
 import PlayheadPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.playhead.min';
 import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
 import { message } from 'antd';
-import { CREATE_OPTIMIZED_AUDIO_FILE } from 'renderer/messages';
 
-import type { Clip } from '../../shared/types';
+import { Clip } from '../../shared/types';
+import { CREATE_OPTIMIZED_AUDIO_FILE } from '../messages';
 
-export function useWaveform(
-  filePath: string | null,
-  isLoading: boolean,
-  stopLoading: () => void,
-  clips: Array<Clip>
-) {
+import { useProjectConfig } from './useProjectConfig';
+
+export function useWaveform({
+  filePath,
+  duration,
+  clips,
+  skipRegions,
+  stopLoading,
+}: {
+  filePath: string | undefined;
+  duration: number | undefined;
+  clips: Clip[] | undefined;
+  skipRegions: boolean;
+  stopLoading: () => void;
+}): {
+  waveformRef: React.RefObject<HTMLDivElement>;
+  handleScroll: (event: React.WheelEvent<HTMLDivElement>) => void;
+} {
+  const { projectConfig: { dir } = {} } = useProjectConfig();
+
   const skipRegionInProgress = useRef(false);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [duration, setDuration] = useState(0);
 
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
@@ -28,61 +41,43 @@ export function useWaveform(
     }
   }, []);
 
-  const handleScroll = (event: React.WheelEvent<HTMLDivElement>) => {
-    if (wavesurferRef.current) {
-      const delta = event.deltaY > 0 ? -1 : 1;
-      setZoomLevel((prev) => Math.max(Math.min(prev + delta, 20), 1));
-    }
-  };
+  const handleScroll = useCallback(
+    (event: React.WheelEvent<HTMLDivElement>) => {
+      if (wavesurferRef.current) {
+        const delta = event.deltaY > 0 ? -1 : 1;
+        setZoomLevel((prev) => Math.max(Math.min(prev + delta, 20), 1));
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (!wavesurferRef.current) return;
+    if (!waveformRef.current || !filePath || !dir || !clips || !duration)
+      return;
 
     wavesurferRef.current.zoom(zoomLevel);
-  }, [zoomLevel]);
+  }, [zoomLevel, filePath, dir, clips, duration]);
 
   useEffect(() => {
-    if (!waveformRef.current || !filePath) return;
+    console.log(
+      Boolean(waveformRef.current),
+      Boolean(filePath),
+      Boolean(dir),
+      Boolean(clips),
+      Boolean(duration)
+    );
 
-    wavesurferRef.current = WaveSurfer.create({
-      container: waveformRef.current,
-      waveColor: 'violet',
-      progressColor: 'purple',
-      height: 256,
-      scrollParent: true,
-      plugins: [
-        PlayheadPlugin.create({
-          showTime: true,
-          opacity: 1,
-          customShowTimeStyle: {
-            'background-color': '#000',
-            color: '#fff',
-            padding: '2px',
-            'font-size': '10px',
-          },
-        }),
-        TimelinePlugin.create({ container: '#waveform-timeline' }),
-        WaveSurferRegions.create(),
-      ],
-    });
-
-    // set initial zoom level
-    wavesurferRef.current.zoom(zoomLevel);
-
-    wavesurferRef.current.load(`file://${filePath}`);
-    wavesurferRef.current.on('ready', () => {
-      stopLoading();
-      setDuration(wavesurferRef.current!.getDuration());
-      message.open({
-        key: CREATE_OPTIMIZED_AUDIO_FILE,
-        type: 'success',
-        content: 'Optimized audio file created',
-        duration: 2,
-      });
-    });
+    if (!waveformRef.current || !filePath || !dir || !clips || !duration)
+      return;
 
     const onAudioProcess = () => {
-      if (!wavesurferRef.current || skipRegionInProgress.current) return;
+      if (
+        !skipRegions ||
+        !wavesurferRef.current ||
+        skipRegionInProgress.current
+      )
+        return;
 
       const currentTime = wavesurferRef.current.getCurrentTime();
       const regions = wavesurferRef.current.regions.list;
@@ -103,20 +98,81 @@ export function useWaveform(
       });
     };
 
-    wavesurferRef.current.on('audioprocess', onAudioProcess);
+    const init = async () => {
+      if (!waveformRef.current || !filePath || !dir || !clips || !duration)
+        return;
+
+      let pathTotimelineAudioFile: string = '';
+
+      try {
+        pathTotimelineAudioFile = await window.electron.renderTimelineAudio(
+          filePath,
+          dir,
+          clips
+        );
+      } catch (error: any) {
+        message.error(`Error creating optimized audio file: ${error.message}`);
+        return;
+      } finally {
+        stopLoading();
+      }
+
+      wavesurferRef.current = WaveSurfer.create({
+        container: waveformRef.current,
+        waveColor: 'violet',
+        progressColor: 'purple',
+        height: 256,
+        scrollParent: true,
+        plugins: [
+          PlayheadPlugin.create({
+            showTime: true,
+            opacity: 1,
+            customShowTimeStyle: {
+              'background-color': '#000',
+              color: '#fff',
+              padding: '2px',
+              'font-size': '10px',
+            },
+          }),
+          TimelinePlugin.create({ container: '#waveform-timeline' }),
+          WaveSurferRegions.create(),
+        ],
+      });
+
+      // set initial zoom level
+      wavesurferRef.current.zoom(zoomLevel);
+
+      wavesurferRef.current.load(`file://${pathTotimelineAudioFile}`);
+      wavesurferRef.current.on('ready', () => {
+        stopLoading();
+        message.open({
+          key: CREATE_OPTIMIZED_AUDIO_FILE,
+          type: 'success',
+          content: 'Optimized audio file created',
+          duration: 2,
+        });
+      });
+
+      if (skipRegions) wavesurferRef.current.on('audioprocess', onAudioProcess);
+    };
+
+    init();
 
     return () => {
       wavesurferRef.current?.destroy();
-      wavesurferRef.current?.un('audioprocess', onAudioProcess);
+      if (skipRegions)
+        wavesurferRef.current?.un('audioprocess', onAudioProcess);
     };
-  }, [filePath, stopLoading, duration]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filePath, dir, skipRegions, stopLoading, clips, duration]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!wavesurferRef.current) return;
+    if (!waveformRef.current || !filePath || !dir || !clips || !duration)
+      return;
 
     wavesurferRef.current.clearRegions();
 
-    clips.forEach((clip) => {
+    clips!.forEach((clip) => {
       wavesurferRef.current!.addRegion({
         start: clip.start,
         end: clip.end,
@@ -125,7 +181,7 @@ export function useWaveform(
         resize: false,
       } as RegionParams);
     });
-  }, [clips]);
+  }, [clips, filePath, dir, duration]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -145,7 +201,6 @@ export function useWaveform(
   return {
     waveformRef,
     handleScroll,
-    duration,
   };
 }
 

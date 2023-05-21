@@ -7,6 +7,7 @@ import {
   getSilentClips,
   compressAudioFile,
   renderTimelineAudio,
+  getVideoDuration,
 } from './ffmpeg';
 import {
   showSaveDialog,
@@ -36,6 +37,11 @@ const electronHandler = {
     ...args: Parameters<typeof renderTimelineAudio>
   ): ReturnType<typeof renderTimelineAudio> => {
     return ipcRenderer.invoke('renderTimelineAudio', ...args);
+  },
+  getVideoDuration: async (
+    ...args: Parameters<typeof getVideoDuration>
+  ): ReturnType<typeof getVideoDuration> => {
+    return ipcRenderer.invoke('getVideoDuration', ...args);
   },
   transcribe: async (
     ...args: Parameters<typeof transcribe>

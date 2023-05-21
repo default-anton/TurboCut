@@ -5,7 +5,7 @@ import styles from './Waveform.module.scss';
 interface WaveformProps {
   waveformRef: React.RefObject<HTMLDivElement>;
   onWheel: (event: React.WheelEvent<HTMLDivElement>) => void;
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
 const Waveform: React.FC<WaveformProps> = ({
@@ -27,5 +27,9 @@ const Waveform: React.FC<WaveformProps> = ({
     />
   </>
 );
+
+Waveform.defaultProps = {
+  isLoading: false,
+};
 
 export default Waveform;

@@ -3,7 +3,7 @@ import { message } from 'antd';
 
 import { useProjectConfig } from './useProjectConfig';
 
-export function useTranscription(pathToAudioFile: string | null): {
+export function useTranscription(pathToAudioFile: string | undefined): {
   isLoading: boolean;
   transcribe: (languageCode: string) => Promise<void>;
 } {

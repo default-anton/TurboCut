@@ -8,29 +8,35 @@ import SilenceDetector from '../components/SilenceDetector';
 import TranscriptionButton from '../components/TranscriptionButton';
 import TranscriptionView from '../components/TranscriptionView';
 
-import { useAudioFileInput } from '../hooks/useAudioFileInput';
+import { useTimelineAudioFile } from '../hooks/useTimelineAudioFile';
 import { useWaveform } from '../hooks/useWaveform';
 import { useExport } from '../hooks/useExport';
 import { useSilenceDetection } from '../hooks/useSilenceDetection';
 import { useTranscription } from '../hooks/useTranscription';
 import { useProjectConfig } from '../hooks/useProjectConfig';
 
+import { Clip } from '../../shared/types';
+
 import 'antd/dist/reset.css';
 
+const CLIPS: Clip[] = [];
+
 const Project: FC = () => {
-  const { projectConfig: { filePath, transcription } = {} } =
-    useProjectConfig();
-  const { isLoading, stopLoading, pathToAudioFile } = useAudioFileInput();
-  const { silentClips, detectSilence } = useSilenceDetection();
-  const { waveformRef, handleScroll, duration } = useWaveform(
-    pathToAudioFile,
-    isLoading,
+  const { projectConfig: { transcription } = {} } = useProjectConfig();
+  const { isLoading, stopLoading, timelineDuration, pathToTimelineAudioFile } =
+    useTimelineAudioFile();
+  const { detectSilence } = useSilenceDetection();
+  const { waveformRef, handleScroll } = useWaveform({
+    filePath: pathToTimelineAudioFile,
+    duration: timelineDuration,
+    clips: CLIPS,
     stopLoading,
-    silentClips
+    skipRegions: false,
+  });
+  const { exportTimeline, isExporting } = useExport();
+  const { isLoading: isTranscribing, transcribe } = useTranscription(
+    pathToTimelineAudioFile
   );
-  const { exportTimeline, isExporting } = useExport(duration);
-  const { isLoading: isTranscribing, transcribe } =
-    useTranscription(pathToAudioFile);
   const [activeSegment, setActiveSegment] = useState<number>(0);
 
   return (
@@ -53,19 +59,18 @@ const Project: FC = () => {
         <Col className="col">
           <Space direction="horizontal" size="middle">
             <SilenceDetector
+              duration={timelineDuration}
               loading={isLoading}
               detectSilence={detectSilence}
             />
             <ExportButton
               handleExport={exportTimeline}
               loading={isExporting}
-              disabled={!filePath || isLoading || isExporting}
+              disabled={!pathToTimelineAudioFile || isLoading || isExporting}
             />
             <TranscriptionButton
               loading={isTranscribing}
-              disabled={
-                !filePath || !pathToAudioFile || isLoading || isExporting
-              }
+              disabled={!pathToTimelineAudioFile || isLoading || isExporting}
               onTranscribe={transcribe}
             />
           </Space>

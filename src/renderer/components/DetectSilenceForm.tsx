@@ -19,7 +19,7 @@ interface DetectSilenceFormProps {
   setPadding: (value: number) => void;
 }
 
-export const DetectSilenceForm: React.FC<DetectSilenceFormProps> = ({
+const DetectSilenceForm: React.FC<DetectSilenceFormProps> = ({
   minSilenceLen,
   setMinSilenceLen,
   minNonSilenceLen,

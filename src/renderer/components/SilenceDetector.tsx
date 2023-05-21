@@ -3,20 +3,29 @@ import { message, Button, Modal } from 'antd';
 import { AudioOutlined } from '@ant-design/icons';
 
 import DetectSilenceForm from './DetectSilenceForm';
+import Waveform from './Waveform';
+
 import { DETECT_SILENCE } from '../messages';
+
+import { Clip } from '../../shared/types';
 import { UseSilenceDetection } from '../hooks/useSilenceDetection';
 import { useProjectConfig } from '../hooks/useProjectConfig';
+import { useWaveform } from '../hooks/useWaveform';
 
 interface SilenceDetectorProps {
+  duration: number | undefined;
   loading: boolean;
   detectSilence: UseSilenceDetection['detectSilence'];
 }
 
 const SilenceDetector: React.FC<SilenceDetectorProps> = ({
+  duration,
   loading,
   detectSilence,
 }) => {
   const { projectConfig: { filePath } = {} } = useProjectConfig();
+  const [silentClips, setSilentClips] = useState<Clip[]>([]);
+  const [nonSilentClips, setNonSilentClips] = useState<Clip[]>([]);
   const [isDetectingSilence, setIsDetectingSilence] = useState<boolean>(false);
   const [minSilenceLen, setMinSilenceLen] = useState<number>(1);
   const [minNonSilenceLen, setMinNonSilenceLen] = useState<number>(0.8);
@@ -25,8 +34,19 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = ({
   const [detectSilenceModalOpen, setDetectSilenceModalOpen] =
     useState<boolean>(false);
 
-  const handleDetectSilenceClick = useCallback(async () => {
-    setDetectSilenceModalOpen(false);
+  const stopLoading = useCallback(() => {
+    setIsDetectingSilence(false);
+  }, []);
+
+  const { waveformRef, handleScroll } = useWaveform({
+    filePath,
+    duration,
+    clips: silentClips,
+    stopLoading,
+    skipRegions: false,
+  });
+
+  const onOk = useCallback(async () => {
     setIsDetectingSilence(true);
     message.open({
       key: DETECT_SILENCE,
@@ -35,12 +55,26 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = ({
       duration: 0,
     });
 
-    await detectSilence({
+    const result = await detectSilence({
       minSilenceLen,
       minNonSilenceLen,
       silenceThresh,
       padding,
     });
+    setIsDetectingSilence(false);
+
+    if (!result) {
+      message.open({
+        key: DETECT_SILENCE,
+        type: 'error',
+        content: 'Silence detection failed!',
+        duration: 2,
+      });
+      return;
+    }
+
+    setSilentClips(result.silentClips);
+    setNonSilentClips(result.nonSilentClips);
 
     message.open({
       key: DETECT_SILENCE,
@@ -48,13 +82,40 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = ({
       content: 'Silence detected!',
       duration: 2,
     });
-    setIsDetectingSilence(false);
-    setDetectSilenceModalOpen(false);
   }, [detectSilence, minSilenceLen, minNonSilenceLen, silenceThresh, padding]);
 
-  const showDetectSilenceModal = useCallback(() => {
+  const handleClick = useCallback(async () => {
+    setIsDetectingSilence(true);
     setDetectSilenceModalOpen(true);
-  }, [setDetectSilenceModalOpen]);
+
+    const result = await detectSilence({
+      minSilenceLen,
+      minNonSilenceLen,
+      silenceThresh,
+      padding,
+    });
+    setIsDetectingSilence(false);
+
+    if (!result) {
+      message.open({
+        key: DETECT_SILENCE,
+        type: 'error',
+        content: 'Silence detection failed!',
+        duration: 2,
+      });
+      return;
+    }
+
+    setSilentClips(result.silentClips);
+    setNonSilentClips(result.nonSilentClips);
+
+    message.open({
+      key: DETECT_SILENCE,
+      type: 'success',
+      content: 'Silence detected!',
+      duration: 2,
+    });
+  }, [detectSilence, minSilenceLen, minNonSilenceLen, silenceThresh, padding]);
 
   return (
     <>
@@ -62,20 +123,24 @@ const SilenceDetector: React.FC<SilenceDetectorProps> = ({
         disabled={!filePath || loading || isDetectingSilence}
         loading={isDetectingSilence}
         type="primary"
-        onClick={showDetectSilenceModal}
+        onClick={handleClick}
         icon={<AudioOutlined />}
       >
         Detect silence
       </Button>
       <Modal
+        bodyStyle={{ height: '80vh' }}
+        width="90vw"
+        centered
         title="Silence detection parameters"
         open={detectSilenceModalOpen}
-        onOk={() => handleDetectSilenceClick()}
+        onOk={() => onOk()}
         onCancel={() => {
           setDetectSilenceModalOpen(false);
         }}
         okText="Detect"
       >
+        <Waveform waveformRef={waveformRef} onWheel={handleScroll} />
         <DetectSilenceForm
           minSilenceLen={minSilenceLen}
           minNonSilenceLen={minNonSilenceLen}

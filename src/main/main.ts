@@ -18,6 +18,7 @@ import {
   getSilentClips,
   compressAudioFile,
   renderTimelineAudio,
+  getVideoDuration,
 } from './ffmpeg';
 import {
   showSaveDialog,
@@ -171,6 +172,15 @@ app
         ...args: Parameters<typeof renderTimelineAudio>
       ): ReturnType<typeof renderTimelineAudio> => {
         return renderTimelineAudio(...args);
+      }
+    );
+    ipcMain.handle(
+      'getVideoDuration',
+      async (
+        _event,
+        ...args: Parameters<typeof getVideoDuration>
+      ): ReturnType<typeof getVideoDuration> => {
+        return getVideoDuration(...args);
       }
     );
     ipcMain.handle(

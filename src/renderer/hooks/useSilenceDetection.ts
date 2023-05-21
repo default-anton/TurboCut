@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { Clip } from '../../shared/types';
 import { useProjectConfig } from './useProjectConfig';
 
@@ -10,13 +10,13 @@ export interface Settings {
 }
 
 export interface UseSilenceDetection {
-  silentClips: Array<Clip>;
-  detectSilence: (settings: Settings) => Promise<void>;
+  detectSilence: (
+    settings: Settings
+  ) => Promise<{ silentClips: Clip[]; nonSilentClips: Clip[] } | undefined>;
 }
 
 export function useSilenceDetection(): UseSilenceDetection {
-  const { updateClips, projectConfig: { filePath } = {} } = useProjectConfig();
-  const [silentClips, setSilentClips] = useState<Array<Clip>>([]);
+  const { projectConfig: { filePath } = {} } = useProjectConfig();
 
   const detectSilence = useCallback(
     async ({
@@ -27,23 +27,18 @@ export function useSilenceDetection(): UseSilenceDetection {
     }: Settings) => {
       if (!filePath) return;
 
-      const { silentClips: sc, nonSilentClips: nsc } =
-        await window.electron.getSilentClips(
-          filePath,
-          minSilenceLen,
-          silenceThresh,
-          padding,
-          minNonSilenceLen
-        );
-
-      setSilentClips(sc);
-      await updateClips(nsc);
+      return window.electron.getSilentClips(
+        filePath,
+        minSilenceLen,
+        silenceThresh,
+        padding,
+        minNonSilenceLen
+      );
     },
-    [filePath, updateClips]
+    [filePath]
   );
 
   return {
-    silentClips,
     detectSilence,
   };
 }

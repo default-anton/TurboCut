@@ -30,6 +30,16 @@ export interface ProjectConfig {
   name: string;
   dir: string;
   filePath: string;
+  fileDuration: number;
   clips: Clip[];
   transcription: Transcription;
 }
+
+export const createEmptyProjectConfig = (): ProjectConfig => ({
+  name: '',
+  dir: '',
+  filePath: '',
+  fileDuration: 0,
+  clips: [],
+  transcription: [],
+});
