@@ -17,7 +17,7 @@ const TranscriptionView: React.FC<TranscriptionViewProps> = ({
       {transcription.length > 0 ? (
         transcription.map((segment, index) => (
           <p
-            key={segment.segmentId}
+            key={segment.idx}
             className={`${styles.segment} ${
               index === activeSegment ? styles['segment--active'] : ''
             }`}

@@ -4,32 +4,26 @@ import styles from './Waveform.module.scss';
 
 interface WaveformProps {
   waveformRef: React.RefObject<HTMLDivElement>;
-  onWheel: (event: React.WheelEvent<HTMLDivElement>) => void;
-  isLoading?: boolean;
+  loading?: boolean;
 }
 
-const Waveform: React.FC<WaveformProps> = ({
-  waveformRef,
-  onWheel,
-  isLoading,
-}) => (
+const Waveform: React.FC<WaveformProps> = ({ waveformRef, loading }) => (
   <>
     <div
       className={styles.waveform}
       ref={waveformRef}
-      onWheel={onWheel}
-      style={{ visibility: isLoading ? 'hidden' : 'visible' }}
+      style={{ visibility: loading ? 'hidden' : 'visible' }}
     />
     <div
       id="waveform-timeline"
       className={styles['waveform-timeline']}
-      style={{ visibility: isLoading ? 'hidden' : 'visible' }}
+      style={{ visibility: loading ? 'hidden' : 'visible' }}
     />
   </>
 );
 
 Waveform.defaultProps = {
-  isLoading: false,
+  loading: false,
 };
 
 export default Waveform;

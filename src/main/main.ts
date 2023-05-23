@@ -16,7 +16,6 @@ import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import {
   getSilentClips,
-  compressAudioFile,
   renderTimelineAudio,
   getVideoDuration,
 } from './ffmpeg';
@@ -154,15 +153,6 @@ app
         ...args: Parameters<typeof createEDL>
       ): ReturnType<typeof createEDL> => {
         return createEDL(...args);
-      }
-    );
-    ipcMain.handle(
-      'compressAudioFile',
-      async (
-        _event,
-        ...args: Parameters<typeof compressAudioFile>
-      ): ReturnType<typeof compressAudioFile> => {
-        return compressAudioFile(...args);
       }
     );
     ipcMain.handle(

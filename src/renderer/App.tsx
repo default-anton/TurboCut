@@ -11,15 +11,15 @@ import './App.scss';
 
 export default function App() {
   const [, contextHolder] = message.useMessage();
-  const { projectConfig: { filePath } } = useProjectConfig();
+  const { projectConfig } = useProjectConfig();
 
   return (
     <>
       {contextHolder}
       <Layout>
         <Content>
-          {filePath && <Project />}
-          {!filePath && <Startup />}
+          {projectConfig && <Project />}
+          {!projectConfig && <Startup />}
         </Content>
         <Footer />
       </Layout>

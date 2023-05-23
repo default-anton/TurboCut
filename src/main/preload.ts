@@ -5,7 +5,6 @@ import { contextBridge, ipcRenderer } from 'electron';
 import createEDL from './exporters/davinci';
 import {
   getSilentClips,
-  compressAudioFile,
   renderTimelineAudio,
   getVideoDuration,
 } from './ffmpeg';
@@ -27,11 +26,6 @@ const electronHandler = {
     ...args: Parameters<typeof createEDL>
   ): ReturnType<typeof createEDL> => {
     return ipcRenderer.invoke('createEDL', ...args);
-  },
-  compressAudioFile: async (
-    ...args: Parameters<typeof compressAudioFile>
-  ): ReturnType<typeof compressAudioFile> => {
-    return ipcRenderer.invoke('compressAudioFile', ...args);
   },
   renderTimelineAudio: async (
     ...args: Parameters<typeof renderTimelineAudio>

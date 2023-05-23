@@ -13,15 +13,22 @@ import {
   ProjectConfig,
   Transcription,
   Clip,
-  createEmptyProjectConfig,
+  ProjectStep,
 } from '../../shared/types';
+
+type AllClips = {
+  clips?: Clip[];
+  silence?: Clip[];
+  speech?: Clip[];
+};
 
 type ProjectActions = {
   openProject: () => void;
   createProject: () => void;
   updateFilePath: (filePath: string) => Promise<void>;
   updateTranscription: (transcription: Transcription) => Promise<void>;
-  updateClips: (clips: Clip[]) => Promise<void>;
+  updateClips: (allClips: AllClips) => Promise<void>;
+  updateProjectStep: (projectStep: ProjectStep) => Promise<void>;
 };
 
 interface ProjectContextValue extends ProjectActions {
@@ -37,9 +44,9 @@ const ProjectConfigContext = createContext<ProjectContextValue | undefined>(
 export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [projectConfig, setProjectConfig] = useState<ProjectConfig>(() =>
-    createEmptyProjectConfig()
-  );
+  const [projectConfig, setProjectConfig] = useState<
+    ProjectConfig | undefined
+  >();
   const openProject = useCallback(async () => {
     try {
       const newProjectConfig = await window.electron.openProject();
@@ -69,7 +76,15 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
       if (!projectConfig) return;
 
       const fileDuration = await window.electron.getVideoDuration(filePath);
-      const newProjectConfig = { ...projectConfig, filePath, fileDuration };
+      const newProjectConfig = {
+        ...projectConfig,
+        projectStep: ProjectStep.DetectSilence,
+        filePath,
+        fileDuration,
+        // Reset the clips to a single clip spanning the entire file
+        clips: [{ start: 0, end: fileDuration }],
+      };
+
       await window.electron.updateProject(newProjectConfig);
       setProjectConfig(newProjectConfig);
     },
@@ -89,13 +104,30 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
     [projectConfig]
   );
   const updateClips = useCallback(
-    async (clips: Clip[]) => {
+    async ({ clips, silence, speech }: AllClips) => {
       if (!projectConfig) return;
 
       const newProjectConfig = {
         ...projectConfig,
-        clips,
       };
+      if (clips) newProjectConfig.clips = clips;
+      if (silence) newProjectConfig.silence = silence;
+      if (speech) newProjectConfig.speech = speech;
+
+      await window.electron.updateProject(newProjectConfig);
+      setProjectConfig(newProjectConfig);
+    },
+    [projectConfig]
+  );
+  const updateProjectStep = useCallback(
+    async (projectStep: ProjectStep) => {
+      if (!projectConfig) return;
+
+      const newProjectConfig = {
+        ...projectConfig,
+        projectStep,
+      };
+
       await window.electron.updateProject(newProjectConfig);
       setProjectConfig(newProjectConfig);
     },
@@ -110,6 +142,7 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
       updateFilePath,
       updateTranscription,
       updateClips,
+      updateProjectStep,
     }),
     [
       projectConfig,
@@ -118,6 +151,7 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
       updateFilePath,
       updateTranscription,
       updateClips,
+      updateProjectStep,
     ]
   );
 
