@@ -90,9 +90,10 @@ export function useSilenceDetection(): UseSilenceDetection {
 
   useEffect(() => {
     if (!filePath) return;
+    if (speech.length > 0) return;
 
     detectSilence(settings);
-  }, [filePath]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filePath, speech]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     isDetectingSilence,
