@@ -117,7 +117,7 @@
     "@svgr/webpack": "^6.5.1",
     "@teamsupercell/typings-for-css-modules-loader": "^2.5.2",
     "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
+    "@testing-library/react": "^14.0.0",
     "@types/fluent-ffmpeg": "^2.1.21",
     "@types/jest": "^29.4.0",
     "@types/node": "18.13.0",
