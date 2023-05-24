@@ -20,7 +20,7 @@ import { useProjectConfig } from '../hooks/useProjectConfig';
 
 import 'antd/dist/reset.css';
 
-const Project: FC = () => {
+const Setup: FC = () => {
   const { projectConfig: { transcription, clips, projectStep } = {} } =
     useProjectConfig();
   const {
@@ -127,4 +127,4 @@ const Project: FC = () => {
   );
 };
 
-export default Project;
+export default Setup;

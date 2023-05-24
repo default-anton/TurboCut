@@ -3,7 +3,7 @@ import { Content, Footer } from 'antd/es/layout/layout';
 
 import { useProjectConfig } from './hooks/useProjectConfig';
 
-import Project from './pages/Project';
+import Setup from './pages/Setup';
 import Startup from './pages/Startup';
 
 import 'antd/dist/reset.css';
@@ -18,7 +18,7 @@ export default function App() {
       {contextHolder}
       <Layout>
         <Content>
-          {projectConfig && <Project />}
+          {projectConfig && <Setup />}
           {!projectConfig && <Startup />}
         </Content>
         <Footer />
