@@ -65,6 +65,7 @@ const installExtensions = async () => {
 
 const createWindow = async () => {
   if (isDebug) {
+    log.info('Running in development');
     await installExtensions();
   }
 
@@ -92,7 +93,10 @@ const createWindow = async () => {
   mainWindow.loadURL(resolveHtmlPath('index.html'));
 
   mainWindow.on('ready-to-show', () => {
+    log.info('Main window is ready to show');
+
     if (!mainWindow) {
+      log.error('"mainWindow" is not defined');
       throw new Error('"mainWindow" is not defined');
     }
     if (process.env.START_MINIMIZED) {
@@ -135,6 +139,8 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
+    log.info('App is ready');
+
     createWindow();
     // expose getSilentClips to the renderer process by using ipcMain.handle
     ipcMain.handle(
@@ -220,9 +226,14 @@ app
     );
 
     app.on('activate', () => {
+      log.info('App is activated');
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
       if (mainWindow === null) createWindow();
     });
   })
   .catch(console.log);
+
+process.on('uncaughtException', (err) => {
+  log.error('Uncaught exception: ', err);
+});
