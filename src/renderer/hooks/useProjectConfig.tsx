@@ -97,6 +97,7 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
       const newProjectConfig = {
         ...projectConfig,
         transcription,
+        projectStep: ProjectStep.Edit,
       };
       await window.electron.updateProject(newProjectConfig);
       setProjectConfig(newProjectConfig);

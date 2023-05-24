@@ -1,18 +1,14 @@
 import { useState, useMemo, FC } from 'react';
-import { Row, Col, Space, Card, Button, message, Steps, theme } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
+import { Row, Col, Space, Card, Steps, theme } from 'antd';
 
 import { ProjectStep } from '../../shared/types';
 
 import AudioFileInput from '../components/AudioFileInput';
-import Waveform from '../components/Waveform';
 import ExportButton from '../components/ExportButton';
 import SilenceDetector from '../components/SilenceDetector';
-import TranscriptionButton from '../components/TranscriptionButton';
+import CreateTranscriptionForm from '../components/CreateTranscriptionForm';
 import TranscriptionView from '../components/TranscriptionView';
 
-import { useTimeline } from '../hooks/useTimeline';
-import { useTimelineWaveform } from '../hooks/useTimelineWaveform';
 import { useExport } from '../hooks/useExport';
 import { useSilenceDetection } from '../hooks/useSilenceDetection';
 import { useTranscription } from '../hooks/useTranscription';
@@ -21,19 +17,8 @@ import { useProjectConfig } from '../hooks/useProjectConfig';
 import 'antd/dist/reset.css';
 
 const Setup: FC = () => {
-  const { projectConfig: { transcription, clips, projectStep } = {} } =
+  const { projectConfig: { transcription, projectStep } = {} } =
     useProjectConfig();
-  const {
-    isTimelineLoading,
-    timelineDuration,
-    timelineClips,
-    pathToTimelineAudioFile,
-  } = useTimeline();
-  //const { waveformRef, handleWheel } = useTimelineWaveform({
-  //filePath: pathToTimelineAudioFile,
-  //duration: timelineDuration,
-  //timelineClips,
-  //});
   const {
     isDetectingSilence,
     detectSilence,
@@ -41,9 +26,7 @@ const Setup: FC = () => {
     settings: silenceDetectionSettings,
   } = useSilenceDetection();
   const { exportTimeline, isExporting } = useExport();
-  const { isLoading: isTranscribing, transcribe } = useTranscription(
-    pathToTimelineAudioFile
-  );
+  const { isTranscribing, transcribe } = useTranscription();
   const [activeSegment, setActiveSegment] = useState<number>(0);
 
   const { token } = theme.useToken();
@@ -92,11 +75,13 @@ const Setup: FC = () => {
                   </Card>
                 )}
                 {projectStep === ProjectStep.Transcribe && (
-                  <TranscriptionButton
-                    loading={isTranscribing}
-                    disabled={!pathToTimelineAudioFile || isExporting}
-                    onTranscribe={transcribe}
-                  />
+                  <Card>
+                    <CreateTranscriptionForm
+                      loading={isTranscribing}
+                      disabled={isExporting}
+                      onTranscribe={transcribe}
+                    />
+                  </Card>
                 )}
               </>
             )}
@@ -105,7 +90,7 @@ const Setup: FC = () => {
               <ExportButton
                 handleExport={exportTimeline}
                 loading={isExporting}
-                disabled={!pathToTimelineAudioFile || isExporting}
+                disabled={isExporting}
               />
             )}
           </Space>

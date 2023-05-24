@@ -3,46 +3,43 @@ import { message } from 'antd';
 
 import { useProjectConfig } from './useProjectConfig';
 
-export function useTranscription(pathToAudioFile: string | undefined): {
-  isLoading: boolean;
+export function useTranscription(): {
+  isTranscribing: boolean;
   transcribe: (languageCode: string) => Promise<void>;
 } {
-  const { projectConfig: { clips, dir } = {} } = useProjectConfig();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const {
+    projectConfig: { filePath, dir, clips },
+  } = useProjectConfig();
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const { updateTranscription } = useProjectConfig();
 
   const transcribe = useCallback(
     async (languageCode: string) => {
-      if (!pathToAudioFile) {
-        message.error('Please select an audio file first.');
-        return;
-      }
-
-      setIsLoading(true);
+      setIsTranscribing(true);
 
       try {
-        const pathTotimelineAudioFile =
-          await window.electron.renderTimelineAudio(
-            pathToAudioFile,
-            dir!,
-            clips || []
-          );
+        const pathToAudioFile = await window.electron.renderTimelineAudio(
+          filePath,
+          dir,
+          clips,
+          'mp3'
+        );
         const transcription = await window.electron.transcribe(
-          pathTotimelineAudioFile,
+          pathToAudioFile,
           languageCode
         );
         await updateTranscription(transcription);
       } catch (error) {
         message.error(`Transcription failed. ${error}`);
       } finally {
-        setIsLoading(false);
+        setIsTranscribing(false);
       }
     },
-    [pathToAudioFile, clips, dir, updateTranscription]
+    [filePath, dir, clips, updateTranscription]
   );
 
   return {
-    isLoading,
+    isTranscribing,
     transcribe,
   };
 }
