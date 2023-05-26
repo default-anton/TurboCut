@@ -1,17 +1,17 @@
 import fs from 'fs';
 
 import { Configuration, OpenAIApi } from 'openai';
-import type { Transcription } from '../shared/types';
+import { Transcription, TranscriptionBackend } from '../shared/types';
 
 const config = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(config);
 
-export async function transcribe(
+const transcribeWithOpenAI = async (
   pathToAudioFile: string,
   lang: string
-): Promise<Transcription> {
+): Promise<Transcription> => {
   const response = await openai.createTranscription(
     fs.createReadStream(pathToAudioFile) as any,
     'whisper-1',
@@ -27,6 +27,18 @@ export async function transcribe(
   }
 
   return (response.data as any).segments as Transcription;
+};
+
+export async function transcribe(
+  pathToAudioFile: string,
+  lang: string,
+  backend: TranscriptionBackend
+): Promise<Transcription> {
+  if (backend === TranscriptionBackend.OpenAIWhisper) {
+    return transcribeWithOpenAI(pathToAudioFile, lang);
+  }
+
+  throw new Error(`Unknown transcription backend: ${backend}`);
 }
 
 export default transcribe;

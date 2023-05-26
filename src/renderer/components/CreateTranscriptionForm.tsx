@@ -1,24 +1,37 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { Button, Col, Form, Row, Select, Spin } from 'antd';
-import { FormOutlined, EditOutlined, SoundOutlined } from '@ant-design/icons';
+import { FormOutlined } from '@ant-design/icons';
 
 import styles from './CreateTranscriptionForm.module.scss';
+import { TranscriptionBackend } from '../../shared/types';
+import { useLanguages } from '../hooks/useLanguages';
 
 interface TranscribeProps {
   loading: boolean;
   disabled: boolean;
-  onTranscribe: (languageCode: string) => Promise<void>;
+  onTranscribe: (
+    languageCode: string,
+    backend: TranscriptionBackend
+  ) => Promise<void>;
 }
+
+type FormValues = {
+  languageCode: string;
+  backend: TranscriptionBackend;
+};
 
 const CreateTranscriptionForm: React.FC<TranscribeProps> = ({
   loading,
   onTranscribe,
 }) => {
-  const [form] = Form.useForm<{ languageCode: string }>();
+  const [form] = Form.useForm<FormValues>();
+  const backendWatch = Form.useWatch('backend', form);
+
+  const { languages } = useLanguages(backendWatch as TranscriptionBackend);
 
   const onSubmit = useCallback(
-    async ({ languageCode }: { languageCode: string }) => {
-      await onTranscribe(languageCode);
+    async ({ languageCode, backend }: FormValues) => {
+      await onTranscribe(languageCode, backend);
     },
     [onTranscribe]
   );
@@ -31,24 +44,45 @@ const CreateTranscriptionForm: React.FC<TranscribeProps> = ({
           layout="horizontal"
           initialValues={{ languageCode: 'en' }}
           onFinish={onSubmit}
+          labelCol={{ span: 8 }}
+          wrapperCol={{ span: 16 }}
           requiredMark
         >
           <Row gutter={16}>
             <Col span={24}>
               <Form.Item
-                label="Transcription Language"
+                label="Language of the video/audio"
                 name="languageCode"
                 required
                 tooltip="The language of the audio or video file to transcribe"
               >
                 <Select defaultValue="en">
-                  {/* TODO: Add more languages */}
-                  <Select.Option value="en">English</Select.Option>
-                  <Select.Option value="uk">Ukrainian</Select.Option>
+                  {languages.map((language) => (
+                    <Select.Option key={language.code} value={language.code}>
+                      {language.name}
+                    </Select.Option>
+                  ))}
                 </Select>
               </Form.Item>
             </Col>
-            <Col span={4}>
+            <Col span={24}>
+              <Form.Item
+                label="Backend"
+                name="backend"
+                required
+                tooltip="The backend to use for transcription"
+              >
+                <Select defaultValue={TranscriptionBackend.OpenAIWhisper}>
+                  {/* TODO: Add more backends */}
+                  {Object.entries(TranscriptionBackend).map(([key, value]) => (
+                    <Select.Option key={key} value={value}>
+                      {key}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={24}>
               <Form.Item>
                 <Button
                   icon={<FormOutlined />}

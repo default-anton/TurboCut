@@ -9,6 +9,10 @@ export enum Editor {
   PremierePro = 'Premiere Pro',
 }
 
+export enum TranscriptionBackend {
+  OpenAIWhisper = "open_ai_whisper",
+}
+
 export interface Clip {
   // start in seconds from the beginning of the source video
   start: number;

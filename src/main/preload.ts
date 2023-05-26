@@ -14,7 +14,7 @@ import {
   createProject,
   updateProject,
 } from './projects';
-import { transcribe } from './openai';
+import { transcribe } from './transcriber';
 
 const electronHandler = {
   getSilentClips: async (

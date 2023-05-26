@@ -26,7 +26,7 @@ import {
   updateProject,
 } from './projects';
 import createEDL from './exporters/davinci';
-import { transcribe } from './openai';
+import { transcribe } from './transcriber';
 
 class AppUpdater {
   constructor() {
