@@ -14,7 +14,7 @@ import {
   createProject,
   updateProject,
 } from './projects';
-import { transcribe } from './transcriber';
+import Transcriber from './transcriber';
 
 const electronHandler = {
   getSilentClips: async (
@@ -38,8 +38,8 @@ const electronHandler = {
     return ipcRenderer.invoke('getVideoDuration', ...args);
   },
   transcribe: async (
-    ...args: Parameters<typeof transcribe>
-  ): ReturnType<typeof transcribe> => {
+    ...args: Parameters<typeof Transcriber.prototype.transcribe>
+  ): ReturnType<typeof Transcriber.prototype.transcribe> => {
     return ipcRenderer.invoke('transcribe', ...args);
   },
   showSaveDialog: async (
@@ -61,6 +61,12 @@ const electronHandler = {
     ...args: Parameters<typeof updateProject>
   ): ReturnType<typeof updateProject> => {
     return ipcRenderer.invoke('updateProject', ...args);
+  },
+  setOpenAiApiKey: async (apiKey: string): Promise<void> => {
+    return ipcRenderer.invoke('setOpenAiApiKey', apiKey);
+  },
+  getOpenAiApiKey: async (): Promise<string> => {
+    return ipcRenderer.invoke('getOpenAiApiKey');
   },
 };
 

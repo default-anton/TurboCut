@@ -9,9 +9,12 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
+
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import Store from 'electron-store';
+
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import {
@@ -26,7 +29,7 @@ import {
   updateProject,
 } from './projects';
 import createEDL from './exporters/davinci';
-import { transcribe } from './transcriber';
+import Transcriber from './transcriber';
 
 class AppUpdater {
   constructor() {
@@ -35,6 +38,11 @@ class AppUpdater {
     autoUpdater.checkForUpdatesAndNotify();
   }
 }
+
+const store = new Store<Record<string, string>>();
+const TranscriberInstance = new Transcriber({
+  getApiKey: (keyName) => store.get(keyName),
+});
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -183,9 +191,9 @@ app
       'transcribe',
       async (
         _event,
-        ...args: Parameters<typeof transcribe>
-      ): ReturnType<typeof transcribe> => {
-        return transcribe(...args);
+        ...args: Parameters<typeof Transcriber.prototype.transcribe>
+      ): ReturnType<typeof Transcriber.prototype.transcribe> => {
+        return TranscriberInstance.transcribe(...args);
       }
     );
     ipcMain.handle(
@@ -224,6 +232,12 @@ app
         return updateProject(...args);
       }
     );
+    ipcMain.handle('setOpenAiApiKey', (_event, key: string): void => {
+      store.set('openai_api_key', key);
+    });
+    ipcMain.handle('getOpenAiApiKey', (): string | undefined => {
+      return store.get('openai_api_key');
+    });
 
     app.on('activate', () => {
       log.info('App is activated');

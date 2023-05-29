@@ -74,7 +74,6 @@ const Setup: FC = () => {
                 <Card>
                   <CreateTranscriptionForm
                     loading={isTranscribing}
-                    disabled={isExporting}
                     onTranscribe={transcribe}
                   />
                 </Card>

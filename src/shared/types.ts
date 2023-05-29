@@ -13,6 +13,8 @@ export enum TranscriptionBackend {
   OpenAIWhisper = "open_ai_whisper",
 }
 
+// TODO: replace start and end properties with sourceStart, sourceEnd, clipStart, clipEnd.
+// TODO: rename Clip to SourceClip.
 export interface Clip {
   // start in seconds from the beginning of the source video
   start: number;
@@ -20,6 +22,7 @@ export interface Clip {
   end: number;
 }
 
+// TODO: replace start and end properties with sourceStart, sourceEnd, clipStart, clipEnd.
 export interface TranscriptionSegment extends Clip {
   idx: number;
   text: string;
@@ -49,4 +52,10 @@ export interface ProjectConfig {
   silence: Clip[];
   speech: Clip[];
   transcription: Transcription;
+}
+
+export class ApiKeyNotSetError extends Error {
+  constructor(backend: TranscriptionBackend) {
+    super(`API key for ${backend} not set`);
+  }
 }

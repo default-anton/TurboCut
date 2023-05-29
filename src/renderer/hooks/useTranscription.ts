@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import { message } from 'antd';
 
+import { TranscriptionBackend } from 'shared/types';
 import { useProjectConfig } from './useProjectConfig';
-import { TranscriptionBackend } from '../../shared/types';
 
 export function useTranscription(): {
   isTranscribing: boolean;
@@ -12,7 +12,7 @@ export function useTranscription(): {
   ) => Promise<void>;
 } {
   const {
-    projectConfig: { filePath, dir, clips },
+    projectConfig: { filePath, dir, speech },
   } = useProjectConfig();
   const [isTranscribing, setIsTranscribing] = useState(false);
   const { updateTranscription } = useProjectConfig();
@@ -25,14 +25,15 @@ export function useTranscription(): {
         const pathToAudioFile = await window.electron.renderTimelineAudio(
           filePath,
           dir,
-          clips,
+          speech,
           'mp3'
         );
-        const transcription = await window.electron.transcribe(
+        const transcription = await window.electron.transcribe({
+          backend,
           pathToAudioFile,
           languageCode,
-          backend
-        );
+        });
+
         await updateTranscription(transcription);
       } catch (error) {
         message.error(`Transcription failed. ${error}`);
@@ -40,7 +41,7 @@ export function useTranscription(): {
         setIsTranscribing(false);
       }
     },
-    [filePath, dir, clips, updateTranscription]
+    [filePath, dir, speech, updateTranscription]
   );
 
   return {

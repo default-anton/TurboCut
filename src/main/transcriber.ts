@@ -1,44 +1,39 @@
-import fs from 'fs';
+import {
+  ApiKeyNotSetError,
+  Transcription,
+  TranscriptionBackend,
+} from '../shared/types';
 
-import { Configuration, OpenAIApi } from 'openai';
-import { Transcription, TranscriptionBackend } from '../shared/types';
+import transcribeWithOpenAI from './transcribers/openai';
 
-const config = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-const openai = new OpenAIApi(config);
+type ApiKeyGetter = (keyName: string) => string | undefined;
 
-const transcribeWithOpenAI = async (
-  pathToAudioFile: string,
-  lang: string
-): Promise<Transcription> => {
-  const response = await openai.createTranscription(
-    fs.createReadStream(pathToAudioFile) as any,
-    'whisper-1',
-    undefined,
-    'verbose_json',
-    0.7,
-    lang,
-    { maxContentLength: Infinity, maxBodyLength: Infinity }
-  );
+export default class Transcriber {
+  private readonly getApiKey: ApiKeyGetter;
 
-  if (response.status !== 200) {
-    throw new Error('OpenAI transcription failed');
+  constructor({ getApiKey }: { getApiKey: ApiKeyGetter }) {
+    this.getApiKey = getApiKey;
   }
 
-  return (response.data as any).segments as Transcription;
-};
+  async transcribe({
+    backend,
+    pathToAudioFile,
+    languageCode,
+  }: {
+    backend: TranscriptionBackend;
+    pathToAudioFile: string;
+    languageCode?: string;
+  }): Promise<Transcription> {
+    if (backend === TranscriptionBackend.OpenAIWhisper) {
+      const apiKey = this.getApiKey('openai_api_key');
 
-export async function transcribe(
-  pathToAudioFile: string,
-  lang: string,
-  backend: TranscriptionBackend
-): Promise<Transcription> {
-  if (backend === TranscriptionBackend.OpenAIWhisper) {
-    return transcribeWithOpenAI(pathToAudioFile, lang);
+      if (!apiKey) {
+        throw new ApiKeyNotSetError(TranscriptionBackend.OpenAIWhisper);
+      }
+
+      return transcribeWithOpenAI({ apiKey, pathToAudioFile, languageCode });
+    }
+
+    throw new Error(`Unknown transcription backend: ${backend}`);
   }
-
-  throw new Error(`Unknown transcription backend: ${backend}`);
 }
-
-export default transcribe;

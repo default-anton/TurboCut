@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import { Button, Col, Form, Row, Select, Spin } from 'antd';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Button, Col, Form, Input, Row, Select, Spin } from 'antd';
 import { FormOutlined } from '@ant-design/icons';
 
 import styles from './CreateTranscriptionForm.module.scss';
@@ -8,7 +8,6 @@ import { useLanguages } from '../hooks/useLanguages';
 
 interface TranscribeProps {
   loading: boolean;
-  disabled: boolean;
   onTranscribe: (
     languageCode: string,
     backend: TranscriptionBackend
@@ -18,19 +17,38 @@ interface TranscribeProps {
 type FormValues = {
   languageCode: string;
   backend: TranscriptionBackend;
+  apiKey: string;
 };
 
 const CreateTranscriptionForm: React.FC<TranscribeProps> = ({
   loading,
   onTranscribe,
 }) => {
+  const [storedApiKey, setStoredApiKey] = useState<string | undefined>(
+    undefined
+  );
   const [form] = Form.useForm<FormValues>();
   const backendWatch = Form.useWatch('backend', form);
-
   const { languages } = useLanguages(backendWatch as TranscriptionBackend);
 
-  const onSubmit = useCallback(
-    async ({ languageCode, backend }: FormValues) => {
+  useEffect(() => {
+    const asyncEffect = async () => {
+      if (backendWatch === TranscriptionBackend.OpenAIWhisper) {
+        const key = await window.electron.getOpenAiApiKey();
+        setStoredApiKey(key);
+        form.setFieldsValue({ apiKey: key });
+      }
+    };
+
+    asyncEffect();
+  }, [backendWatch, form]);
+
+  const onFinish = useCallback(
+    async ({ languageCode, backend, apiKey }: FormValues) => {
+      if (backend === TranscriptionBackend.OpenAIWhisper) {
+        await window.electron.setOpenAiApiKey(apiKey);
+      }
+
       await onTranscribe(languageCode, backend);
     },
     [onTranscribe]
@@ -42,8 +60,11 @@ const CreateTranscriptionForm: React.FC<TranscribeProps> = ({
         <Form
           form={form}
           layout="horizontal"
-          initialValues={{ languageCode: 'en' }}
-          onFinish={onSubmit}
+          initialValues={{
+            languageCode: 'en',
+            backend: TranscriptionBackend.OpenAIWhisper,
+          }}
+          onFinish={onFinish}
           labelCol={{ span: 8 }}
           wrapperCol={{ span: 16 }}
           requiredMark
@@ -56,7 +77,18 @@ const CreateTranscriptionForm: React.FC<TranscribeProps> = ({
                 required
                 tooltip="The language of the audio or video file to transcribe"
               >
-                <Select defaultValue="en">
+                <Select
+                  showSearch
+                  filterOption={(input, option) =>
+                    Boolean(
+                      option?.value?.toString().includes(input.toLowerCase()) ||
+                        option?.children
+                          ?.toString()
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                    )
+                  }
+                >
                   {languages.map((language) => (
                     <Select.Option key={language.code} value={language.code}>
                       {language.name}
@@ -72,8 +104,7 @@ const CreateTranscriptionForm: React.FC<TranscribeProps> = ({
                 required
                 tooltip="The backend to use for transcription"
               >
-                <Select defaultValue={TranscriptionBackend.OpenAIWhisper}>
-                  {/* TODO: Add more backends */}
+                <Select>
                   {Object.entries(TranscriptionBackend).map(([key, value]) => (
                     <Select.Option key={key} value={value}>
                       {key}
@@ -82,6 +113,28 @@ const CreateTranscriptionForm: React.FC<TranscribeProps> = ({
                 </Select>
               </Form.Item>
             </Col>
+            {backendWatch === TranscriptionBackend.OpenAIWhisper && (
+              <Col span={24}>
+                <Form.Item
+                  label="OpenAI API Key"
+                  name="apiKey"
+                  required
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Please enter your OpenAI API Key',
+                    },
+                  ]}
+                  hidden={storedApiKey !== undefined}
+                >
+                  {storedApiKey === undefined ? (
+                    <Input.Password />
+                  ) : (
+                    <Input type="hidden" />
+                  )}
+                </Form.Item>
+              </Col>
+            )}
             <Col span={24}>
               <Form.Item>
                 <Button
