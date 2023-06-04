@@ -13,7 +13,7 @@ const Startup: FC = () => {
     <Row className={styles.startupPage}>
       <Col>
         <Card className={styles.startupCard}>
-          <Title level={2}>Welcome to Film Flair AI</Title>
+          <Title level={2}>Welcome to TurboCut</Title>
           <Space
             direction="vertical"
             size="middle"

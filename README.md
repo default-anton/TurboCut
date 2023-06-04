@@ -5,10 +5,10 @@
 
 </div>
 
-# 🎬 Film Flare AI 🎉
+# 🎬 TurboCut 🎉
 **Revolutionize Your Video Editing Experience with AI-Powered Tools**
 
-Film Flare AI is here to supercharge your video editing process and let your creativity flow freely. It's packed with cutting-edge AI technologies that will make editing a breeze. This tool is destined to become the best friend of YouTube creators, video editors, and podcast producers! 🌟
+TurboCut is here to supercharge your video editing process and let your creativity flow freely. It's packed with cutting-edge AI technologies that will make editing a breeze. This tool is destined to become the best friend of YouTube creators, video editors, and podcast producers! 🌟
 
 ## 🚀 Features
 Here's a taste of what's cooking:
@@ -29,13 +29,13 @@ Here's a taste of what's cooking:
 ## 📦 Installation & Setup
 _Hang tight! Detailed installation and setup instructions are coming soon._
 
-## 🙌 Contribute to Film Flare AI
-Film Flare AI is a proud member of the open-source community. We welcome and appreciate contributions of all kinds - from bug fixes and feature additions to documentation improvements. If you want to join us in shaping the future of video editing, check out our Contribution Guidelines!
+## 🙌 Contribute to TurboCut
+TurboCut is a proud member of the open-source community. We welcome and appreciate contributions of all kinds - from bug fixes and feature additions to documentation improvements. If you want to join us in shaping the future of video editing, check out our Contribution Guidelines!
 
 ## 📄 License
 This project is licensed under the terms of the MIT license. For more information, please see [LICENSE.md](LICENSE.md).
 
-[github-actions-status]: https://github.com/default-anton/FilmFlareAI/workflows/Test/badge.svg
-[github-actions-url]: https://github.com/default-anton/FilmFlareAI/actions
-[github-tag-image]: https://img.shields.io/github/tag/default-anton/FilmFlareAI.svg?label=version
-[github-tag-url]: https://github.com/default-anton/FilmFlareAI/releases/latest
+[github-actions-status]: https://github.com/default-anton/TurboCut/workflows/Test/badge.svg
+[github-actions-url]: https://github.com/default-anton/TurboCut/actions
+[github-tag-image]: https://img.shields.io/github/tag/default-anton/TurboCut.svg?label=version
+[github-tag-url]: https://github.com/default-anton/TurboCut/releases/latest

@@ -1,5 +1,5 @@
 {
-  "description": "Film Flare AI",
+  "description": "TurboCut",
   "keywords": [
     "video editing",
     "audio editing",
@@ -25,17 +25,17 @@
     "editing software",
     "desktop application"
   ],
-  "homepage": "https://github.com/default-anton/FilmFlareAI",
+  "homepage": "https://github.com/default-anton/TurboCut",
   "bugs": {
-    "url": "https://github.com/default-anton/FilmFlareAI/issues"
+    "url": "https://github.com/default-anton/TurboCut/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/default-anton/FilmFlareAI.git"
+    "url": "git+https://github.com/default-anton/TurboCut.git"
   },
   "license": "MIT",
   "author": {
-    "name": "Film Flare AI maintainers",
+    "name": "TurboCut maintainers",
     "email": "hotk@hey.com"
   },
   "main": "./src/main/main.ts",
@@ -185,8 +185,8 @@
     "webpack-merge": "^5.8.0"
   },
   "build": {
-    "productName": "FilmFlareAI",
-    "appId": "org.erb.FilmFlareAI",
+    "productName": "TurboCut",
+    "appId": "org.erb.TurboCut",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
     "files": [
@@ -245,7 +245,7 @@
     "publish": {
       "provider": "github",
       "owner": "default-anton",
-      "repo": "FilmFlareAI"
+      "repo": "TurboCut"
     }
   },
   "devEngines": {
