@@ -1,0 +1,16 @@
+.card {
+  max-width: 800px;
+  max-height: 800px;
+  margin: auto;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.text {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-size: 16px; /* Adequate size for most readers, adjust as necessary */
+  line-height: 1.7; /* Spacing between lines for better readability */
+  word-spacing: 0.05em; /* Small space between words to improve reading flow */
+  margin-bottom: 20px; /* Space between paragraphs for better visual separation */
+  white-space: pre-line; /* Preserves line breaks in your transcription text */
+}

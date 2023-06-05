@@ -5,6 +5,8 @@ import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
 
 const { Text } = Typography;
 
+import styles from './Cut.module.scss';
+
 const Cut: FC = () => {
   const {
     projectConfig: { transcription },
@@ -68,12 +70,13 @@ const Cut: FC = () => {
   return (
     <Row justify="center">
       <Col className="col">
-        <Card>
+        <Card className={styles.card}>
           {transcription.map(({ id, text }) => (
             <Text
               key={id}
               delete={disabledSegmentIds.has(id)}
               data-segment-id={id}
+              className={styles.text}
             >
               {text}
             </Text>
