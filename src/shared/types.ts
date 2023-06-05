@@ -24,7 +24,7 @@ export interface Clip {
 
 // TODO: replace start and end properties with sourceStart, sourceEnd, clipStart, clipEnd.
 export interface TranscriptionSegment extends Clip {
-  idx: number;
+  id: number;
   text: string;
 }
 
