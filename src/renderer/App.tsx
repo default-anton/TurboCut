@@ -10,6 +10,7 @@ import Startup from './pages/Startup';
 import Cut from './pages/Cut';
 
 import 'antd/dist/reset.css';
+import 'video.js/dist/video-js.css';
 
 import './App.scss';
 

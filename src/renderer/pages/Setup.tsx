@@ -11,8 +11,6 @@ import { useSilenceDetection } from '../hooks/useSilenceDetection';
 import { useTranscription } from '../hooks/useTranscription';
 import { useProjectConfig } from '../hooks/useProjectConfig';
 
-import 'antd/dist/reset.css';
-
 const Setup: FC = () => {
   const { projectConfig: { projectStep } = {} } = useProjectConfig();
   const {

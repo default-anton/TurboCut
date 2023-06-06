@@ -2,10 +2,11 @@ import { FC, useEffect, useState } from 'react';
 import { Card, Col, Row, Typography } from 'antd';
 
 import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
-
-const { Text } = Typography;
+import VideoPlayer from 'renderer/components/VideoPlayer';
 
 import styles from './Cut.module.scss';
+
+const { Text } = Typography;
 
 const Cut: FC = () => {
   const {
@@ -82,6 +83,9 @@ const Cut: FC = () => {
             </Text>
           ))}
         </Card>
+      </Col>
+      <Col className="col">
+        <VideoPlayer disabledSegmentIds={disabledSegmentIds} />
       </Col>
     </Row>
   );
