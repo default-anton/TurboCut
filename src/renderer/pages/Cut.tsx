@@ -1,8 +1,9 @@
 import { FC, useEffect, useState } from 'react';
 import { Card, Col, Row, Typography } from 'antd';
 
+import CutTimeline from 'renderer/components/CutTimeline';
+
 import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
-import VideoPlayer from 'renderer/components/VideoPlayer';
 
 import styles from './Cut.module.scss';
 
@@ -27,19 +28,31 @@ const Cut: FC = () => {
 
         for (let i = 0; i < selection.rangeCount; i++) {
           const range = selection.getRangeAt(i);
-          const startParent = range.startContainer.parentElement;
-          const endParent = range.endContainer.parentElement;
+          const start = range.startContainer.parentElement;
+          const startParent = start?.parentElement;
+          const end = range.endContainer.parentElement;
+          const endParent = end?.parentElement;
 
-          if (!startParent || !endParent) break;
+          if (!start || !end) break;
+
+          console.log(start, startParent, end, endParent);
 
           if (
-            startParent &&
-            startParent.dataset?.segmentId &&
-            endParent &&
-            endParent.dataset?.segmentId
+            start &&
+            (start.dataset?.segmentId || startParent?.dataset?.segmentId) &&
+            end &&
+            (end.dataset?.segmentId || endParent?.dataset?.segmentId)
           ) {
-            const from = parseInt(startParent.dataset.segmentId || '-1', 10);
-            const to = parseInt(endParent.dataset.segmentId || '-1', 10);
+            const from = parseInt(
+              start.dataset.segmentId ||
+                startParent?.dataset?.segmentId ||
+                '-1',
+              10
+            );
+            const to = parseInt(
+              end.dataset.segmentId || endParent?.dataset?.segmentId || '-1',
+              10
+            );
 
             if (from !== -1 && to !== -1) {
               for (let j = from; j <= to; j++) {
@@ -69,25 +82,29 @@ const Cut: FC = () => {
   }, []);
 
   return (
-    <Row justify="center">
-      <Col className="col">
-        <Card className={styles.card}>
-          {transcription.map(({ id, text }) => (
-            <Text
-              key={id}
-              delete={disabledSegmentIds.has(id)}
-              data-segment-id={id}
-              className={styles.text}
-            >
-              {text}
-            </Text>
-          ))}
-        </Card>
-      </Col>
-      <Col className="col">
-        <VideoPlayer disabledSegmentIds={disabledSegmentIds} />
-      </Col>
-    </Row>
+    <>
+      <Row justify="center">
+        <Col className="col">
+          <CutTimeline disabledSegmentIds={disabledSegmentIds} />
+        </Col>
+      </Row>
+      <Row justify="center">
+        <Col className="col">
+          <Card className={styles.card}>
+            {transcription.map(({ id, text }) => (
+              <Text
+                key={id}
+                delete={disabledSegmentIds.has(id)}
+                data-segment-id={id}
+                className={styles.text}
+              >
+                {text}
+              </Text>
+            ))}
+          </Card>
+        </Col>
+      </Row>
+    </>
   );
 };
 

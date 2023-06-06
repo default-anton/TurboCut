@@ -1,13 +1,17 @@
 import { useEffect, useRef, FC, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
-import { Button } from 'antd';
+import WaveSurferRegions from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.js';
+import TimelinePlugin from 'wavesurfer.js/dist/plugin/wavesurfer.timeline.min';
+import { theme, Button, Space, Layout } from 'antd';
 import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
+import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
 
-interface VideoPlayerProps {
+interface CutTimelineProps {
   disabledSegmentIds: Set<number>;
 }
 
-const VideoPlayer: FC<VideoPlayerProps> = ({ disabledSegmentIds }) => {
+const CutTimeline: FC<CutTimelineProps> = ({ disabledSegmentIds }) => {
+  const { token } = theme.useToken();
   const skipRegionInProgress = useRef(false);
   const waveSurferRef = useRef<WaveSurfer | null>(null);
   const waveformRef = useRef<HTMLDivElement>(null);
@@ -40,18 +44,18 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ disabledSegmentIds }) => {
   }, [filePath, dir, speech]);
 
   useEffect(() => {
-    if (
-      !waveformRef.current ||
-      !audioFile ||
-      !audioFileDuration
-    )
-      return;
+    if (!waveformRef.current || !audioFile || !audioFileDuration) return;
 
     // Initialize Wavesurfer.js
     waveSurferRef.current = WaveSurfer.create({
       container: waveformRef.current,
-      waveColor: 'violet',
-      progressColor: 'purple',
+      waveColor: token.colorPrimary,
+      progressColor: token.colorFillSecondary,
+      height: 256,
+      plugins: [
+        TimelinePlugin.create({ container: '#waveform-timeline' }),
+        WaveSurferRegions.create(),
+      ],
     });
 
     waveSurferRef.current.load(`file://${audioFile}`);
@@ -67,7 +71,7 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ disabledSegmentIds }) => {
     return () => {
       waveSurferRef.current?.destroy();
     };
-  }, [filePath, audioFile, audioFileDuration]);
+  }, [filePath, audioFile, audioFileDuration, token]);
 
   useEffect(() => {
     if (!waveSurferRef.current || !audioFileDuration) return;
@@ -91,6 +95,20 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ disabledSegmentIds }) => {
       });
     };
 
+    waveSurferRef.current.clearRegions();
+
+    disabledSegmentIds.forEach((id) => {
+      const t = transcription[id];
+
+      waveSurferRef.current!.addRegion({
+        start: t.start,
+        end: t.end,
+        color: 'rgba(255, 0, 0, 0.2)',
+        drag: false,
+        resize: false,
+      } as RegionParams);
+    });
+
     waveSurferRef.current.on('audioprocess', onAudioProcess);
 
     return () => {
@@ -103,11 +121,12 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ disabledSegmentIds }) => {
   };
 
   return (
-    <div>
+    <>
       <div ref={waveformRef} id="waveform" />
+      <div id="waveform-timeline" />
       <Button onClick={handlePlayPause}>Play/Pause</Button>
-    </div>
+    </>
   );
 };
 
-export default VideoPlayer;
+export default CutTimeline;
