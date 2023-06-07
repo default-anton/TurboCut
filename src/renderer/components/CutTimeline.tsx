@@ -25,6 +25,22 @@ const CutTimeline: FC<CutTimelineProps> = ({ disabledSegmentIds }) => {
   >(undefined);
 
   useEffect(() => {
+    const resize = () => {
+      if (!waveSurferRef.current) return;
+
+      waveSurferRef.current.drawer.containerWidth =
+        waveSurferRef.current.drawer.container.clientWidth;
+      waveSurferRef.current.drawBuffer();
+    };
+
+    window.addEventListener('resize', resize);
+
+    return () => {
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
+  useEffect(() => {
     const run = async () => {
       if (!filePath || !dir || !speech) return;
 
