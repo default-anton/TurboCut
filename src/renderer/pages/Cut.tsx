@@ -35,8 +35,6 @@ const Cut: FC = () => {
 
           if (!start || !end) break;
 
-          console.log(start, startParent, end, endParent);
-
           if (
             start &&
             (start.dataset?.segmentId || startParent?.dataset?.segmentId) &&
