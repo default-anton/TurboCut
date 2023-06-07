@@ -130,6 +130,7 @@ const CutTimeline: FC<CutTimelineProps> = ({
       if (!waveSurferRef.current || skipRegionInProgress.current) return;
 
       const currentTime = waveSurferRef.current.getCurrentTime();
+
       const currentSegmentAtPlayhead = findSegmentAtPlayhead(
         transcription,
         currentTime
@@ -166,10 +167,12 @@ const CutTimeline: FC<CutTimelineProps> = ({
       } as RegionParams);
     });
 
-    waveSurferRef.current.on('timeupdate', onAudioPositionChange);
+    waveSurferRef.current.on('seek', onAudioPositionChange);
+    waveSurferRef.current.on('audioprocess', onAudioPositionChange);
 
     return () => {
-      waveSurferRef.current?.un('timeupdate', onAudioPositionChange);
+      waveSurferRef.current?.un('seek', onAudioPositionChange);
+      waveSurferRef.current?.un('audioprocess', onAudioPositionChange);
     };
   }, [
     audioFileDuration,

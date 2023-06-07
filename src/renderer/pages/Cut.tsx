@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { Card, Col, Row, Typography } from 'antd';
 
 import CutTimeline from 'renderer/components/CutTimeline';
@@ -19,6 +19,16 @@ const Cut: FC = () => {
   const [segmentAtPlayhead, setSegmentAtPlayhead] = useState<number | null>(
     null
   );
+  const textRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (segmentAtPlayhead) {
+      const element = textRef.current;
+      if (element && element.scrollIntoView) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [segmentAtPlayhead]);
 
   useEffect(() => {
     const handleKeyUp = (event: KeyboardEvent) => {
@@ -89,7 +99,7 @@ const Cut: FC = () => {
           <CutTimeline
             disabledSegmentIds={disabledSegmentIds}
             setSegmentAtPlayhead={(segmentId) => {
-              if (segmentId !== segmentAtPlayhead) {
+              if (segmentId !== null && segmentId !== segmentAtPlayhead) {
                 setSegmentAtPlayhead(segmentId);
               }
             }}
@@ -101,6 +111,7 @@ const Cut: FC = () => {
           <Card className={styles.card}>
             {transcription.map(({ id, text }) => (
               <Text
+                ref={id === segmentAtPlayhead ? textRef : null}
                 key={id}
                 delete={disabledSegmentIds.has(id)}
                 data-segment-id={id}
