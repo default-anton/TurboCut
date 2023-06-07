@@ -12,6 +12,7 @@ module.exports = {
     'consistent-return': 'off',
     'no-plusplus': 'off',
     'no-bitwise': 'off',
+    'no-restricted-syntax': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

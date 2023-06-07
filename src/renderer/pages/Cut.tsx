@@ -16,6 +16,9 @@ const Cut: FC = () => {
   const [disabledSegmentIds, setDisabledSegmentIds] = useState<Set<number>>(
     new Set()
   );
+  const [segmentAtPlayhead, setSegmentAtPlayhead] = useState<number | null>(
+    null
+  );
 
   useEffect(() => {
     const handleKeyUp = (event: KeyboardEvent) => {
@@ -83,7 +86,14 @@ const Cut: FC = () => {
     <>
       <Row justify="center">
         <Col className="col">
-          <CutTimeline disabledSegmentIds={disabledSegmentIds} />
+          <CutTimeline
+            disabledSegmentIds={disabledSegmentIds}
+            setSegmentAtPlayhead={(segmentId) => {
+              if (segmentId !== segmentAtPlayhead) {
+                setSegmentAtPlayhead(segmentId);
+              }
+            }}
+          />
         </Col>
       </Row>
       <Row justify="center">
@@ -95,6 +105,7 @@ const Cut: FC = () => {
                 delete={disabledSegmentIds.has(id)}
                 data-segment-id={id}
                 className={styles.text}
+                mark={id === segmentAtPlayhead}
               >
                 {text}
               </Text>

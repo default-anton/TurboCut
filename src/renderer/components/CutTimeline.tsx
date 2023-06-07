@@ -8,12 +8,42 @@ import { theme, Button } from 'antd';
 import { PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
 
 import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
+import { Transcription } from 'shared/types';
 
 interface CutTimelineProps {
   disabledSegmentIds: Set<number>;
+  setSegmentAtPlayhead: (segmentId: number | null) => void;
 }
 
-const CutTimeline: FC<CutTimelineProps> = ({ disabledSegmentIds }) => {
+function findSegmentAtPlayhead(
+  transcription: Transcription,
+  currentTime: number
+): number | null {
+  let left = 0;
+  let right = transcription.length - 1;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+    const t = transcription[mid];
+
+    if (currentTime >= t.start && currentTime <= t.end) {
+      return t.id;
+    }
+
+    if (currentTime < t.start) {
+      right = mid - 1;
+    } else {
+      left = mid + 1;
+    }
+  }
+
+  return null;
+}
+
+const CutTimeline: FC<CutTimelineProps> = ({
+  disabledSegmentIds,
+  setSegmentAtPlayhead,
+}) => {
   const { token } = theme.useToken();
   const skipRegionInProgress = useRef(false);
   const waveSurferRef = useRef<WaveSurfer | null>(null);
@@ -96,13 +126,19 @@ const CutTimeline: FC<CutTimelineProps> = ({ disabledSegmentIds }) => {
   useEffect(() => {
     if (!waveSurferRef.current || !audioFileDuration) return;
 
-    const onAudioProcess = () => {
+    const onAudioPositionChange = () => {
       if (!waveSurferRef.current || skipRegionInProgress.current) return;
 
       const currentTime = waveSurferRef.current.getCurrentTime();
+      const currentSegmentAtPlayhead = findSegmentAtPlayhead(
+        transcription,
+        currentTime
+      );
+
+      setSegmentAtPlayhead(currentSegmentAtPlayhead);
 
       // skip to the end of the region if the current time is within a disabled region
-      disabledSegmentIds.forEach((id) => {
+      for (const id of disabledSegmentIds) {
         const t = transcription[id];
 
         if (currentTime >= t.start && currentTime <= t.end) {
@@ -111,8 +147,9 @@ const CutTimeline: FC<CutTimelineProps> = ({ disabledSegmentIds }) => {
           setTimeout(() => {
             skipRegionInProgress.current = false;
           }, 0);
+          break;
         }
-      });
+      }
     };
 
     waveSurferRef.current.clearRegions();
@@ -129,12 +166,17 @@ const CutTimeline: FC<CutTimelineProps> = ({ disabledSegmentIds }) => {
       } as RegionParams);
     });
 
-    waveSurferRef.current.on('audioprocess', onAudioProcess);
+    waveSurferRef.current.on('timeupdate', onAudioPositionChange);
 
     return () => {
-      waveSurferRef.current?.un('audioprocess', onAudioProcess);
+      waveSurferRef.current?.un('timeupdate', onAudioPositionChange);
     };
-  }, [audioFileDuration, disabledSegmentIds, transcription]);
+  }, [
+    audioFileDuration,
+    disabledSegmentIds,
+    transcription,
+    setSegmentAtPlayhead,
+  ]);
 
   const handlePlayPause = () => {
     if (!waveSurferRef.current) return;
