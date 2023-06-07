@@ -2,9 +2,12 @@ import { useEffect, useRef, FC, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import WaveSurferRegions from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.js';
 import TimelinePlugin from 'wavesurfer.js/dist/plugin/wavesurfer.timeline.min';
-import { theme, Button, Space, Layout } from 'antd';
-import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
 import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
+
+import { theme, Button } from 'antd';
+import { PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
+
+import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
 
 interface CutTimelineProps {
   disabledSegmentIds: Set<number>;
@@ -18,6 +21,7 @@ const CutTimeline: FC<CutTimelineProps> = ({ disabledSegmentIds }) => {
   const {
     projectConfig: { transcription, filePath, dir, speech },
   } = useProjectConfig();
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const [audioFile, setAudioFile] = useState<string | undefined>(undefined);
   const [audioFileDuration, setAudioFileDuration] = useState<
@@ -133,14 +137,35 @@ const CutTimeline: FC<CutTimelineProps> = ({ disabledSegmentIds }) => {
   }, [audioFileDuration, disabledSegmentIds, transcription]);
 
   const handlePlayPause = () => {
-    waveSurferRef.current?.playPause();
+    if (!waveSurferRef.current) return;
+
+    setIsPlaying(!waveSurferRef.current.isPlaying());
+
+    waveSurferRef.current.playPause();
   };
 
   return (
     <>
       <div ref={waveformRef} id="waveform" />
+
       <div id="waveform-timeline" />
-      <Button onClick={handlePlayPause}>Play/Pause</Button>
+
+      <Button
+        onClick={handlePlayPause}
+        style={{ marginTop: token.marginMD }}
+        type={isPlaying ? 'default' : 'primary'}
+        danger={isPlaying}
+      >
+        {isPlaying ? (
+          <>
+            <PauseCircleOutlined /> Pause
+          </>
+        ) : (
+          <>
+            <PlayCircleOutlined /> Play
+          </>
+        )}
+      </Button>
     </>
   );
 };
