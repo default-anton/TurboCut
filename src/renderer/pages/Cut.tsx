@@ -37,7 +37,8 @@ const Cut: FC = () => {
 
         if (!selection) return;
 
-        const selectedSegmentIds = new Set<number>();
+        const segmentsToDelete = new Set<number>();
+        const segmentsToAdd = new Set<number>();
 
         for (let i = 0; i < selection.rangeCount; i++) {
           const range = selection.getRangeAt(i);
@@ -46,7 +47,7 @@ const Cut: FC = () => {
           const end = range.endContainer.parentElement;
           const endParent = end?.parentElement;
 
-          if (!start || !end) break;
+          console.log(start, startParent, end, endParent);
 
           if (
             start &&
@@ -67,7 +68,11 @@ const Cut: FC = () => {
 
             if (from !== -1 && to !== -1) {
               for (let j = from; j <= to; j++) {
-                selectedSegmentIds.add(j);
+                if (disabledSegmentIds.has(j)) {
+                  segmentsToDelete.add(j);
+                } else {
+                  segmentsToAdd.add(j);
+                }
               }
             }
           }
@@ -77,8 +82,10 @@ const Cut: FC = () => {
         setDisabledSegmentIds(
           (prevDisabledSegmentIds) =>
             new Set([
-              ...Array.from(prevDisabledSegmentIds),
-              ...Array.from(selectedSegmentIds),
+              ...Array.from(prevDisabledSegmentIds).filter(
+                (id) => !segmentsToDelete.has(id)
+              ),
+              ...Array.from(segmentsToAdd),
             ])
         );
       }
@@ -90,7 +97,7 @@ const Cut: FC = () => {
     return () => {
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [disabledSegmentIds]);
 
   return (
     <>
