@@ -1,8 +1,8 @@
-import { FC, forwardRef, RefObject } from 'react';
+import { forwardRef } from 'react';
 import { Card, Typography } from 'antd';
 
 import { Transcription } from 'shared/types';
-import styles from './Transcription.module.scss';
+import styles from './TranscriptionEditor.module.scss';
 
 const { Text } = Typography;
 

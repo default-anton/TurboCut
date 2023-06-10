@@ -1,9 +1,10 @@
 import { createHash } from 'crypto';
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
-import { access, constants } from 'fs/promises';
+import { access, constants, mkdir } from 'fs/promises';
 import path from 'path';
 import { Clip } from '../shared/types';
+import { createCacheDir } from './util';
 
 export const getVideoDuration = async (pathToFile: string): Promise<number> => {
   return new Promise((resolve, reject) => {
@@ -36,6 +37,8 @@ export const renderTimelineAudio = async (
     'cache',
     `${clipsHash}.timeline.${extension}`
   );
+
+  createCacheDir(projectDir);
 
   try {
     await access(outPath, constants.R_OK | constants.W_OK);

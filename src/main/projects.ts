@@ -5,6 +5,7 @@ import checkDiskSpace from 'check-disk-space';
 import { app, dialog } from 'electron';
 
 import { ProjectConfig, ProjectStep } from '../shared/types';
+import { createCacheDir } from './util';
 
 const MIN_DISK_SPACE_IN_BYTES = 100 * 1024 * 1024; // 100 MB
 
@@ -73,13 +74,7 @@ export async function createProject(): Promise<ProjectConfig | undefined> {
     transcription: [],
   };
 
-  try {
-    await mkdir(path.join(dir, 'cache'));
-  } catch (error: any) {
-    if (error.code !== 'EEXIST') {
-      throw new Error('Unable to create cache directory');
-    }
-  }
+  createCacheDir(config.dir);
 
   try {
     await writeFile(result.filePath, JSON.stringify(config, null, 2));

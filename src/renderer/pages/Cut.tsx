@@ -1,11 +1,10 @@
 import { FC, useEffect, useRef, useState } from 'react';
 import { Col, Row } from 'antd';
 
-import CutTimeline from 'renderer/components/CutTimeline';
-
 import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
 import { useExport } from 'renderer/hooks/useExport';
 
+import CutTimeline from 'renderer/components/CutTimeline';
 import ExportButton from 'renderer/components/ExportButton';
 import TranscriptionEditor from 'renderer/components/TranscriptionEditor';
 
