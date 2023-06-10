@@ -125,7 +125,7 @@ async function getVideoMetadata(filePath: string): Promise<{
       startTimecodeStream ||
       startTimecodeQt ||
       startTimecodeStreamStart ||
-      0,
+      '00:00:00:00',
   };
 }
 
