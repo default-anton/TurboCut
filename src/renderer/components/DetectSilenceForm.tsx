@@ -105,14 +105,14 @@ const DetectSilenceForm: FC<DetectSilenceFormProps> = ({
             />
           </Form.Item>
         </Col>
-        <Col span={4}>
+        <Col span={24}>
           <Form.Item>
             <Button icon={<AudioOutlined />} htmlType="submit">
               Detect silence
             </Button>
           </Form.Item>
         </Col>
-        <Col span={12}>
+        <Col span={24}>
           <Form.Item>
             <Button
               type="primary"

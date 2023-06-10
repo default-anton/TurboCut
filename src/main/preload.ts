@@ -70,6 +70,29 @@ const electronHandler = {
   },
 };
 
+export type LogHandler = {
+  error(...params: any[]): void;
+  warn(...params: any[]): void;
+  info(...params: any[]): void;
+  debug(...params: any[]): void;
+};
+
+const logHandler: LogHandler = {
+  info: async (...args: Parameters<LogHandler['info']>): Promise<void> => {
+    ipcRenderer.send('logInfo', ...args);
+  },
+  warn: async (...args: Parameters<LogHandler['warn']>): Promise<void> => {
+    ipcRenderer.send('logWarn', ...args);
+  },
+  error: async (...args: Parameters<LogHandler['error']>): Promise<void> => {
+    ipcRenderer.send('logError', ...args);
+  },
+  debug: async (...args: Parameters<LogHandler['debug']>): Promise<void> => {
+    ipcRenderer.send('logDebug', ...args);
+  },
+};
+
 contextBridge.exposeInMainWorld('electron', electronHandler);
+contextBridge.exposeInMainWorld('log', logHandler);
 
 export type ElectronHandler = typeof electronHandler;

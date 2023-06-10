@@ -1,15 +1,12 @@
 import { FC, useEffect, useRef, useState } from 'react';
-import { Card, Col, Row, Typography } from 'antd';
-
-import CutTimeline from 'renderer/components/CutTimeline';
+import { Col, Row } from 'antd';
 
 import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
-import useExport from 'renderer/hooks/useExport';
+import { useExport } from 'renderer/hooks/useExport';
 
-import styles from './Cut.module.scss';
+import CutTimeline from 'renderer/components/CutTimeline';
 import ExportButton from 'renderer/components/ExportButton';
-
-const { Text } = Typography;
+import TranscriptionEditor from 'renderer/components/TranscriptionEditor';
 
 const Cut: FC = () => {
   const {
@@ -40,7 +37,8 @@ const Cut: FC = () => {
 
         if (!selection) return;
 
-        const selectedSegmentIds = new Set<number>();
+        const segmentsToDelete = new Set<number>();
+        const segmentsToAdd = new Set<number>();
 
         for (let i = 0; i < selection.rangeCount; i++) {
           const range = selection.getRangeAt(i);
@@ -49,7 +47,7 @@ const Cut: FC = () => {
           const end = range.endContainer.parentElement;
           const endParent = end?.parentElement;
 
-          if (!start || !end) break;
+          console.log(start, startParent, end, endParent);
 
           if (
             start &&
@@ -70,7 +68,11 @@ const Cut: FC = () => {
 
             if (from !== -1 && to !== -1) {
               for (let j = from; j <= to; j++) {
-                selectedSegmentIds.add(j);
+                if (disabledSegmentIds.has(j)) {
+                  segmentsToDelete.add(j);
+                } else {
+                  segmentsToAdd.add(j);
+                }
               }
             }
           }
@@ -80,8 +82,10 @@ const Cut: FC = () => {
         setDisabledSegmentIds(
           (prevDisabledSegmentIds) =>
             new Set([
-              ...Array.from(prevDisabledSegmentIds),
-              ...Array.from(selectedSegmentIds),
+              ...Array.from(prevDisabledSegmentIds).filter(
+                (id) => !segmentsToDelete.has(id)
+              ),
+              ...Array.from(segmentsToAdd),
             ])
         );
       }
@@ -93,7 +97,7 @@ const Cut: FC = () => {
     return () => {
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [disabledSegmentIds]);
 
   return (
     <>
@@ -111,20 +115,12 @@ const Cut: FC = () => {
       </Row>
       <Row justify="center">
         <Col className="col">
-          <Card className={styles.card}>
-            {transcription.map(({ id, text }) => (
-              <Text
-                ref={id === segmentAtPlayhead ? textRef : null}
-                key={id}
-                delete={disabledSegmentIds.has(id)}
-                data-segment-id={id}
-                className={styles.text}
-                mark={id === segmentAtPlayhead}
-              >
-                {text}
-              </Text>
-            ))}
-          </Card>
+          <TranscriptionEditor
+            transcription={transcription}
+            segmentAtPlayhead={segmentAtPlayhead}
+            disabledSegmentIds={disabledSegmentIds}
+            ref={textRef}
+          />
           <ExportButton
             handleExport={exportTimeline}
             loading={isExporting}

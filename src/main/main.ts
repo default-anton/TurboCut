@@ -68,7 +68,7 @@ const installExtensions = async () => {
       extensions.map((name) => installer[name]),
       forceDownload
     )
-    .catch(console.log);
+    .catch((err: any) => log.error(`Error installing extensions: ${err}`));
 };
 
 const createWindow = async () => {
@@ -238,6 +238,18 @@ app
     ipcMain.handle('getOpenAiApiKey', (): string | undefined => {
       return store.get('openai_api_key');
     });
+    ipcMain.on('logInfo', (_event, ...args: any[]): void => {
+      log.info(...args);
+    });
+    ipcMain.on('logError', (_event, ...args: any[]): void => {
+      log.error(...args);
+    });
+    ipcMain.on('logWarn', (_event, ...args: any[]): void => {
+      log.warn(...args);
+    });
+    ipcMain.on('logDebug', (_event, ...args: any[]): void => {
+      log.debug(...args);
+    });
 
     app.on('activate', () => {
       log.info('App is activated');
@@ -246,8 +258,10 @@ app
       if (mainWindow === null) createWindow();
     });
   })
-  .catch(console.log);
+  .catch((err: any) => {
+    log.error(`Error in app.whenReady: ${err}`);
+  });
 
-process.on('uncaughtException', (err) => {
+process.on('uncaughtException', (err: any) => {
   log.error('Uncaught exception: ', err);
 });

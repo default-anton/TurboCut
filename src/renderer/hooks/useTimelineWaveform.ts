@@ -94,7 +94,7 @@ export function useTimelineWaveform({
 
     wavesurferRef.current.load(`file://${filePath}`);
     wavesurferRef.current.on('ready', () => {
-      console.log('ready');
+      window.log.info(`Waveform ready: ${filePath}`);
     });
 
     return () => {

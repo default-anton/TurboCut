@@ -111,11 +111,11 @@ const CutTimeline: FC<CutTimelineProps> = ({
     waveSurferRef.current.load(`file://${audioFile}`);
 
     waveSurferRef.current.on('ready', () => {
-      console.log('ready');
+      window.log.info(`Audio file ready: ${audioFile}`);
     });
 
     waveSurferRef.current.on('error', (err) => {
-      console.log('error', err);
+      window.log.error(`Error loading audio file: ${err}`);
     });
 
     return () => {
