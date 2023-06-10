@@ -9,15 +9,18 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
+
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import Store from 'electron-store';
+
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import {
   getSilentClips,
-  compressAudioFile,
   renderTimelineAudio,
+  getVideoDuration,
 } from './ffmpeg';
 import {
   showSaveDialog,
@@ -26,7 +29,7 @@ import {
   updateProject,
 } from './projects';
 import createEDL from './exporters/davinci';
-import { transcribe } from './openai';
+import Transcriber from './transcriber';
 
 class AppUpdater {
   constructor() {
@@ -35,6 +38,11 @@ class AppUpdater {
     autoUpdater.checkForUpdatesAndNotify();
   }
 }
+
+const store = new Store<Record<string, string>>();
+const TranscriberInstance = new Transcriber({
+  getApiKey: (keyName) => store.get(keyName),
+});
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -65,6 +73,7 @@ const installExtensions = async () => {
 
 const createWindow = async () => {
   if (isDebug) {
+    log.info('Running in development');
     await installExtensions();
   }
 
@@ -92,7 +101,10 @@ const createWindow = async () => {
   mainWindow.loadURL(resolveHtmlPath('index.html'));
 
   mainWindow.on('ready-to-show', () => {
+    log.info('Main window is ready to show');
+
     if (!mainWindow) {
+      log.error('"mainWindow" is not defined');
       throw new Error('"mainWindow" is not defined');
     }
     if (process.env.START_MINIMIZED) {
@@ -135,6 +147,8 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
+    log.info('App is ready');
+
     createWindow();
     // expose getSilentClips to the renderer process by using ipcMain.handle
     ipcMain.handle(
@@ -156,15 +170,6 @@ app
       }
     );
     ipcMain.handle(
-      'compressAudioFile',
-      async (
-        _event,
-        ...args: Parameters<typeof compressAudioFile>
-      ): ReturnType<typeof compressAudioFile> => {
-        return compressAudioFile(...args);
-      }
-    );
-    ipcMain.handle(
       'renderTimelineAudio',
       async (
         _event,
@@ -174,12 +179,21 @@ app
       }
     );
     ipcMain.handle(
+      'getVideoDuration',
+      async (
+        _event,
+        ...args: Parameters<typeof getVideoDuration>
+      ): ReturnType<typeof getVideoDuration> => {
+        return getVideoDuration(...args);
+      }
+    );
+    ipcMain.handle(
       'transcribe',
       async (
         _event,
-        ...args: Parameters<typeof transcribe>
-      ): ReturnType<typeof transcribe> => {
-        return transcribe(...args);
+        ...args: Parameters<typeof Transcriber.prototype.transcribe>
+      ): ReturnType<typeof Transcriber.prototype.transcribe> => {
+        return TranscriberInstance.transcribe(...args);
       }
     );
     ipcMain.handle(
@@ -218,11 +232,22 @@ app
         return updateProject(...args);
       }
     );
+    ipcMain.handle('setOpenAiApiKey', (_event, key: string): void => {
+      store.set('openai_api_key', key);
+    });
+    ipcMain.handle('getOpenAiApiKey', (): string | undefined => {
+      return store.get('openai_api_key');
+    });
 
     app.on('activate', () => {
+      log.info('App is activated');
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
       if (mainWindow === null) createWindow();
     });
   })
   .catch(console.log);
+
+process.on('uncaughtException', (err) => {
+  log.error('Uncaught exception: ', err);
+});

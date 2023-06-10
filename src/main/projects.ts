@@ -4,7 +4,7 @@ import path from 'path';
 import checkDiskSpace from 'check-disk-space';
 import { app, dialog } from 'electron';
 
-import { ProjectConfig } from '../shared/types';
+import { ProjectConfig, ProjectStep } from '../shared/types';
 
 const MIN_DISK_SPACE_IN_BYTES = 100 * 1024 * 1024; // 100 MB
 
@@ -62,10 +62,14 @@ export async function createProject(): Promise<ProjectConfig | undefined> {
   }
 
   const config: ProjectConfig = {
+    projectStep: ProjectStep.SelectFile,
     name: path.basename(result.filePath, '.ffai'),
     dir,
     filePath: '',
+    fileDuration: 0,
     clips: [],
+    silence: [],
+    speech: [],
     transcription: [],
   };
 

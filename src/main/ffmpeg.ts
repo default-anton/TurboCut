@@ -5,7 +5,7 @@ import { access, constants } from 'fs/promises';
 import path from 'path';
 import { Clip } from '../shared/types';
 
-const getVideoDuration = async (pathToFile: string): Promise<number> => {
+export const getVideoDuration = async (pathToFile: string): Promise<number> => {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(pathToFile, (err, metadata) => {
       if (err) {
@@ -25,12 +25,17 @@ const getVideoDuration = async (pathToFile: string): Promise<number> => {
 export const renderTimelineAudio = async (
   inPath: string,
   projectDir: string,
-  clips: Clip[]
+  clips: Clip[],
+  extension: 'mp3' | 'wav'
 ): Promise<string> => {
   const hash = createHash('sha256');
   hash.update(JSON.stringify(clips) + inPath);
   const clipsHash = hash.digest('hex');
-  const outPath = path.join(projectDir, 'cache', `${clipsHash}.timeline.mp3`);
+  const outPath = path.join(
+    projectDir,
+    'cache',
+    `${clipsHash}.timeline.${extension}`
+  );
 
   try {
     await access(outPath, constants.R_OK | constants.W_OK);
@@ -65,10 +70,10 @@ export const renderTimelineAudio = async (
 };
 
 const getNonSilentClips = (
-  silentClips: Array<Clip>,
+  silentClips: Clip[],
   videoDuration: number
-): Array<Clip> => {
-  const nonSilentClips: Array<Clip> = [];
+): Clip[] => {
+  const nonSilentClips: Clip[] = [];
 
   // Start from the beginning of the video
   let currentStart = 0;
@@ -94,20 +99,26 @@ const getNonSilentClips = (
   return nonSilentClips;
 };
 
-export const getSilentClips = async (
-  filePath: string,
-  minSilenceLen: number,
-  silenceThresh: number,
-  padding: number,
-  minNonSilenceLen: number
-): Promise<{
+export const getSilentClips = async ({
+  filePath,
+  minSilenceLen,
+  silenceThresh,
+  padding,
+  minNonSilenceLen,
+}: {
+  filePath: string;
+  minSilenceLen: number;
+  silenceThresh: number;
+  padding: number;
+  minNonSilenceLen: number;
+}): Promise<{
   silentClips: Clip[];
   nonSilentClips: Clip[];
 }> => {
   const videoDuration = await getVideoDuration(filePath);
 
   return new Promise((resolve, reject) => {
-    const silenceClips: Array<Clip> = [];
+    const silenceClips: Clip[] = [];
     // use a temporary mono audio file in tmp to detect silence
     const outputAudioFile = `${filePath}.mono.wav`;
     let clipStart: number | null = null;
@@ -129,7 +140,14 @@ export const getSilentClips = async (
         }
 
         // Extend silence clips to fill ultra-short non-silence clips
-        const extendedSilenceClips: Array<Clip> = [{ ...silenceClips[0] }];
+        const extendedSilenceClips: Clip[] = [{ ...silenceClips[0] }];
+
+        // If the first non-silence clip is shorter than the minimum non-silence length, extend the first silence clip
+        // to the beginning of the video.
+        if (extendedSilenceClips[0].start < minNonSilenceLen) {
+          extendedSilenceClips[0].start = 0;
+        }
+
         let i = 0;
 
         while (i < silenceClips.length - 1) {
@@ -190,41 +208,6 @@ export const getSilentClips = async (
         reject(err);
       })
       .output(outputAudioFile)
-      .run();
-  });
-};
-
-export const compressAudioFile = async (
-  inPath: string,
-  projectDir: string
-): Promise<string> => {
-  const hash = createHash('sha256');
-  hash.update(inPath);
-  const inHash = hash.digest('hex');
-  const outPath = path.join(projectDir, 'cache', `${inHash}.compressed.wav`);
-
-  try {
-    await access(outPath, constants.R_OK | constants.W_OK);
-
-    // If the file exists, return it
-    return outPath;
-  } catch (error) {
-    // If the file doesn't exist, render it
-  }
-
-  return new Promise((resolve, reject) => {
-    ffmpeg(inPath)
-      .noVideo()
-      .audioFrequency(44100)
-      .audioChannels(1)
-      .audioBitrate('64k')
-      .output(outPath)
-      .on('end', () => {
-        resolve(outPath);
-      })
-      .on('error', (err: Error) => {
-        reject(err);
-      })
       .run();
   });
 };

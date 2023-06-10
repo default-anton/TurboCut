@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'react';
-import { Clip } from '../../shared/types';
+import { message } from 'antd';
+import { useCallback, useEffect, useState } from 'react';
+import { ProjectStep } from 'shared/types';
 import { useProjectConfig } from './useProjectConfig';
 
-export interface Settings {
+export interface SilenceDetectionSettings {
   minSilenceLen: number;
   minNonSilenceLen: number;
   silenceThresh: number;
@@ -10,41 +11,95 @@ export interface Settings {
 }
 
 export interface UseSilenceDetection {
-  silentClips: Array<Clip>;
-  detectSilence: (settings: Settings) => Promise<void>;
+  isDetectingSilence: boolean;
+  detectSilence: (newSettings: SilenceDetectionSettings) => Promise<void>;
+  applySilenceDetection: () => Promise<void>;
+  settings: SilenceDetectionSettings;
 }
 
 export function useSilenceDetection(): UseSilenceDetection {
-  const { updateClips, projectConfig: { filePath } = {} } = useProjectConfig();
-  const [silentClips, setSilentClips] = useState<Array<Clip>>([]);
+  const {
+    projectConfig: { filePath, speech },
+    updateClips,
+    updateProjectStep,
+  } = useProjectConfig();
+  const [isDetectingSilence, setIsDetectingSilence] = useState(false);
+  const [settings, setSettings] = useState<SilenceDetectionSettings>({
+    minSilenceLen: 1,
+    minNonSilenceLen: 0.8,
+    silenceThresh: -33,
+    padding: 0.2,
+  });
 
   const detectSilence = useCallback(
-    async ({
-      minSilenceLen,
-      silenceThresh,
-      padding,
-      minNonSilenceLen,
-    }: Settings) => {
+    async (newSettings: SilenceDetectionSettings) => {
       if (!filePath) return;
 
-      const { silentClips: sc, nonSilentClips: nsc } =
-        await window.electron.getSilentClips(
-          filePath,
-          minSilenceLen,
-          silenceThresh,
-          padding,
-          minNonSilenceLen
-        );
+      message.open({
+        key: 'detect-silence',
+        type: 'loading',
+        content: 'Detecting silence...',
+        duration: 0,
+      });
+      setIsDetectingSilence(true);
 
-      setSilentClips(sc);
-      await updateClips(nsc);
+      try {
+        const { silentClips, nonSilentClips } =
+          await window.electron.getSilentClips({ filePath, ...newSettings });
+
+        await updateClips({
+          silence: silentClips,
+          speech: nonSilentClips,
+        });
+
+        setSettings(newSettings);
+      } catch (e: any) {
+        message.open({
+          key: 'detect-silence',
+          type: 'error',
+          content: `Silence detection failed: ${e.message}`,
+          duration: 2,
+        });
+        return;
+      } finally {
+        message.open({
+          key: 'detect-silence',
+          type: 'success',
+          content: 'Silence detection complete',
+          duration: 2,
+        });
+        setIsDetectingSilence(false);
+      }
     },
     [filePath, updateClips]
   );
+  const applySilenceDetection = useCallback(async () => {
+    try {
+      await updateClips({ clips: speech });
+    } catch (e: any) {
+      message.error(`Failed to apply silence detection: ${e.message}`);
+      return;
+    }
+
+    try {
+      await updateProjectStep(ProjectStep.Transcribe);
+    } catch (e: any) {
+      message.error(`Failed to update project step: ${e.message}`);
+    }
+  }, [speech, updateClips, updateProjectStep]);
+
+  useEffect(() => {
+    if (!filePath) return;
+    if (speech.length > 0) return;
+
+    detectSilence(settings);
+  }, [filePath, speech]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
-    silentClips,
+    isDetectingSilence,
     detectSilence,
+    applySilenceDetection,
+    settings,
   };
 }
 
