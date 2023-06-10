@@ -1,19 +1,30 @@
-import { forwardRef, useMemo } from 'react';
-import { Card, Typography } from 'antd';
+import { forwardRef, useMemo, FC, ReactNode } from 'react';
+import { Card, Typography, theme } from 'antd';
 
 import { Transcription } from 'shared/types';
 import styles from './TranscriptionEditor.module.scss';
 
 const { Text, Paragraph } = Typography;
 
+interface IfParagraphProps {
+  condition: boolean;
+  children: ReactNode;
+  id: number;
+}
+
+const IfParagraph: FC<IfParagraphProps> = ({ condition, children, id }) =>
+  condition ? <Paragraph data-segment-id={id}>{children}</Paragraph> : children;
+
 interface Props {
   transcription: Transcription;
-  segmentAtPlayhead: number | null;
+  segmentAtPlayhead: number;
   disabledSegmentIds: Set<number>;
 }
 
 const TranscriptionEditor = forwardRef<HTMLElement, Props>(
   ({ transcription, segmentAtPlayhead, disabledSegmentIds }, ref) => {
+    const { token } = theme.useToken();
+
     const percentile10thIntervalBetweenSegments = useMemo(() => {
       const intervalsBetweenSegments = transcription
         .map(({ start }, index) => start - (transcription[index - 1]?.end || 0))
@@ -27,39 +38,29 @@ const TranscriptionEditor = forwardRef<HTMLElement, Props>(
 
     return (
       <Card className={styles.card}>
-        {transcription.map(
-          ({ id, text, start }, index) =>
-            (start - (transcription[index - 1]?.end || 0) >
-              percentile10thIntervalBetweenSegments && (
-              <Paragraph
-                key={`${id}-gap`}
-                className={styles.gap}
-                data-segment-id={id}
-              >
-                <Text
-                  ref={id === segmentAtPlayhead ? ref : null}
-                  key={id}
-                  delete={disabledSegmentIds.has(id)}
-                  data-segment-id={id}
-                  className={styles.text}
-                  mark={id === segmentAtPlayhead}
-                >
-                  {text}
-                </Text>
-              </Paragraph>
-            )) || (
-              <Text
-                ref={id === segmentAtPlayhead ? ref : null}
-                key={id}
-                delete={disabledSegmentIds.has(id)}
-                data-segment-id={id}
-                className={styles.text}
-                mark={id === segmentAtPlayhead}
-              >
-                {text}
-              </Text>
-            )
-        )}
+        {transcription.map(({ id, text, start }, index) => (
+          <IfParagraph
+            key={`${id}-gap`}
+            id={id}
+            condition={
+              start - (transcription[index - 1]?.end || 0) >
+              percentile10thIntervalBetweenSegments
+            }
+          >
+            <Text
+              ref={id === segmentAtPlayhead ? ref : null}
+              delete={disabledSegmentIds.has(id)}
+              data-segment-id={id}
+              className={styles.text}
+              mark={id === segmentAtPlayhead}
+              style={{
+                backgroundColor: index % 2 === 0 ? token.colorPrimaryBg : '',
+              }}
+            >
+              {text}
+            </Text>
+          </IfParagraph>
+        ))}
       </Card>
     );
   }
