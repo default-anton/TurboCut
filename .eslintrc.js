@@ -13,6 +13,7 @@ module.exports = {
     'no-plusplus': 'off',
     'no-bitwise': 'off',
     'no-restricted-syntax': 'off',
+    'no-continue': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

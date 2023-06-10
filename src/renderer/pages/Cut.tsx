@@ -16,17 +16,13 @@ const Cut: FC = () => {
   const [disabledSegmentIds, setDisabledSegmentIds] = useState<Set<number>>(
     new Set()
   );
-  const [segmentAtPlayhead, setSegmentAtPlayhead] = useState<number | null>(
-    null
-  );
+  const [segmentAtPlayhead, setSegmentAtPlayhead] = useState<number>(0);
   const textRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (segmentAtPlayhead) {
-      const element = textRef.current;
-      if (element && element.scrollIntoView) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+    const element = textRef.current;
+    if (element && element.scrollIntoView) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, [segmentAtPlayhead]);
 
@@ -42,37 +38,30 @@ const Cut: FC = () => {
 
         for (let i = 0; i < selection.rangeCount; i++) {
           const range = selection.getRangeAt(i);
-          const start = range.startContainer.parentElement;
-          const startParent = start?.parentElement;
-          const end = range.endContainer.parentElement;
-          const endParent = end?.parentElement;
+          const start =
+            range.startContainer.parentElement?.dataset?.segmentId ||
+            range.startContainer.parentElement
+              ?.closest('[data-segment-id]')
+              ?.getAttribute('data-segment-id');
+          const end =
+            range.endContainer.parentElement?.dataset?.segmentId ||
+            range.endContainer.parentElement
+              ?.closest('[data-segment-id]')
+              ?.getAttribute('data-segment-id');
 
-          console.log(start, startParent, end, endParent);
+          if (!start || !end) {
+            continue;
+          }
 
-          if (
-            start &&
-            (start.dataset?.segmentId || startParent?.dataset?.segmentId) &&
-            end &&
-            (end.dataset?.segmentId || endParent?.dataset?.segmentId)
-          ) {
-            const from = parseInt(
-              start.dataset.segmentId ||
-                startParent?.dataset?.segmentId ||
-                '-1',
-              10
-            );
-            const to = parseInt(
-              end.dataset.segmentId || endParent?.dataset?.segmentId || '-1',
-              10
-            );
+          const from = parseInt(start || '-1', 10);
+          const to = parseInt(end || '-1', 10);
 
-            if (from !== -1 && to !== -1) {
-              for (let j = from; j <= to; j++) {
-                if (disabledSegmentIds.has(j)) {
-                  segmentsToDelete.add(j);
-                } else {
-                  segmentsToAdd.add(j);
-                }
+          if (from !== -1 && to !== -1) {
+            for (let j = from; j <= to; j++) {
+              if (disabledSegmentIds.has(j)) {
+                segmentsToDelete.add(j);
+              } else {
+                segmentsToAdd.add(j);
               }
             }
           }

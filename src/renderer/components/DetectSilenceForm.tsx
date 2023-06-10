@@ -1,5 +1,5 @@
 import { FC, useCallback } from 'react';
-import { Form, InputNumber, Row, Col, Button, message } from 'antd';
+import { Form, InputNumber, Row, Col, Button, message, Space } from 'antd';
 import {
   ClockCircleOutlined,
   AudioOutlined,
@@ -106,22 +106,22 @@ const DetectSilenceForm: FC<DetectSilenceFormProps> = ({
           </Form.Item>
         </Col>
         <Col span={24}>
-          <Form.Item>
-            <Button icon={<AudioOutlined />} htmlType="submit">
-              Detect silence
-            </Button>
-          </Form.Item>
-        </Col>
-        <Col span={24}>
-          <Form.Item>
-            <Button
-              type="primary"
-              icon={<SoundOutlined />}
-              onClick={handleApply}
-            >
-              Apply silence detection
-            </Button>
-          </Form.Item>
+          <Space wrap>
+            <Form.Item>
+              <Button icon={<AudioOutlined />} htmlType="submit">
+                Detect silence
+              </Button>
+            </Form.Item>
+            <Form.Item>
+              <Button
+                type="primary"
+                icon={<SoundOutlined />}
+                onClick={handleApply}
+              >
+                Apply silence detection
+              </Button>
+            </Form.Item>
+          </Space>
         </Col>
       </Row>
     </Form>
