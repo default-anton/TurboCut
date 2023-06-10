@@ -4,8 +4,10 @@ import { Card, Col, Row, Typography } from 'antd';
 import CutTimeline from 'renderer/components/CutTimeline';
 
 import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
+import useExport from 'renderer/hooks/useExport';
 
 import styles from './Cut.module.scss';
+import ExportButton from 'renderer/components/ExportButton';
 
 const { Text } = Typography;
 
@@ -13,6 +15,7 @@ const Cut: FC = () => {
   const {
     projectConfig: { transcription },
   } = useProjectConfig();
+  const { exportTimeline, isExporting } = useExport();
   const [disabledSegmentIds, setDisabledSegmentIds] = useState<Set<number>>(
     new Set()
   );
@@ -122,6 +125,11 @@ const Cut: FC = () => {
               </Text>
             ))}
           </Card>
+          <ExportButton
+            handleExport={exportTimeline}
+            loading={isExporting}
+            disabled={isExporting}
+          />
         </Col>
       </Row>
     </>
