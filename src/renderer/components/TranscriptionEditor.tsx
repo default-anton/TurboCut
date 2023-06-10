@@ -14,22 +14,23 @@ interface Props {
 
 const TranscriptionEditor = forwardRef<HTMLElement, Props>(
   ({ transcription, segmentAtPlayhead, disabledSegmentIds }, ref) => {
-    const meanPauseInterval = useMemo(
-      () =>
-        transcription.reduce(
-          (acc, { start }, index, array) =>
-            index === 0 ? acc : acc + start - array[index - 1].end,
-          0
-        ) / transcription.length,
-      [transcription]
-    );
+    const percentile10thIntervalBetweenSegments = useMemo(() => {
+      const intervalsBetweenSegments = transcription
+        .map(({ start }, index) => start - (transcription[index - 1]?.end || 0))
+        .filter((interval) => interval > 0)
+        .sort((a, b) => a - b);
+
+      const index = Math.floor(intervalsBetweenSegments.length * 0.1);
+
+      return intervalsBetweenSegments[index];
+    }, [transcription]);
 
     return (
       <Card className={styles.card}>
         {transcription.map(
           ({ id, text, start }, index) =>
             (start - (transcription[index - 1]?.end || 0) >
-              meanPauseInterval && (
+              percentile10thIntervalBetweenSegments && (
               <Paragraph
                 key={`${id}-gap`}
                 className={styles.gap}
