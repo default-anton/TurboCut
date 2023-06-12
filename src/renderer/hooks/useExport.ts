@@ -1,11 +1,11 @@
 import { useCallback, useState } from 'react';
 import { message } from 'antd';
 
-import { Editor } from '../../shared/types';
+import { Clip, Editor } from '../../shared/types';
 import { useProjectConfig } from './useProjectConfig';
 
 export function useExport(): {
-  exportTimeline: (editor: Editor) => Promise<void>;
+  exportTimeline: (editor: Editor, clipsToExport?: Clip[]) => Promise<void>;
   isExporting: boolean;
 } {
   const { projectConfig: { filePath, fileDuration, clips } = {} } =
@@ -13,7 +13,7 @@ export function useExport(): {
   const [isExporting, setIsExporting] = useState(false);
 
   const exportTimeline = useCallback(
-    async (editor: Editor) => {
+    async (editor: Editor, clipsToExport?: Clip[]) => {
       if (!filePath || !clips || !fileDuration) {
         message.error('Please select a file first');
         return;
@@ -34,7 +34,7 @@ export function useExport(): {
 
       const exported = await window.electron.createEDL(
         `Export to ${editor}`,
-        clips,
+        clipsToExport || clips,
         { duration: fileDuration, path: filePath },
         clipName
       );

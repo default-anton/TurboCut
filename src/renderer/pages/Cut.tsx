@@ -1,12 +1,14 @@
-import { FC, useEffect, useRef, useState } from 'react';
-import { Col, Row } from 'antd';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { Col, Row, Space } from 'antd';
 
 import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
 import { useExport } from 'renderer/hooks/useExport';
+import { useTranscription } from 'renderer/hooks/useTranscription';
 
 import CutTimeline from 'renderer/components/CutTimeline';
 import ExportButton from 'renderer/components/ExportButton';
 import TranscriptionEditor from 'renderer/components/TranscriptionEditor';
+import { Editor } from 'shared/types';
 
 const Cut: FC = () => {
   const {
@@ -18,6 +20,7 @@ const Cut: FC = () => {
   );
   const [segmentAtPlayhead, setSegmentAtPlayhead] = useState<number>(0);
   const textRef = useRef<HTMLElement>(null);
+  const { applyEdits } = useTranscription();
 
   useEffect(() => {
     const element = textRef.current;
@@ -88,6 +91,18 @@ const Cut: FC = () => {
     };
   }, [disabledSegmentIds]);
 
+  const handleExport = useCallback(
+    async (editor: Editor) => {
+      window.log.info(
+        `Exporting timeline with ${disabledSegmentIds.size} segments disabled`
+      );
+      const clips = await applyEdits(disabledSegmentIds);
+      window.log.info(`Exporting timeline for ${editor}`);
+      await exportTimeline(editor, clips);
+    },
+    [applyEdits, disabledSegmentIds, exportTimeline]
+  );
+
   return (
     <>
       <Row justify="center">
@@ -110,11 +125,13 @@ const Cut: FC = () => {
             disabledSegmentIds={disabledSegmentIds}
             ref={textRef}
           />
-          <ExportButton
-            handleExport={exportTimeline}
-            loading={isExporting}
-            disabled={isExporting}
-          />
+          <Space wrap>
+            <ExportButton
+              handleExport={handleExport}
+              loading={isExporting}
+              disabled={isExporting}
+            />
+          </Space>
         </Col>
       </Row>
     </>
