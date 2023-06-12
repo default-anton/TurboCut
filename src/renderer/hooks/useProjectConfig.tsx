@@ -29,6 +29,7 @@ type ProjectActions = {
   updateTranscription: (transcription: Transcription) => Promise<void>;
   updateClips: (allClips: AllClips) => Promise<void>;
   updateProjectStep: (projectStep: ProjectStep) => Promise<void>;
+  updateDisabledSegmentIds: (disabledSegmentIds: Set<number>) => Promise<void>;
 };
 
 interface ProjectContextValue extends ProjectActions {
@@ -134,6 +135,20 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
     },
     [projectConfig]
   );
+  const updateDisabledSegmentIds = useCallback(
+    async (disabledSegmentIds: Set<number>) => {
+      if (!projectConfig) return;
+
+      const newProjectConfig = {
+        ...projectConfig,
+        disabledSegmentIds,
+      };
+
+      await window.electron.updateProject(newProjectConfig);
+      setProjectConfig(newProjectConfig);
+    },
+    [projectConfig]
+  );
 
   const value = useMemo(
     () => ({
@@ -144,6 +159,7 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
       updateTranscription,
       updateClips,
       updateProjectStep,
+      updateDisabledSegmentIds,
     }),
     [
       projectConfig,
@@ -153,6 +169,7 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
       updateTranscription,
       updateClips,
       updateProjectStep,
+      updateDisabledSegmentIds,
     ]
   );
 

@@ -27,12 +27,31 @@ export async function openProject(): Promise<ProjectConfig | undefined> {
     await access(configPath, constants.R_OK | constants.W_OK);
     const config = await readFile(configPath, 'utf-8');
 
-    return JSON.parse(config) as ProjectConfig;
+    const projectConfig = JSON.parse(config) as ProjectConfig;
+    projectConfig.disabledSegmentIds = new Set(
+      projectConfig.disabledSegmentIds
+    );
+    return projectConfig;
   } catch (error) {
     throw new Error(
       'The selected file is either inaccessible, lacks sufficient permissions, or is not a valid project file'
     );
   }
+}
+
+export async function updateProject(
+  projectConfig: ProjectConfig
+): Promise<void> {
+  await writeFile(
+    path.join(projectConfig.dir, `${projectConfig.name}.ffai`),
+    JSON.stringify(
+      projectConfig,
+      (_key, value) => {
+        return value instanceof Set ? [...value] : value;
+      },
+      2
+    )
+  );
 }
 
 export async function createProject(): Promise<ProjectConfig | undefined> {
@@ -72,26 +91,18 @@ export async function createProject(): Promise<ProjectConfig | undefined> {
     silence: [],
     speech: [],
     transcription: [],
+    disabledSegmentIds: new Set(),
   };
 
   createCacheDir(config.dir);
 
   try {
-    await writeFile(result.filePath, JSON.stringify(config, null, 2));
+    await updateProject(config);
   } catch (error) {
     throw new Error('Unable to create project file');
   }
 
   return config;
-}
-
-export async function updateProject(
-  projectConfig: ProjectConfig
-): Promise<void> {
-  await writeFile(
-    path.join(projectConfig.dir, `${projectConfig.name}.ffai`),
-    JSON.stringify(projectConfig, null, 2)
-  );
 }
 
 export const showSaveDialog = async (

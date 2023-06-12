@@ -54,7 +54,9 @@ export function useTranscription(): {
         (segment) => !removedSegmentIds.has(segment.id)
       );
 
-      window.log.info('newTranscription.length', newTranscription.length);
+      window.log.info(
+        `Exporting timeline with ${removedSegmentIds.size} segments removed`
+      );
 
       let duration = 0;
       const speechTimeline = speech.map((clip) => {

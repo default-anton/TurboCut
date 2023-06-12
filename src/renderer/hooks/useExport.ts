@@ -24,6 +24,8 @@ export function useExport(): {
         return;
       }
 
+      window.log.info(`Exporting timeline to ${editor}`);
+
       const clipName = filePath.split('/').pop() as string;
       setIsExporting(true);
       message.loading({
@@ -41,8 +43,10 @@ export function useExport(): {
 
       setIsExporting(false);
       if (exported) {
+        window.log.info(`Exported timeline to ${editor}`);
         message.success({ content: 'File exported!', key: 'exporting' });
       } else {
+        window.log.info(`Export timeline to ${editor} cancelled`);
         message.warning({ content: 'Export cancelled', key: 'exporting' });
       }
     },

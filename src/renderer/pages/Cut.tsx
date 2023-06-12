@@ -10,14 +10,15 @@ import ExportButton from 'renderer/components/ExportButton';
 import TranscriptionEditor from 'renderer/components/TranscriptionEditor';
 import { Editor } from 'shared/types';
 
+const DELETE_SEGMENTS_BUTTONS = new Set(['Backspace', 'Delete', 'd', 'x']);
+const ADD_SEGMENTS_BUTTONS = new Set(['Enter', 'a']);
+
 const Cut: FC = () => {
   const {
-    projectConfig: { transcription },
+    projectConfig: { transcription, disabledSegmentIds },
+    updateDisabledSegmentIds,
   } = useProjectConfig();
   const { exportTimeline, isExporting } = useExport();
-  const [disabledSegmentIds, setDisabledSegmentIds] = useState<Set<number>>(
-    new Set()
-  );
   const [segmentAtPlayhead, setSegmentAtPlayhead] = useState<number>(0);
   const textRef = useRef<HTMLElement>(null);
   const { applyEdits } = useTranscription();
@@ -30,55 +31,89 @@ const Cut: FC = () => {
   }, [segmentAtPlayhead]);
 
   useEffect(() => {
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key === 'Backspace' || event.key === 'Delete') {
-        const selection = window.getSelection();
+    const handleKeyUp = async (event: KeyboardEvent) => {
+      if (
+        !DELETE_SEGMENTS_BUTTONS.has(event.key) &&
+        !ADD_SEGMENTS_BUTTONS.has(event.key)
+      ) {
+        return;
+      }
 
-        if (!selection) return;
+      const selection = window.getSelection();
 
-        const segmentsToDelete = new Set<number>();
-        const segmentsToAdd = new Set<number>();
+      if (!selection) return;
 
-        for (let i = 0; i < selection.rangeCount; i++) {
-          const range = selection.getRangeAt(i);
-          const start =
-            range.startContainer.parentElement?.dataset?.segmentId ||
-            range.startContainer.parentElement
-              ?.closest('[data-segment-id]')
-              ?.getAttribute('data-segment-id');
-          const end =
-            range.endContainer.parentElement?.dataset?.segmentId ||
-            range.endContainer.parentElement
-              ?.closest('[data-segment-id]')
-              ?.getAttribute('data-segment-id');
+      const changedSegments = new Set<number>();
 
-          if (!start || !end) {
-            continue;
-          }
+      for (let i = 0; i < selection.rangeCount; i++) {
+        const range = selection.getRangeAt(i);
+        const startElem = Array.prototype.find.call(
+          range.startContainer.parentElement?.childNodes,
+          (node) => range.startContainer === node
+        );
+        const endElem = Array.prototype.find.call(
+          range.endContainer.parentElement?.childNodes,
+          (node) => range.endContainer === node
+        );
 
-          const from = parseInt(start || '-1', 10);
-          const to = parseInt(end || '-1', 10);
-
-          if (from !== -1 && to !== -1) {
-            for (let j = from; j <= to; j++) {
-              if (disabledSegmentIds.has(j)) {
-                segmentsToDelete.add(j);
-              } else {
-                segmentsToAdd.add(j);
-              }
-            }
-          }
+        if (!startElem || !endElem) {
+          continue;
         }
 
-        // Merge selectedSegmentIds into disabledSegmentIds
-        setDisabledSegmentIds(
-          (prevDisabledSegmentIds) =>
-            new Set([
-              ...Array.from(prevDisabledSegmentIds).filter(
-                (id) => !segmentsToDelete.has(id)
-              ),
-              ...Array.from(segmentsToAdd),
-            ])
+        let start = '';
+        if (startElem.dataset && startElem.dataset.segmentId) {
+          start = startElem.dataset.segmentId;
+        } else if (startElem.closest) {
+          start = startElem
+            .closest('[data-segment-id]')
+            ?.getAttribute('data-segment-id');
+        } else if (startElem.parentElement && startElem.parentElement.closest) {
+          start = startElem.parentElement
+            ?.closest('[data-segment-id]')
+            ?.getAttribute('data-segment-id');
+        } else {
+          continue;
+        }
+
+        let end = '';
+        if (endElem.dataset && endElem.dataset.segmentId) {
+          end = endElem.dataset.segmentId;
+        } else if (endElem.closest) {
+          end = endElem
+            .closest('[data-segment-id]')
+            ?.getAttribute('data-segment-id');
+        } else if (endElem.parentElement && endElem.parentElement.closest) {
+          end = endElem.parentElement
+            ?.closest('[data-segment-id]')
+            ?.getAttribute('data-segment-id');
+        } else {
+          continue;
+        }
+
+        const from = parseInt(start || '-1', 10);
+        const to = parseInt(end || '-1', 10);
+
+        if (from !== -1 && to !== -1) {
+          for (let j = from; j <= to; j++) {
+            changedSegments.add(j);
+          }
+        }
+      }
+
+      if (ADD_SEGMENTS_BUTTONS.has(event.key)) {
+        await updateDisabledSegmentIds(
+          new Set([
+            ...Array.from(disabledSegmentIds).filter(
+              (id) => !changedSegments.has(id)
+            ),
+          ])
+        );
+      } else if (DELETE_SEGMENTS_BUTTONS.has(event.key)) {
+        await updateDisabledSegmentIds(
+          new Set([
+            ...Array.from(disabledSegmentIds),
+            ...Array.from(changedSegments),
+          ])
         );
       }
     };
@@ -89,15 +124,11 @@ const Cut: FC = () => {
     return () => {
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [disabledSegmentIds]);
+  }, [disabledSegmentIds, updateDisabledSegmentIds]);
 
   const handleExport = useCallback(
     async (editor: Editor) => {
-      window.log.info(
-        `Exporting timeline with ${disabledSegmentIds.size} segments disabled`
-      );
       const clips = await applyEdits(disabledSegmentIds);
-      window.log.info(`Exporting timeline for ${editor}`);
       await exportTimeline(editor, clips);
     },
     [applyEdits, disabledSegmentIds, exportTimeline]
