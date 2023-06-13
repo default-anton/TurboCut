@@ -136,21 +136,36 @@ const CutTimeline: FC<CutTimelineProps> = ({
         currentTime
       );
 
-      setSegmentAtPlayhead(currentSegmentAtPlayhead);
-
-      // skip to the end of the region if the current time is within a disabled region
-      for (const id of disabledSegmentIds) {
-        const t = transcription[id];
-
-        if (currentTime >= t.start && currentTime <= t.end) {
-          skipRegionInProgress.current = true;
-          waveSurferRef.current!.seekTo(t.end / audioFileDuration);
-          setTimeout(() => {
-            skipRegionInProgress.current = false;
-          }, 0);
-          break;
-        }
+      if (!currentSegmentAtPlayhead) {
+        setSegmentAtPlayhead(null);
+        return;
       }
+
+      let newPlayheadSegment = currentSegmentAtPlayhead;
+      // skip to the first non-disabled segment
+      while (
+        newPlayheadSegment < transcription.length &&
+        disabledSegmentIds.has(newPlayheadSegment)
+      ) {
+        newPlayheadSegment++;
+      }
+
+      if (newPlayheadSegment === currentSegmentAtPlayhead) {
+        setSegmentAtPlayhead(currentSegmentAtPlayhead);
+        return;
+      }
+
+      skipRegionInProgress.current = true;
+      setSegmentAtPlayhead(
+        newPlayheadSegment >= transcription.length ? null : newPlayheadSegment
+      );
+      waveSurferRef.current!.seekTo(
+        (transcription[newPlayheadSegment]?.end || audioFileDuration) /
+          audioFileDuration
+      );
+      setTimeout(() => {
+        skipRegionInProgress.current = false;
+      }, 0);
     };
 
     waveSurferRef.current.clearRegions();

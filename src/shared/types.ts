@@ -52,6 +52,7 @@ export interface ProjectConfig {
   silence: Clip[];
   speech: Clip[];
   transcription: Transcription;
+  disabledSegmentIds: Set<number>;
 }
 
 export class ApiKeyNotSetError extends Error {
