@@ -4,7 +4,7 @@ import WaveSurferRegions from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.
 import TimelinePlugin from 'wavesurfer.js/dist/plugin/wavesurfer.timeline.min';
 import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
 
-import { theme, Button } from 'antd';
+import { theme, FloatButton } from 'antd';
 import { PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
 
 import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
@@ -210,22 +210,13 @@ const CutTimeline: FC<CutTimelineProps> = ({
 
       <div id="waveform-timeline" />
 
-      <Button
+      <FloatButton
         onClick={handlePlayPause}
-        style={{ marginTop: token.marginMD }}
         type={isPlaying ? 'default' : 'primary'}
-        danger={isPlaying}
-      >
-        {isPlaying ? (
-          <>
-            <PauseCircleOutlined /> Pause
-          </>
-        ) : (
-          <>
-            <PlayCircleOutlined /> Play
-          </>
-        )}
-      </Button>
+        icon={isPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
+        tooltip={<div>{isPlaying ? 'Pause' : 'Play'}</div>}
+        style={{ right: `calc(50% - ${token.controlHeightLG}px)` }}
+      />
     </>
   );
 };
