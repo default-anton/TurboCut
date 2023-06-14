@@ -1,6 +1,6 @@
 # 🎬 TurboCut 
 
-🚨🚨🚨Alpha version
+🚨🚨🚨 Alpha version
 
 ## 🚀 Features
 
