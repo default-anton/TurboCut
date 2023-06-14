@@ -1,6 +1,6 @@
 # 🎬 TurboCut 
 
-Experimental version. Use at your own risk.
+🚨🚨🚨Alpha version
 
 ## 🚀 Features
 
