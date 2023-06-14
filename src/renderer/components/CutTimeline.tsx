@@ -1,4 +1,4 @@
-import { useEffect, useRef, FC, useState } from 'react';
+import { useEffect, useRef, FC, useState, useCallback } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import WaveSurferRegions from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.js';
 import TimelinePlugin from 'wavesurfer.js/dist/plugin/wavesurfer.timeline.min';
@@ -57,6 +57,14 @@ const CutTimeline: FC<CutTimelineProps> = ({
   const [audioFileDuration, setAudioFileDuration] = useState<
     number | undefined
   >(undefined);
+
+  const handlePlayPause = useCallback(() => {
+    if (!waveSurferRef.current) return;
+
+    setIsPlaying(!waveSurferRef.current.isPlaying());
+
+    waveSurferRef.current.playPause();
+  }, []);
 
   useEffect(() => {
     const resize = () => {
@@ -196,13 +204,20 @@ const CutTimeline: FC<CutTimelineProps> = ({
     setSegmentAtPlayhead,
   ]);
 
-  const handlePlayPause = () => {
-    if (!waveSurferRef.current) return;
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === ' ') {
+        event.preventDefault();
+        handlePlayPause();
+      }
+    };
 
-    setIsPlaying(!waveSurferRef.current.isPlaying());
+    window.addEventListener('keydown', handleKeyDown);
 
-    waveSurferRef.current.playPause();
-  };
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handlePlayPause]);
 
   return (
     <>
