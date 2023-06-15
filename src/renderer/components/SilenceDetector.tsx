@@ -14,7 +14,14 @@ const SilenceDetector: FC<UseSilenceDetection> = ({
   applySilenceDetection,
   settings,
 }) => {
-  const { waveformRef, handleWheel, isPlaying, playPause } = useSilenceDetectionWaveform();
+  const {
+    waveformRef,
+    handleWheel,
+    isPlaying,
+    playbackRate,
+    setPlaybackRate,
+    playPause,
+  } = useSilenceDetectionWaveform();
 
   useEffect(() => {
     const ref = waveformRef.current;
@@ -33,6 +40,8 @@ const SilenceDetector: FC<UseSilenceDetection> = ({
       <Waveform
         waveformRef={waveformRef}
         playing={isPlaying}
+        playbackRate={playbackRate}
+        onPlaybackRateChange={setPlaybackRate}
         onPlayPause={playPause}
       />
       <DetectSilenceForm

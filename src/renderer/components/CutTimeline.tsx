@@ -230,7 +230,7 @@ const CutTimeline: FC<CutTimelineProps> = ({
         type={isPlaying ? 'default' : 'primary'}
         icon={isPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
         tooltip={<div>{isPlaying ? 'Pause' : 'Play'}</div>}
-        style={{ right: `calc(50% - ${token.controlHeightLG}px)` }}
+        style={{ right: `calc(50% - ${token.controlHeightLG / 2}px)` }}
       />
     </>
   );
