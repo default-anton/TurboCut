@@ -11,9 +11,12 @@ import { useProjectConfig } from './useProjectConfig';
 export function useSilenceDetectionWaveform(): {
   waveformRef: React.RefObject<HTMLDivElement>;
   handleWheel: (event: WheelEvent) => void;
+  playPause: () => void;
+  isPlaying: boolean;
 } {
   const { token } = theme.useToken();
   const [audioFile, setAudioFile] = useState<string | undefined>(undefined);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [audioFileDuration, setAudioFileDuration] = useState<
     number | undefined
   >(undefined);
@@ -25,10 +28,12 @@ export function useSilenceDetectionWaveform(): {
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
 
-  const handlePlayPauseClick = useCallback(() => {
-    if (wavesurferRef.current) {
-      wavesurferRef.current.playPause();
-    }
+  const playPause = useCallback(() => {
+    if (!wavesurferRef.current) return;
+
+    setIsPlaying(!wavesurferRef.current.isPlaying());
+
+    wavesurferRef.current.playPause();
   }, []);
 
   const handleWheel = useCallback((event: WheelEvent) => {
@@ -152,7 +157,7 @@ export function useSilenceDetectionWaveform(): {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === ' ') {
         event.preventDefault();
-        handlePlayPauseClick();
+        playPause();
       }
     };
 
@@ -161,11 +166,13 @@ export function useSilenceDetectionWaveform(): {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handlePlayPauseClick]);
+  }, [playPause]);
 
   return {
     waveformRef,
     handleWheel,
+    playPause,
+    isPlaying,
   };
 }
 
