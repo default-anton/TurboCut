@@ -12,11 +12,14 @@ export function useSilenceDetectionWaveform(): {
   waveformRef: React.RefObject<HTMLDivElement>;
   handleWheel: (event: WheelEvent) => void;
   playPause: () => void;
+  setPlaybackRate: (rate: number) => void;
+  playbackRate: number;
   isPlaying: boolean;
 } {
   const { token } = theme.useToken();
   const [audioFile, setAudioFile] = useState<string | undefined>(undefined);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
   const [audioFileDuration, setAudioFileDuration] = useState<
     number | undefined
   >(undefined);
@@ -99,6 +102,7 @@ export function useSilenceDetectionWaveform(): {
     };
 
     wavesurferRef.current = WaveSurfer.create({
+      backend: 'MediaElement',
       container: waveformRef.current,
       waveColor: token.colorPrimary,
       progressColor: token.colorFillSecondary,
@@ -168,10 +172,18 @@ export function useSilenceDetectionWaveform(): {
     };
   }, [playPause]);
 
+  useEffect(() => {
+    if (!wavesurferRef.current) return;
+
+    wavesurferRef.current!.setPlaybackRate(playbackRate);
+  }, [playbackRate]);
+
   return {
     waveformRef,
     handleWheel,
     playPause,
+    playbackRate,
+    setPlaybackRate,
     isPlaying,
   };
 }
