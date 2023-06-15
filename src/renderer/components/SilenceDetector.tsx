@@ -14,7 +14,7 @@ const SilenceDetector: FC<UseSilenceDetection> = ({
   applySilenceDetection,
   settings,
 }) => {
-  const { waveformRef, handleWheel } = useSilenceDetectionWaveform();
+  const { waveformRef, handleWheel, isPlaying, playPause } = useSilenceDetectionWaveform();
 
   useEffect(() => {
     const ref = waveformRef.current;
@@ -30,7 +30,11 @@ const SilenceDetector: FC<UseSilenceDetection> = ({
 
   return (
     <Spin spinning={isDetectingSilence} tip="Detecting silence..." size="large">
-      <Waveform waveformRef={waveformRef} />
+      <Waveform
+        waveformRef={waveformRef}
+        playing={isPlaying}
+        onPlayPause={playPause}
+      />
       <DetectSilenceForm
         settings={settings}
         onSubmit={detectSilence}
