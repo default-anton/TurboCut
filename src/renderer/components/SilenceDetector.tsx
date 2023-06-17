@@ -1,6 +1,6 @@
 import { FC, useEffect } from 'react';
 
-import { Spin } from 'antd';
+import { Spin, Space, Divider } from 'antd';
 
 import DetectSilenceForm from './DetectSilenceForm';
 import Waveform from './Waveform';
@@ -37,18 +37,23 @@ const SilenceDetector: FC<UseSilenceDetection> = ({
 
   return (
     <Spin spinning={isDetectingSilence} tip="Detecting silence..." size="large">
-      <Waveform
-        waveformRef={waveformRef}
-        playing={isPlaying}
-        playbackRate={playbackRate}
-        onPlaybackRateChange={setPlaybackRate}
-        onPlayPause={playPause}
-      />
-      <DetectSilenceForm
-        settings={settings}
-        onSubmit={detectSilence}
-        onApply={applySilenceDetection}
-      />
+      <Space direction="vertical" size="large">
+        <Waveform
+          waveformRef={waveformRef}
+          playing={isPlaying}
+          playbackRate={playbackRate}
+          onPlaybackRateChange={setPlaybackRate}
+          onPlayPause={playPause}
+        />
+
+        <Divider orientation="left">Spam Detection</Divider>
+
+        <DetectSilenceForm
+          settings={settings}
+          onSubmit={detectSilence}
+          onApply={applySilenceDetection}
+        />
+      </Space>
     </Spin>
   );
 };
