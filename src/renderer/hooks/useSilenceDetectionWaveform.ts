@@ -109,16 +109,6 @@ export function useSilenceDetectionWaveform(): {
       height: 256,
       scrollParent: true,
       plugins: [
-        PlayheadPlugin.create({
-          showTime: true,
-          opacity: 1,
-          customShowTimeStyle: {
-            'background-color': '#000',
-            color: token.colorBgSpotlight,
-            padding: token.paddingXXS,
-            'font-size': token.fontSizeSM,
-          },
-        }),
         TimelinePlugin.create({ container: '#waveform-timeline' }),
         WaveSurferRegions.create(),
       ],
