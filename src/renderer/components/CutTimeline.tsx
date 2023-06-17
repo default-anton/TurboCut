@@ -4,7 +4,7 @@ import WaveSurferRegions from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.
 import TimelinePlugin from 'wavesurfer.js/dist/plugin/wavesurfer.timeline.min';
 import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
 
-import { theme, FloatButton } from 'antd';
+import { theme, FloatButton, Typography } from 'antd';
 import { PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
 
 import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
@@ -14,6 +14,14 @@ interface CutTimelineProps {
   disabledSegmentIds: Set<number>;
   setSegmentAtPlayhead: (segmentId: number | null) => void;
 }
+
+const { Text } = Typography;
+
+const PLAYBACK_RATE_OPTIONS = [
+  { label: '2.0x', value: 2.0 },
+  { label: '1.5x', value: 1.5 },
+  { label: '1.0x', value: 1.0 },
+];
 
 function findSegmentAtPlayhead(
   transcription: Transcription,
@@ -52,6 +60,7 @@ const CutTimeline: FC<CutTimelineProps> = ({
     projectConfig: { transcription, filePath, dir, speech },
   } = useProjectConfig();
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
 
   const [audioFile, setAudioFile] = useState<string | undefined>(undefined);
   const [audioFileDuration, setAudioFileDuration] = useState<
@@ -106,6 +115,7 @@ const CutTimeline: FC<CutTimelineProps> = ({
 
     // Initialize Wavesurfer.js
     waveSurferRef.current = WaveSurfer.create({
+      backend: 'MediaElement',
       container: waveformRef.current,
       waveColor: token.colorPrimary,
       progressColor: token.colorFillSecondary,
@@ -205,6 +215,12 @@ const CutTimeline: FC<CutTimelineProps> = ({
   ]);
 
   useEffect(() => {
+    if (!waveSurferRef.current) return;
+
+    waveSurferRef.current!.setPlaybackRate(playbackRate);
+  }, [playbackRate]);
+
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === ' ') {
         event.preventDefault();
@@ -230,8 +246,33 @@ const CutTimeline: FC<CutTimelineProps> = ({
         type={isPlaying ? 'default' : 'primary'}
         icon={isPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
         tooltip={<div>{isPlaying ? 'Pause' : 'Play'}</div>}
-        style={{ right: `calc(50% - ${token.controlHeightLG / 2}px)` }}
+        style={{ left: `calc(50% - ${token.controlHeightLG}px)` }}
       />
+
+      <FloatButton.Group
+        trigger="hover"
+        style={{ left: `calc(50% + ${token.controlHeightLG / 2}px)` }}
+        icon={null}
+        closeIcon={null}
+        description={
+          <Text>
+            {
+              PLAYBACK_RATE_OPTIONS.find(
+                (option) => option.value === playbackRate
+              )?.label
+            }
+          </Text>
+        }
+      >
+        {PLAYBACK_RATE_OPTIONS.map((option) => (
+          <FloatButton
+            key={option.value}
+            description={option.label}
+            type={option.value === playbackRate ? 'primary' : 'default'}
+            onClick={() => setPlaybackRate(option.value)}
+          />
+        ))}
+      </FloatButton.Group>
     </>
   );
 };
