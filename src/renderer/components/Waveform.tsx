@@ -1,12 +1,10 @@
 import React from 'react';
-import { theme, FloatButton } from 'antd';
-import {
-  PlayCircleOutlined,
-  PauseCircleOutlined,
-  DoubleRightOutlined,
-} from '@ant-design/icons';
+import { theme, FloatButton, Typography } from 'antd';
+import { PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
 
 import styles from './Waveform.module.scss';
+
+const { Text } = Typography;
 
 interface WaveformProps {
   waveformRef: React.RefObject<HTMLDivElement>;
@@ -17,9 +15,9 @@ interface WaveformProps {
 }
 
 const PLAYBACK_RATE_OPTIONS = [
-  { label: '1.0x', value: 1.0 },
-  { label: '1.5x', value: 1.5 },
   { label: '2.0x', value: 2.0 },
+  { label: '1.5x', value: 1.5 },
+  { label: '1.0x', value: 1.0 },
 ];
 
 const Waveform: React.FC<WaveformProps> = ({
@@ -47,7 +45,17 @@ const Waveform: React.FC<WaveformProps> = ({
       <FloatButton.Group
         trigger="hover"
         style={{ left: `calc(50% + ${token.controlHeightLG / 2}px)` }}
-        icon={<DoubleRightOutlined />}
+        icon={null}
+        closeIcon={null}
+        description={
+          <Text>
+            {
+              PLAYBACK_RATE_OPTIONS.find(
+                (option) => option.value === playbackRate
+              )?.label
+            }
+          </Text>
+        }
       >
         {PLAYBACK_RATE_OPTIONS.map((option) => (
           <FloatButton
