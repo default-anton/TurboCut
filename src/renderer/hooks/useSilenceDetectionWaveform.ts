@@ -15,6 +15,8 @@ export function useSilenceDetectionWaveform(): {
   setPlaybackRate: (rate: number) => void;
   playbackRate: number;
   isPlaying: boolean;
+  gain: number;
+  setGain: number;
 } {
   const { token } = theme.useToken();
   const [audioFile, setAudioFile] = useState<string | undefined>(undefined);
@@ -23,11 +25,13 @@ export function useSilenceDetectionWaveform(): {
   const [audioFileDuration, setAudioFileDuration] = useState<
     number | undefined
   >(undefined);
-  const [isWaveformReady, setIsWaveformReady] = useState(false);
+  const [isWaveformReady, setIsWaveformReady] = useState<boolean>(false);
   const { projectConfig: { dir, filePath, clips, silence } = {} } =
     useProjectConfig();
-  const skipRegionInProgress = useRef(false);
-  const [zoomLevel, setZoomLevel] = useState(1);
+  const skipRegionInProgress = useRef<boolean>(false);
+  const [gain, setGain] = useState<number>(1);
+  const gainNode = useRef<any>(null);
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
 
@@ -102,7 +106,7 @@ export function useSilenceDetectionWaveform(): {
     };
 
     wavesurferRef.current = WaveSurfer.create({
-      backend: 'MediaElement',
+      backend: 'MediaElementWebAudio',
       container: waveformRef.current,
       waveColor: token.colorPrimary,
       progressColor: token.colorFillSecondary,
@@ -113,6 +117,10 @@ export function useSilenceDetectionWaveform(): {
         WaveSurferRegions.create(),
       ],
     });
+
+    gainNode.current = wavesurferRef.current.backend.ac.createGain();
+    gainNode.current.gain.value = 1;
+    wavesurferRef.current.backend.setFilters([gainNode.current]);
 
     // set initial zoom level
     wavesurferRef.current.zoom(zoomLevel);
@@ -168,6 +176,12 @@ export function useSilenceDetectionWaveform(): {
     wavesurferRef.current!.setPlaybackRate(playbackRate);
   }, [playbackRate]);
 
+  useEffect(() => {
+    if (!wavesurferRef.current) return;
+
+    gainNode.current.gain.value = gain;
+  }, [gain]);
+
   return {
     waveformRef,
     handleWheel,
@@ -175,6 +189,8 @@ export function useSilenceDetectionWaveform(): {
     playbackRate,
     setPlaybackRate,
     isPlaying,
+    gain,
+    setGain,
   };
 }
 

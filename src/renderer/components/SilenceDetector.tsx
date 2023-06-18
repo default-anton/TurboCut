@@ -21,6 +21,8 @@ const SilenceDetector: FC<UseSilenceDetection> = ({
     playbackRate,
     setPlaybackRate,
     playPause,
+    gain,
+    setGain,
   } = useSilenceDetectionWaveform();
 
   useEffect(() => {
@@ -44,6 +46,8 @@ const SilenceDetector: FC<UseSilenceDetection> = ({
           playbackRate={playbackRate}
           onPlaybackRateChange={setPlaybackRate}
           onPlayPause={playPause}
+          gain={gain}
+          onChangeGain={setGain}
         />
 
         <Divider orientation="left">Spam Detection</Divider>

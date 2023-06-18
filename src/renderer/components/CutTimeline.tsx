@@ -4,8 +4,12 @@ import WaveSurferRegions from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.
 import TimelinePlugin from 'wavesurfer.js/dist/plugin/wavesurfer.timeline.min';
 import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
 
-import { theme, FloatButton, Typography } from 'antd';
-import { PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
+import { theme, FloatButton, Typography, Slider, Card } from 'antd';
+import {
+  PlayCircleOutlined,
+  PauseCircleOutlined,
+  SoundOutlined,
+} from '@ant-design/icons';
 
 import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
 import { Transcription } from 'shared/types';
@@ -59,8 +63,10 @@ const CutTimeline: FC<CutTimelineProps> = ({
   const {
     projectConfig: { transcription, filePath, dir, speech },
   } = useProjectConfig();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackRate, setPlaybackRate] = useState(1);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [playbackRate, setPlaybackRate] = useState<number>(1);
+  const [gain, setGain] = useState<number>(1);
+  const gainNode = useRef<any>(null);
 
   const [audioFile, setAudioFile] = useState<string | undefined>(undefined);
   const [audioFileDuration, setAudioFileDuration] = useState<
@@ -115,7 +121,7 @@ const CutTimeline: FC<CutTimelineProps> = ({
 
     // Initialize Wavesurfer.js
     waveSurferRef.current = WaveSurfer.create({
-      backend: 'MediaElement',
+      backend: 'MediaElementWebAudio',
       container: waveformRef.current,
       waveColor: token.colorPrimary,
       progressColor: token.colorFillSecondary,
@@ -125,6 +131,10 @@ const CutTimeline: FC<CutTimelineProps> = ({
         WaveSurferRegions.create(),
       ],
     });
+
+    gainNode.current = waveSurferRef.current.backend.ac.createGain();
+    gainNode.current.gain.value = 1;
+    waveSurferRef.current.backend.setFilters([gainNode.current]);
 
     waveSurferRef.current.load(`file://${audioFile}`);
 
@@ -221,6 +231,12 @@ const CutTimeline: FC<CutTimelineProps> = ({
   }, [playbackRate]);
 
   useEffect(() => {
+    if (!waveSurferRef.current) return;
+
+    gainNode.current.gain.value = gain;
+  }, [gain]);
+
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === ' ') {
         event.preventDefault();
@@ -246,12 +262,12 @@ const CutTimeline: FC<CutTimelineProps> = ({
         type={isPlaying ? 'default' : 'primary'}
         icon={isPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
         tooltip={<div>{isPlaying ? 'Pause' : 'Play'}</div>}
-        style={{ left: `calc(50% - ${token.controlHeightLG}px)` }}
+        style={{ left: `calc(50% - ${token.controlHeightLG * 2}px)` }}
       />
 
       <FloatButton.Group
         trigger="hover"
-        style={{ left: `calc(50% + ${token.controlHeightLG / 2}px)` }}
+        style={{ left: `calc(50% - ${token.controlHeightLG / 2}px)` }}
         icon={null}
         closeIcon={null}
         description={
@@ -272,6 +288,32 @@ const CutTimeline: FC<CutTimelineProps> = ({
             onClick={() => setPlaybackRate(option.value)}
           />
         ))}
+      </FloatButton.Group>
+
+      <FloatButton.Group
+        trigger="hover"
+        style={{ left: `calc(50% + ${token.controlHeightLG}px)` }}
+        icon={<SoundOutlined />}
+      >
+        <Card style={{ width: token.sizeXXL * 2 }} hoverable bordered>
+          <Slider
+            min={0}
+            max={400}
+            marks={{
+              0: '0%',
+              100: '100%',
+              200: '200%',
+              300: '300%',
+              400: '400%',
+            }}
+            onChange={(value) => setGain(value / 100)}
+            value={gain * 100}
+            style={{
+              height: token.sizeXXL * 5,
+            }}
+            vertical
+          />
+        </Card>
       </FloatButton.Group>
     </>
   );

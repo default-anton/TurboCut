@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
-import { Col, Row, Space } from 'antd';
+import { Col, Row, Space, Divider } from 'antd';
 
 import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
 import { useExport } from 'renderer/hooks/useExport';
@@ -148,14 +148,18 @@ const Cut: FC = () => {
           />
         </Col>
       </Row>
+
       <Row justify="center">
         <Col className="col">
+          <Divider orientation="left">Transcription</Divider>
+
           <TranscriptionEditor
             transcription={transcription}
             segmentAtPlayhead={segmentAtPlayhead}
             disabledSegmentIds={disabledSegmentIds}
             ref={textRef}
           />
+
           <Space wrap>
             <ExportButton
               handleExport={handleExport}
