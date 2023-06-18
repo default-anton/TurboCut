@@ -53,9 +53,6 @@ const TranscriptionEditor = forwardRef<HTMLElement, Props>(
               data-segment-id={id}
               className={styles.text}
               mark={id === segmentAtPlayhead}
-              style={{
-                backgroundColor: index % 2 === 0 ? token.colorPrimaryBg : '',
-              }}
             >
               {text}
             </Text>
