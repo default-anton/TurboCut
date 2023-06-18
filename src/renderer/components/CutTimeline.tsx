@@ -157,8 +157,6 @@ const CutTimeline: FC<CutTimelineProps> = ({
     const onAudioPositionChange = () => {
       if (!waveSurferRef.current || skipRegionInProgress.current) return;
 
-      console.log(waveSurferRef.current.getVolume());
-
       const currentTime = waveSurferRef.current.getCurrentTime();
 
       const currentSegmentAtPlayhead = findSegmentAtPlayhead(
