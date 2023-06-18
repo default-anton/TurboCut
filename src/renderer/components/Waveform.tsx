@@ -1,6 +1,10 @@
 import React from 'react';
-import { theme, FloatButton, Typography } from 'antd';
-import { PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
+import { theme, FloatButton, Typography, Card, Slider } from 'antd';
+import {
+  PlayCircleOutlined,
+  PauseCircleOutlined,
+  SoundOutlined,
+} from '@ant-design/icons';
 
 import styles from './Waveform.module.scss';
 
@@ -12,6 +16,8 @@ interface WaveformProps {
   playbackRate: number;
   onPlaybackRateChange: (rate: number) => void;
   onPlayPause: () => void;
+  gain: number;
+  onChangeGain: (gain: number) => void;
 }
 
 const PLAYBACK_RATE_OPTIONS = [
@@ -26,6 +32,8 @@ const Waveform: React.FC<WaveformProps> = ({
   playbackRate,
   onPlaybackRateChange,
   onPlayPause,
+  gain,
+  onChangeGain,
 }) => {
   const { token } = theme.useToken();
 
@@ -39,12 +47,12 @@ const Waveform: React.FC<WaveformProps> = ({
         type={playing ? 'default' : 'primary'}
         icon={playing ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
         tooltip={<div>{playing ? 'Pause' : 'Play'}</div>}
-        style={{ left: `calc(50% - ${token.controlHeightLG}px)` }}
+        style={{ left: `calc(50% - ${token.controlHeightLG * 2}px)` }}
       />
 
       <FloatButton.Group
         trigger="hover"
-        style={{ left: `calc(50% + ${token.controlHeightLG / 2}px)` }}
+        style={{ left: `calc(50% - ${token.controlHeightLG / 2}px)` }}
         icon={null}
         closeIcon={null}
         description={
@@ -65,6 +73,32 @@ const Waveform: React.FC<WaveformProps> = ({
             onClick={() => onPlaybackRateChange(option.value)}
           />
         ))}
+      </FloatButton.Group>
+
+      <FloatButton.Group
+        trigger="hover"
+        style={{ left: `calc(50% + ${token.controlHeightLG}px)` }}
+        icon={<SoundOutlined />}
+      >
+        <Card style={{ width: token.sizeXXL * 2 }} hoverable bordered>
+          <Slider
+            min={0}
+            max={400}
+            marks={{
+              0: '0%',
+              100: '100%',
+              200: '200%',
+              300: '300%',
+              400: '400%',
+            }}
+            onChange={(value) => onChangeGain(value / 100)}
+            value={gain * 100}
+            style={{
+              height: token.sizeXXL * 5,
+            }}
+            vertical
+          />
+        </Card>
       </FloatButton.Group>
     </>
   );

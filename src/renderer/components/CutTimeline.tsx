@@ -4,8 +4,12 @@ import WaveSurferRegions from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.
 import TimelinePlugin from 'wavesurfer.js/dist/plugin/wavesurfer.timeline.min';
 import { RegionParams } from 'wavesurfer.js/src/plugin/regions';
 
-import { theme, FloatButton, Typography, Slider } from 'antd';
-import { PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
+import { theme, FloatButton, Typography, Slider, Card } from 'antd';
+import {
+  PlayCircleOutlined,
+  PauseCircleOutlined,
+  SoundOutlined,
+} from '@ant-design/icons';
 
 import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
 import { Transcription } from 'shared/types';
@@ -59,9 +63,9 @@ const CutTimeline: FC<CutTimelineProps> = ({
   const {
     projectConfig: { transcription, filePath, dir, speech },
   } = useProjectConfig();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackRate, setPlaybackRate] = useState(1);
-  const [gain, setGain] = useState(1);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [playbackRate, setPlaybackRate] = useState<number>(1);
+  const [gain, setGain] = useState<number>(1);
   const gainNode = useRef<any>(null);
 
   const [audioFile, setAudioFile] = useState<string | undefined>(undefined);
@@ -260,12 +264,12 @@ const CutTimeline: FC<CutTimelineProps> = ({
         type={isPlaying ? 'default' : 'primary'}
         icon={isPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
         tooltip={<div>{isPlaying ? 'Pause' : 'Play'}</div>}
-        style={{ left: `calc(50% - ${token.controlHeightLG}px)` }}
+        style={{ left: `calc(50% - ${token.controlHeightLG * 2}px)` }}
       />
 
       <FloatButton.Group
         trigger="hover"
-        style={{ left: `calc(50% + ${token.controlHeightLG / 2}px)` }}
+        style={{ left: `calc(50% - ${token.controlHeightLG / 2}px)` }}
         icon={null}
         closeIcon={null}
         description={
@@ -288,22 +292,31 @@ const CutTimeline: FC<CutTimelineProps> = ({
         ))}
       </FloatButton.Group>
 
-      <Slider
-        min={0}
-        max={400}
-        marks={{ 0: '0%', 100: '100%', 200: '200%', 300: '300%', 400: '400%' }}
-        onChange={(value) => setGain(value / 100)}
-        value={gain * 100}
-        style={{
-          position: 'fixed',
-          bottom: token.controlHeightLG,
-          left: `calc(50% + ${token.controlHeightLG * 2}px)`,
-          height: token.controlHeightLG * 10,
-          zIndex: 100,
-          opacity: 1,
-        }}
-        vertical
-      />
+      <FloatButton.Group
+        trigger="hover"
+        style={{ left: `calc(50% + ${token.controlHeightLG}px)` }}
+        icon={<SoundOutlined />}
+      >
+        <Card style={{ width: token.sizeXXL * 2 }} hoverable bordered>
+          <Slider
+            min={0}
+            max={400}
+            marks={{
+              0: '0%',
+              100: '100%',
+              200: '200%',
+              300: '300%',
+              400: '400%',
+            }}
+            onChange={(value) => setGain(value / 100)}
+            value={gain * 100}
+            style={{
+              height: token.sizeXXL * 5,
+            }}
+            vertical
+          />
+        </Card>
+      </FloatButton.Group>
     </>
   );
 };
