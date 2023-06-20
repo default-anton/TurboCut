@@ -20,6 +20,8 @@ interface Props {
   segmentAtPlayhead: number;
   disabledSegmentIds: Set<number>;
   selectedSegmentIds: Set<number>;
+  onMouseEnterSegment: (id: number) => void;
+  onMouseLeaveSegment: () => void;
 }
 
 const TranscriptionEditor = forwardRef<HTMLElement, Props>(
@@ -29,6 +31,8 @@ const TranscriptionEditor = forwardRef<HTMLElement, Props>(
       segmentAtPlayhead,
       disabledSegmentIds,
       selectedSegmentIds,
+      onMouseEnterSegment,
+      onMouseLeaveSegment,
     },
     ref
   ) => {
@@ -62,6 +66,8 @@ const TranscriptionEditor = forwardRef<HTMLElement, Props>(
                 selectedSegmentIds.has(id) ? styles['text--selected'] : ''
               }`}
               mark={id === segmentAtPlayhead}
+              onMouseEnter={() => onMouseEnterSegment(id)}
+              onMouseLeave={() => onMouseLeaveSegment()}
             >
               {text}
             </Text>

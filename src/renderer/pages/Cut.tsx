@@ -21,6 +21,8 @@ const Cut: FC = () => {
   const [selectedSegmentIds, setSelectedSegmentIds] = useState<Set<number>>(
     new Set()
   );
+  const [forwardToSegmentId, setForwardToSegmentId] = useState<number>(-1);
+  const [hoveredSegmentId, setHoveredSegmentId] = useState<number>(-1);
   const { exportTimeline, isExporting } = useExport();
   const [segmentAtPlayhead, setSegmentAtPlayhead] = useState<number>(0);
   const textRef = useRef<HTMLElement>(null);
@@ -117,6 +119,12 @@ const Cut: FC = () => {
             ...Array.from(selectedSegmentIds),
           ])
         );
+
+        return;
+      }
+
+      if (event.key === 'g' && hoveredSegmentId !== -1) {
+        setForwardToSegmentId(hoveredSegmentId);
       }
     };
 
@@ -126,7 +134,12 @@ const Cut: FC = () => {
     return () => {
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [selectedSegmentIds, disabledSegmentIds, updateDisabledSegmentIds]);
+  }, [
+    selectedSegmentIds,
+    disabledSegmentIds,
+    updateDisabledSegmentIds,
+    hoveredSegmentId,
+  ]);
 
   const handleExport = useCallback(
     async (editor: Editor) => {
@@ -135,6 +148,10 @@ const Cut: FC = () => {
     },
     [applyEdits, disabledSegmentIds, exportTimeline]
   );
+
+  const unsetHoveredSegmentId = useCallback(() => {
+    setHoveredSegmentId(-1);
+  }, []);
 
   return (
     <>
@@ -147,6 +164,8 @@ const Cut: FC = () => {
                 setSegmentAtPlayhead(segmentId);
               }
             }}
+            forwardToSegmentId={forwardToSegmentId}
+            setForwardToSegmentId={setForwardToSegmentId}
           />
         </Col>
       </Row>
@@ -156,11 +175,13 @@ const Cut: FC = () => {
           <Divider orientation="left">Transcription</Divider>
 
           <TranscriptionEditor
+            ref={textRef}
             transcription={transcription}
             segmentAtPlayhead={segmentAtPlayhead}
             disabledSegmentIds={disabledSegmentIds}
             selectedSegmentIds={selectedSegmentIds}
-            ref={textRef}
+            onMouseEnterSegment={setHoveredSegmentId}
+            onMouseLeaveSegment={unsetHoveredSegmentId}
           />
 
           <Space wrap>
