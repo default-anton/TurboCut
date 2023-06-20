@@ -18,6 +18,9 @@ const Cut: FC = () => {
     projectConfig: { transcription, disabledSegmentIds },
     updateDisabledSegmentIds,
   } = useProjectConfig();
+  const [selectedSegmentIds, setSelectedSegmentIds] = useState<Set<number>>(
+    new Set()
+  );
   const { exportTimeline, isExporting } = useExport();
   const [segmentAtPlayhead, setSegmentAtPlayhead] = useState<number>(0);
   const textRef = useRef<HTMLElement>(null);
@@ -31,19 +34,33 @@ const Cut: FC = () => {
   }, [segmentAtPlayhead]);
 
   useEffect(() => {
-    const handleKeyUp = async (event: KeyboardEvent) => {
-      if (
-        !DELETE_SEGMENTS_BUTTONS.has(event.key) &&
-        !ADD_SEGMENTS_BUTTONS.has(event.key)
-      ) {
-        return;
+    const findSegmentIdFromSelection = (node: any): number => {
+      let segmentId = '';
+      if (node.dataset && node.dataset.segmentId) {
+        segmentId = node.dataset.segmentId;
+      } else if (node.closest) {
+        segmentId = node
+          .closest('[data-segment-id]')
+          ?.getAttribute('data-segment-id');
+      } else if (node.parentElement && node.parentElement.closest) {
+        segmentId = node.parentElement
+          ?.closest('[data-segment-id]')
+          ?.getAttribute('data-segment-id');
       }
 
+      if (segmentId) {
+        return parseInt(segmentId || '-1', 10);
+      }
+
+      return -1;
+    };
+
+    const handleSelectionChange = () => {
       const selection = window.getSelection();
 
       if (!selection) return;
 
-      const changedSegments = new Set<number>();
+      const segmentsInSelection = new Set<number>();
 
       for (let i = 0; i < selection.rangeCount; i++) {
         const range = selection.getRangeAt(i);
@@ -60,59 +77,44 @@ const Cut: FC = () => {
           continue;
         }
 
-        let start = '';
-        if (startElem.dataset && startElem.dataset.segmentId) {
-          start = startElem.dataset.segmentId;
-        } else if (startElem.closest) {
-          start = startElem
-            .closest('[data-segment-id]')
-            ?.getAttribute('data-segment-id');
-        } else if (startElem.parentElement && startElem.parentElement.closest) {
-          start = startElem.parentElement
-            ?.closest('[data-segment-id]')
-            ?.getAttribute('data-segment-id');
-        } else {
-          continue;
-        }
+        const from = findSegmentIdFromSelection(startElem);
+        const to = findSegmentIdFromSelection(endElem);
 
-        let end = '';
-        if (endElem.dataset && endElem.dataset.segmentId) {
-          end = endElem.dataset.segmentId;
-        } else if (endElem.closest) {
-          end = endElem
-            .closest('[data-segment-id]')
-            ?.getAttribute('data-segment-id');
-        } else if (endElem.parentElement && endElem.parentElement.closest) {
-          end = endElem.parentElement
-            ?.closest('[data-segment-id]')
-            ?.getAttribute('data-segment-id');
-        } else {
-          continue;
-        }
+        if (from === -1 || to === -1) continue;
 
-        const from = parseInt(start || '-1', 10);
-        const to = parseInt(end || '-1', 10);
-
-        if (from !== -1 && to !== -1) {
-          for (let j = from; j <= to; j++) {
-            changedSegments.add(j);
-          }
+        for (let j = from; j <= to; j++) {
+          segmentsInSelection.add(j);
         }
       }
 
+      setSelectedSegmentIds(segmentsInSelection);
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleKeyUp = async (event: KeyboardEvent) => {
       if (ADD_SEGMENTS_BUTTONS.has(event.key)) {
         await updateDisabledSegmentIds(
           new Set([
             ...Array.from(disabledSegmentIds).filter(
-              (id) => !changedSegments.has(id)
+              (id) => !selectedSegmentIds.has(id)
             ),
           ])
         );
-      } else if (DELETE_SEGMENTS_BUTTONS.has(event.key)) {
+        return;
+      }
+
+      if (DELETE_SEGMENTS_BUTTONS.has(event.key)) {
         await updateDisabledSegmentIds(
           new Set([
             ...Array.from(disabledSegmentIds),
-            ...Array.from(changedSegments),
+            ...Array.from(selectedSegmentIds),
           ])
         );
       }
@@ -124,7 +126,7 @@ const Cut: FC = () => {
     return () => {
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [disabledSegmentIds, updateDisabledSegmentIds]);
+  }, [selectedSegmentIds, disabledSegmentIds, updateDisabledSegmentIds]);
 
   const handleExport = useCallback(
     async (editor: Editor) => {
@@ -157,6 +159,7 @@ const Cut: FC = () => {
             transcription={transcription}
             segmentAtPlayhead={segmentAtPlayhead}
             disabledSegmentIds={disabledSegmentIds}
+            selectedSegmentIds={selectedSegmentIds}
             ref={textRef}
           />
 
