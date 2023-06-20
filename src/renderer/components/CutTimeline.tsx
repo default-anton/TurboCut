@@ -17,6 +17,8 @@ import { Transcription } from 'shared/types';
 interface CutTimelineProps {
   disabledSegmentIds: Set<number>;
   setSegmentAtPlayhead: (segmentId: number | null) => void;
+  forwardToSegmentId: number;
+  setForwardToSegmentId: (segmentId: number) => void;
 }
 
 const { Text } = Typography;
@@ -55,6 +57,8 @@ function findSegmentAtPlayhead(
 const CutTimeline: FC<CutTimelineProps> = ({
   disabledSegmentIds,
   setSegmentAtPlayhead,
+  forwardToSegmentId,
+  setForwardToSegmentId,
 }) => {
   const { token } = theme.useToken();
   const skipRegionInProgress = useRef(false);
@@ -250,6 +254,29 @@ const CutTimeline: FC<CutTimelineProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [handlePlayPause]);
+
+  useEffect(() => {
+    if (isPlaying || forwardToSegmentId === -1 || !audioFileDuration) {
+      return;
+    }
+
+    const segment = transcription[forwardToSegmentId];
+
+    if (!segment) {
+      return;
+    }
+
+    waveSurferRef.current!.seekTo(segment.start / audioFileDuration);
+    setSegmentAtPlayhead(forwardToSegmentId);
+    setForwardToSegmentId(-1);
+  }, [
+    isPlaying,
+    forwardToSegmentId,
+    audioFileDuration,
+    transcription,
+    setSegmentAtPlayhead,
+    setForwardToSegmentId,
+  ]);
 
   return (
     <>
