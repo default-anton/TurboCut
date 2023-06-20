@@ -19,12 +19,19 @@ interface Props {
   transcription: Transcription;
   segmentAtPlayhead: number;
   disabledSegmentIds: Set<number>;
+  selectedSegmentIds: Set<number>;
 }
 
 const TranscriptionEditor = forwardRef<HTMLElement, Props>(
-  ({ transcription, segmentAtPlayhead, disabledSegmentIds }, ref) => {
-    const { token } = theme.useToken();
-
+  (
+    {
+      transcription,
+      segmentAtPlayhead,
+      disabledSegmentIds,
+      selectedSegmentIds,
+    },
+    ref
+  ) => {
     const percentile10thIntervalBetweenSegments = useMemo(() => {
       const intervalsBetweenSegments = transcription
         .map(({ start }, index) => start - (transcription[index - 1]?.end || 0))
@@ -51,7 +58,9 @@ const TranscriptionEditor = forwardRef<HTMLElement, Props>(
               ref={id === segmentAtPlayhead ? ref : null}
               delete={disabledSegmentIds.has(id)}
               data-segment-id={id}
-              className={styles.text}
+              className={`${styles.text} ${
+                selectedSegmentIds.has(id) ? styles['text--selected'] : ''
+              }`}
               mark={id === segmentAtPlayhead}
             >
               {text}
