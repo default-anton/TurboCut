@@ -14,6 +14,7 @@ module.exports = {
     'no-bitwise': 'off',
     'no-restricted-syntax': 'off',
     'no-continue': 'off',
+    'no-await-in-loop': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,
