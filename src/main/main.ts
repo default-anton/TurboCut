@@ -21,6 +21,7 @@ import {
   getSilentClips,
   renderTimelineAudio,
   getVideoDuration,
+  splitAudioIfLargerThan,
 } from './ffmpeg';
 import {
   showSaveDialog,
@@ -185,6 +186,15 @@ app
         ...args: Parameters<typeof getVideoDuration>
       ): ReturnType<typeof getVideoDuration> => {
         return getVideoDuration(...args);
+      }
+    );
+    ipcMain.handle(
+      'splitAudioIfLargerThan',
+      async (
+        _event,
+        ...args: Parameters<typeof splitAudioIfLargerThan>
+      ): ReturnType<typeof splitAudioIfLargerThan> => {
+        return splitAudioIfLargerThan(...args);
       }
     );
     ipcMain.handle(

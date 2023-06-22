@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
-import { access, constants, mkdir } from 'fs/promises';
+import { access, constants, stat } from 'fs/promises';
 import path from 'path';
 import { Clip } from '../shared/types';
 import { createCacheDir } from './util';
@@ -21,6 +21,58 @@ export const getVideoDuration = async (pathToFile: string): Promise<number> => {
       }
     });
   });
+};
+
+const splitAudio = (
+  audioPath: string,
+  startSeconds: number,
+  endSeconds: number,
+  outputPath: string
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    ffmpeg(audioPath)
+      .setStartTime(startSeconds)
+      .setDuration(endSeconds - startSeconds)
+      .output(outputPath)
+      .on('end', () => resolve())
+      .on('error', (err) => reject(err))
+      .run();
+  });
+};
+
+export const splitAudioIfLargerThan = async (
+  audioPath: string,
+  limitInMB: number
+): Promise<string[]> => {
+  const totalSizeInMB = (await stat(audioPath)).size / (1024 * 1024);
+
+  if (totalSizeInMB <= limitInMB) {
+    return [audioPath];
+  }
+
+  const totalDurationInSecs = await getVideoDuration(audioPath);
+  const bitRate = (totalSizeInMB * 8) / totalDurationInSecs; // in Mbps
+  const splitDuration = (limitInMB * 8) / bitRate; // the duration for each split file
+  const outputPaths: string[] = [];
+
+  let start = 0;
+  let i = 1;
+  while (start < totalDurationInSecs) {
+    let end = start + splitDuration;
+    if (end > totalDurationInSecs) {
+      end = totalDurationInSecs;
+    }
+    const outputPath = path.join(
+      path.dirname(audioPath),
+      `${i}-${path.basename(audioPath)}`
+    );
+    await splitAudio(audioPath, start, end, outputPath);
+    outputPaths.push(outputPath);
+    start = end;
+    i++;
+  }
+
+  return outputPaths;
 };
 
 export const renderTimelineAudio = async (
