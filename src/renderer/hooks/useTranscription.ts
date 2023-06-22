@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { message } from 'antd';
 
-import { TranscriptionBackend, Clip } from 'shared/types';
+import { TranscriptionBackend, Clip, Transcription } from 'shared/types';
 import { useProjectConfig } from './useProjectConfig';
 
 export function useTranscription(): {
@@ -30,11 +30,38 @@ export function useTranscription(): {
           speech,
           'mp3'
         );
-        const newTranscription = await window.electron.transcribe({
-          backend,
+        const pathToAudioFiles = await window.electron.splitAudioIfLargerThan(
           pathToAudioFile,
-          languageCode,
-        });
+          backend === TranscriptionBackend.OpenAIWhisper ? 24 : 64
+        );
+
+        const transcriptions: Transcription[] = [];
+        for (const audioPath of pathToAudioFiles) {
+          transcriptions.push(
+            await window.electron.transcribe({
+              backend,
+              pathToAudioFile: audioPath,
+              languageCode,
+            })
+          );
+        }
+
+        const newTranscription: Transcription = [];
+        let segmentId = 0;
+        let transcriptionStart = 0;
+
+        for (const t of transcriptions) {
+          for (const segment of t) {
+            newTranscription.push({
+              id: segmentId++,
+              start: transcriptionStart + segment.start,
+              end: transcriptionStart + segment.end,
+              text: segment.text,
+            });
+          }
+
+          transcriptionStart += t[t.length - 1].end;
+        }
 
         await updateTranscription(newTranscription);
       } catch (error) {
