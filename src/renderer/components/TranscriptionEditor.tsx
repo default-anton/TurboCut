@@ -1,10 +1,12 @@
 import { forwardRef, useMemo, FC, ReactNode } from 'react';
-import { Card, Typography, theme } from 'antd';
+import { Card, Typography, Input, Space } from 'antd';
 
 import { Transcription } from 'shared/types';
 import styles from './TranscriptionEditor.module.scss';
 
 const { Text, Paragraph } = Typography;
+
+const { Search } = Input;
 
 interface IfParagraphProps {
   condition: boolean;
@@ -47,33 +49,46 @@ const TranscriptionEditor = forwardRef<HTMLElement, Props>(
       return intervalsBetweenSegments[index];
     }, [transcription]);
 
+    const onSearch = (value: string) => console.log(value);
+
     return (
-      <Card className={styles.card}>
-        {transcription.map(({ id, text, start }, index) => (
-          <IfParagraph
-            key={`${id}-gap`}
-            id={id}
-            condition={
-              start - (transcription[index - 1]?.end || 0) >
-              percentile10thIntervalBetweenSegments
-            }
-          >
-            <Text
-              ref={id === segmentAtPlayhead ? ref : null}
-              delete={disabledSegmentIds.has(id)}
-              data-segment-id={id}
-              className={`${styles.text} ${
-                selectedSegmentIds.has(id) ? styles['text--selected'] : ''
-              }`}
-              mark={id === segmentAtPlayhead}
-              onMouseEnter={() => onMouseEnterSegment(id)}
-              onMouseLeave={() => onMouseLeaveSegment()}
+      <Space direction="vertical" size="large" style={{ display: 'flex' }}>
+        <Card className={styles.searchCard}>
+          <Search
+            placeholder="Start typing to search..."
+            onSearch={onSearch}
+            enterButton
+            className={styles.search}
+          />
+        </Card>
+
+        <Card className={styles.card}>
+          {transcription.map(({ id, text, start }, index) => (
+            <IfParagraph
+              key={`${id}-gap`}
+              id={id}
+              condition={
+                start - (transcription[index - 1]?.end || 0) >
+                percentile10thIntervalBetweenSegments
+              }
             >
-              {text}
-            </Text>
-          </IfParagraph>
-        ))}
-      </Card>
+              <Text
+                ref={id === segmentAtPlayhead ? ref : null}
+                delete={disabledSegmentIds.has(id)}
+                data-segment-id={id}
+                className={`${styles.text} ${
+                  selectedSegmentIds.has(id) ? styles['text--selected'] : ''
+                }`}
+                mark={id === segmentAtPlayhead}
+                onMouseEnter={() => onMouseEnterSegment(id)}
+                onMouseLeave={() => onMouseLeaveSegment()}
+              >
+                {text}
+              </Text>
+            </IfParagraph>
+          ))}
+        </Card>
+      </Space>
     );
   }
 );

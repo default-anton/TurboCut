@@ -174,17 +174,17 @@ const Cut: FC = () => {
         <Col className="col">
           <Divider orientation="left">Transcription</Divider>
 
-          <TranscriptionEditor
-            ref={textRef}
-            transcription={transcription}
-            segmentAtPlayhead={segmentAtPlayhead}
-            disabledSegmentIds={disabledSegmentIds}
-            selectedSegmentIds={selectedSegmentIds}
-            onMouseEnterSegment={setHoveredSegmentId}
-            onMouseLeaveSegment={unsetHoveredSegmentId}
-          />
+          <Space direction="vertical" size="large" style={{ display: 'flex' }}>
+            <TranscriptionEditor
+              ref={textRef}
+              transcription={transcription}
+              segmentAtPlayhead={segmentAtPlayhead}
+              disabledSegmentIds={disabledSegmentIds}
+              selectedSegmentIds={selectedSegmentIds}
+              onMouseEnterSegment={setHoveredSegmentId}
+              onMouseLeaveSegment={unsetHoveredSegmentId}
+            />
 
-          <Space wrap>
             <ExportButton
               handleExport={handleExport}
               loading={isExporting}

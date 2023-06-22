@@ -1,9 +1,19 @@
 .card {
   max-width: 800px;
   max-height: 800px;
-  margin: auto;
+  margin: 0 auto;
   padding: 20px;
   overflow-y: auto;
+}
+
+.searchCard {
+  max-width: 800px;
+  max-height: 800px;
+  margin: 0 auto;
+}
+
+.search {
+  max-width: 304px;
 }
 
 .text {
