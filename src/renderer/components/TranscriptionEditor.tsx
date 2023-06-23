@@ -91,6 +91,7 @@ const TranscriptionEditor = forwardRef<HTMLElement, Props>(
         <div className={styles.searchCard}>
           <Search
             ref={searchRef}
+            allowClear
             placeholder="Start typing to search..."
             onSearch={onSearch}
             enterButton
