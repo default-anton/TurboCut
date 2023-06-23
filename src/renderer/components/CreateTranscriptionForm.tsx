@@ -24,9 +24,6 @@ const CreateTranscriptionForm: React.FC<TranscribeProps> = ({
   loading,
   onTranscribe,
 }) => {
-  const [storedApiKey, setStoredApiKey] = useState<string | undefined>(
-    undefined
-  );
   const [form] = Form.useForm<FormValues>();
   const backendWatch = Form.useWatch('backend', form);
   const { languages } = useLanguages(backendWatch as TranscriptionBackend);
@@ -35,7 +32,6 @@ const CreateTranscriptionForm: React.FC<TranscribeProps> = ({
     const asyncEffect = async () => {
       if (backendWatch === TranscriptionBackend.OpenAIWhisper) {
         const key = await window.electron.getOpenAiApiKey();
-        setStoredApiKey(key);
         form.setFieldsValue({ apiKey: key });
       }
     };
@@ -125,13 +121,8 @@ const CreateTranscriptionForm: React.FC<TranscribeProps> = ({
                       message: 'Please enter your OpenAI API Key',
                     },
                   ]}
-                  hidden={storedApiKey !== undefined}
                 >
-                  {storedApiKey === undefined ? (
-                    <Input.Password />
-                  ) : (
-                    <Input type="hidden" />
-                  )}
+                  <Input.Password />
                 </Form.Item>
               </Col>
             )}
