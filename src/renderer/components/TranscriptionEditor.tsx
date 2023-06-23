@@ -1,5 +1,13 @@
-import { forwardRef, useMemo, FC, ReactNode } from 'react';
-import { Card, Typography, Input, Space } from 'antd';
+import {
+  forwardRef,
+  useMemo,
+  FC,
+  ReactNode,
+  useCallback,
+  useRef,
+  useEffect,
+} from 'react';
+import { Card, Typography, Input, Space, InputRef } from 'antd';
 
 import { Transcription } from 'shared/types';
 import styles from './TranscriptionEditor.module.scss';
@@ -38,6 +46,7 @@ const TranscriptionEditor = forwardRef<HTMLElement, Props>(
     },
     ref
   ) => {
+    const searchRef = useRef<InputRef>(null);
     const percentile10thIntervalBetweenSegments = useMemo(() => {
       const intervalsBetweenSegments = transcription
         .map(({ start }, index) => start - (transcription[index - 1]?.end || 0))
@@ -49,18 +58,46 @@ const TranscriptionEditor = forwardRef<HTMLElement, Props>(
       return intervalsBetweenSegments[index];
     }, [transcription]);
 
-    const onSearch = (value: string) => console.log(value);
+    const onSearch = useCallback((query: string) => {
+      if (!window.find(query, false, false, false, false, false, true)) return;
+
+      const selection = window.getSelection();
+
+      if (!selection) return;
+
+      selection.focusNode?.parentElement?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }, []);
+
+    useEffect(() => {
+      const handleKeyPress = (event: KeyboardEvent) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === 'f') {
+          event.preventDefault();
+          searchRef.current?.focus({ cursor: 'all', preventScroll: true });
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyPress);
+
+      return () => {
+        document.removeEventListener('keydown', handleKeyPress);
+      };
+    }, []);
 
     return (
       <Space direction="vertical" size="large" style={{ display: 'flex' }}>
-        <Card className={styles.searchCard}>
+        <div className={styles.searchCard}>
           <Search
+            ref={searchRef}
             placeholder="Start typing to search..."
             onSearch={onSearch}
             enterButton
             className={styles.search}
+            onKeyDown={(e) => e.stopPropagation()}
           />
-        </Card>
+        </div>
 
         <Card className={styles.card}>
           {transcription.map(({ id, text, start }, index) => (
