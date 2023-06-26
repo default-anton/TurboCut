@@ -1,4 +1,4 @@
-import { access, constants, mkdir, readFile, writeFile } from 'fs/promises';
+import { access, constants, readFile, writeFile } from 'fs/promises';
 import path from 'path';
 
 import checkDiskSpace from 'check-disk-space';
@@ -87,6 +87,7 @@ export async function createProject(): Promise<ProjectConfig | undefined> {
     dir,
     filePath: '',
     fileDuration: 0,
+    frameRate: 0,
     clips: [],
     silence: [],
     speech: [],

@@ -106,13 +106,6 @@ export function useTranscription(): {
           currentIndex++;
         }
 
-        if (currentIndex === speechTimeline.length) {
-          window.log.info(
-            `Segment not found in timeline: ${trStart} - ${trEnd}`
-          );
-          throw new Error('Segment not found in timeline');
-        }
-
         const startIndex = currentIndex;
 
         while (
@@ -122,14 +115,10 @@ export function useTranscription(): {
           currentIndex++;
         }
 
-        const endIndex = currentIndex;
-
-        if (currentIndex === speechTimeline.length) {
-          window.log.info(
-            `End of segment not found in timeline: ${trStart} - ${trEnd}`
-          );
-          throw new Error('End of segment not found in timeline');
-        }
+        const endIndex =
+          currentIndex === speechTimeline.length
+            ? currentIndex - 1
+            : currentIndex;
 
         const start =
           speech[startIndex].start +

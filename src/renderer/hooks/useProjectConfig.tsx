@@ -50,12 +50,11 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
   >();
   const openProject = useCallback(async () => {
     try {
-      const newProjectConfig = await window.electron.openProject();
+      const config = await window.electron.openProject();
       // User cancelled the open project dialog
-      if (!newProjectConfig) return;
+      if (!config) return;
 
-      setProjectConfig(newProjectConfig);
-      message.success('Project opened successfully');
+      setProjectConfig(config);
     } catch (e: any) {
       message.error(`Failed to open project: ${e.message}`);
     }
@@ -67,7 +66,6 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
       if (!newProjectConfig) return;
 
       setProjectConfig(newProjectConfig);
-      message.success('Project created successfully');
     } catch (e: any) {
       message.error(`Failed to create project: ${e.message}`);
     }
@@ -77,11 +75,14 @@ export const ProjectConfigProvider: FC<{ children: ReactNode }> = ({
       if (!projectConfig) return;
 
       const fileDuration = await window.electron.getVideoDuration(filePath);
+      const frameRate = await window.electron.getVideoFrameRate(filePath);
+
       const newProjectConfig = {
         ...projectConfig,
         projectStep: ProjectStep.DetectSilence,
         filePath,
         fileDuration,
+        frameRate,
         // Reset the clips to a single clip spanning the entire file
         clips: [{ start: 0, end: fileDuration }],
       };

@@ -47,6 +47,7 @@ export interface ProjectConfig {
   name: string;
   dir: string;
   filePath: string;
+  frameRate: number;
   fileDuration: number;
   clips: Clip[];
   silence: Clip[];

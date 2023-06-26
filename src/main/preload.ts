@@ -8,6 +8,7 @@ import {
   renderTimelineAudio,
   getVideoDuration,
   splitAudioIfLargerThan,
+  getVideoFrameRate,
 } from './ffmpeg';
 import {
   showSaveDialog,
@@ -42,6 +43,11 @@ const electronHandler = {
     ...args: Parameters<typeof splitAudioIfLargerThan>
   ): ReturnType<typeof splitAudioIfLargerThan> => {
     return ipcRenderer.invoke('splitAudioIfLargerThan', ...args);
+  },
+  getVideoFrameRate: async (
+    ...args: Parameters<typeof getVideoFrameRate>
+  ): ReturnType<typeof getVideoFrameRate> => {
+    return ipcRenderer.invoke('getVideoFrameRate', ...args);
   },
   transcribe: async (
     ...args: Parameters<typeof Transcriber.prototype.transcribe>
