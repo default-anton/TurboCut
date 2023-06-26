@@ -29,8 +29,8 @@ export function useSilenceDetection(): UseSilenceDetection {
     minSilenceLen: 1000,
     minNonSilenceLen: 150,
     silenceThresh: -33,
-    startPad: 200,
-    endPad: 500,
+    startPad: 230,
+    endPad: 530,
   });
 
   const detectSilence = useCallback(
