@@ -7,7 +7,8 @@ export interface SilenceDetectionSettings {
   minSilenceLen: number;
   minNonSilenceLen: number;
   silenceThresh: number;
-  padding: number;
+  startPad: number;
+  endPad: number;
 }
 
 export interface UseSilenceDetection {
@@ -25,10 +26,11 @@ export function useSilenceDetection(): UseSilenceDetection {
   } = useProjectConfig();
   const [isDetectingSilence, setIsDetectingSilence] = useState(false);
   const [settings, setSettings] = useState<SilenceDetectionSettings>({
-    minSilenceLen: 1,
-    minNonSilenceLen: 0.8,
+    minSilenceLen: 1000,
+    minNonSilenceLen: 150,
     silenceThresh: -33,
-    padding: 0.2,
+    startPad: 200,
+    endPad: 500,
   });
 
   const detectSilence = useCallback(

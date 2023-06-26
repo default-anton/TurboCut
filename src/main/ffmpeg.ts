@@ -158,13 +158,15 @@ export const getSilentClips = async ({
   filePath,
   minSilenceLen,
   silenceThresh,
-  padding,
+  startPad,
+  endPad,
   minNonSilenceLen,
 }: {
   filePath: string;
   minSilenceLen: number;
   silenceThresh: number;
-  padding: number;
+  startPad: number;
+  endPad: number;
   minNonSilenceLen: number;
 }): Promise<{
   silentClips: Clip[];
@@ -183,7 +185,9 @@ export const getSilentClips = async ({
       .audioFrequency(44100)
       .audioChannels(1)
       .audioBitrate('64k')
-      .audioFilters(`silencedetect=n=${silenceThresh}dB:d=${minSilenceLen}`)
+      .audioFilters(
+        `silencedetect=n=${silenceThresh}dB:d=${minSilenceLen / 1000}`
+      )
       .on('end', () => {
         if (silenceClips.length === 0) {
           fs.unlinkSync(outputAudioFile);
@@ -199,7 +203,7 @@ export const getSilentClips = async ({
 
         // If the first non-silence clip is shorter than the minimum non-silence length, extend the first silence clip
         // to the beginning of the video.
-        if (extendedSilenceClips[0].start < minNonSilenceLen) {
+        if (extendedSilenceClips[0].start < minNonSilenceLen / 1000) {
           extendedSilenceClips[0].start = 0;
         }
 
@@ -212,7 +216,7 @@ export const getSilentClips = async ({
           const nextClip = silenceClips[i + 1];
           const nonSilenceDuration = nextClip.start - currentClip.end;
 
-          if (nonSilenceDuration < minNonSilenceLen) {
+          if (nonSilenceDuration < minNonSilenceLen / 1000) {
             currentClip.end = nextClip.end;
           } else if (nextClip.end > currentClip.end) {
             extendedSilenceClips.push({ ...nextClip });
@@ -228,7 +232,7 @@ export const getSilentClips = async ({
           const nextClip = silenceClips[i];
           const nonSilenceDuration = nextClip.start - currentClip.end;
 
-          if (nonSilenceDuration >= minNonSilenceLen) {
+          if (nonSilenceDuration >= minNonSilenceLen / 1000) {
             extendedSilenceClips.push({ ...nextClip });
           } else {
             currentClip.end = nextClip.end;
@@ -250,12 +254,12 @@ export const getSilentClips = async ({
 
         if (silenceStartRegex.test(line)) {
           const [, start] = line.match(silenceStartRegex) as RegExpMatchArray;
-          clipStart = parseFloat(start) + padding;
+          clipStart = parseFloat(start) + startPad / 1000;
         } else if (silenceEndRegex.test(line)) {
           const [, end] = line.match(silenceEndRegex) as RegExpMatchArray;
           silenceClips.push({
             start: clipStart!,
-            end: parseFloat(end) - padding,
+            end: parseFloat(end) - endPad / 1000,
           });
         }
       })
