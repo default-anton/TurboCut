@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import ffmpeg from 'fluent-ffmpeg';
+import ffmpeg, { FfprobeData } from 'fluent-ffmpeg';
 import fs from 'fs';
 import { access, constants, stat } from 'fs/promises';
 import path from 'path';
@@ -21,6 +21,31 @@ export const getVideoDuration = async (pathToFile: string): Promise<number> => {
       }
     });
   });
+};
+
+export const getVideoFrameRate = async (filePath: string): Promise<number> => {
+  const probeData = await new Promise<FfprobeData>((resolve, reject) => {
+    ffmpeg.ffprobe(filePath, (err, data) => {
+      if (err) reject(err);
+      else resolve(data);
+    });
+  });
+
+  // Duration of the entire file (in seconds)
+  const videoStream = probeData.streams.find(
+    (stream: any) => stream.codec_type === 'video'
+  );
+
+  if (videoStream && videoStream.avg_frame_rate) {
+    const [totalDuration, totalFrames] = videoStream.avg_frame_rate.split('/');
+    return (
+      Math.floor(
+        (parseInt(totalDuration, 10) / parseInt(totalFrames, 10)) * 1000
+      ) / 1000
+    );
+  }
+
+  return 0;
 };
 
 const splitAudio = (

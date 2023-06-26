@@ -85,10 +85,7 @@ function generateEDL(
   return edl;
 }
 
-async function getVideoMetadata(filePath: string): Promise<{
-  startTimecode: string;
-  frameRate: number;
-}> {
+async function getStartTimecode(filePath: string): Promise<string> {
   const probeData = await new Promise<FfprobeData>((resolve, reject) => {
     ffmpeg.ffprobe(filePath, (err, data) => {
       if (err) reject(err);
@@ -104,36 +101,26 @@ async function getVideoMetadata(filePath: string): Promise<{
     (stream: any) => stream.codec_type === 'data'
   );
 
-  const frameRate =
-    videoStream && videoStream.avg_frame_rate
-      ? Math.floor(
-          videoStream.avg_frame_rate
-            .split('/')
-            .reduce((a, b) => parseInt(a, 10) / parseInt(b, 10)) * 1000
-        ) / 1000
-      : 23.976;
-
   const startTimecodeFormat = probeData.format.tags?.timecode;
   const startTimecodeStream = videoStream?.tags?.timecode;
   const startTimecodeQt = qtStream?.tags?.timecode;
   const startTimecodeStreamStart = videoStream?.start_time;
 
-  return {
-    frameRate,
-    startTimecode:
-      startTimecodeFormat ||
-      startTimecodeStream ||
-      startTimecodeQt ||
-      startTimecodeStreamStart ||
-      '00:00:00:00',
-  };
+  return (
+    startTimecodeFormat ||
+    startTimecodeStream ||
+    startTimecodeQt ||
+    startTimecodeStreamStart ||
+    '00:00:00:00'
+  );
 }
 
 export default async function createEDL(
   title: string,
   clips: Array<Clip>,
   videoInfo: VideoInfo,
-  clipName: string
+  clipName: string,
+  frameRate: number
 ): Promise<boolean> {
   // Show the save file dialog and get the user's chosen path
   const result = await dialog.showSaveDialog({
@@ -146,7 +133,7 @@ export default async function createEDL(
     return false;
   }
 
-  const { startTimecode, frameRate } = await getVideoMetadata(videoInfo.path);
+  const startTimecode = await getStartTimecode(videoInfo.path);
 
   const startFrame = timecodeToFrames(startTimecode, frameRate);
   const startTimecodeInSeconds = framesToSeconds(startFrame, frameRate);

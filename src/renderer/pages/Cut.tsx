@@ -142,9 +142,9 @@ const Cut: FC = () => {
   ]);
 
   const handleExport = useCallback(
-    async (editor: Editor) => {
+    async (editor: Editor, frameRate: number) => {
       const clips = await applyEdits(disabledSegmentIds);
-      await exportTimeline(editor, clips);
+      await exportTimeline(editor, frameRate, clips);
     },
     [applyEdits, disabledSegmentIds, exportTimeline]
   );

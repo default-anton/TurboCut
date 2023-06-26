@@ -5,7 +5,11 @@ import { Clip, Editor } from '../../shared/types';
 import { useProjectConfig } from './useProjectConfig';
 
 export function useExport(): {
-  exportTimeline: (editor: Editor, clipsToExport?: Clip[]) => Promise<void>;
+  exportTimeline: (
+    editor: Editor,
+    frameRate: number,
+    clipsToExport?: Clip[]
+  ) => Promise<void>;
   isExporting: boolean;
 } {
   const { projectConfig: { filePath, fileDuration, clips } = {} } =
@@ -13,7 +17,7 @@ export function useExport(): {
   const [isExporting, setIsExporting] = useState(false);
 
   const exportTimeline = useCallback(
-    async (editor: Editor, clipsToExport?: Clip[]) => {
+    async (editor: Editor, frameRate: number, clipsToExport?: Clip[]) => {
       if (!filePath || !clips || !fileDuration) {
         message.error('Please select a file first');
         return;
@@ -38,7 +42,8 @@ export function useExport(): {
         `Export to ${editor}`,
         clipsToExport || clips,
         { duration: fileDuration, path: filePath },
-        clipName
+        clipName,
+        frameRate
       );
 
       setIsExporting(false);
