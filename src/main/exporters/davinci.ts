@@ -55,7 +55,6 @@ function frameRateToFrameDuration(frameRate: number): string {
 }
 
 function generateFCPXML(
-  title: string,
   pathToSource: string,
   sourceClipName: string,
   sourceDuration: number,
@@ -92,11 +91,11 @@ function generateFCPXML(
       library: {
         event: {
           _attributes: {
-            name: title,
+            name: `TurboCut ${sourceClipName}`,
           },
           project: {
             _attributes: {
-              name: title,
+              name: `TurboCut ${sourceClipName}`,
             },
             sequence: {
               _attributes: {
@@ -105,14 +104,7 @@ function generateFCPXML(
                 tcFormat: 'NDF',
               },
               spine: {
-                gap: {
-                  _attributes: {
-                    offset: '0/1s',
-                    name: 'Gap',
-                    start: '3600/1s',
-                  },
-                  'asset-clip': [],
-                },
+                'asset-clip': [],
               },
             },
           },
@@ -158,7 +150,7 @@ function generateFCPXML(
     const duration = end - start;
 
     // Add the clip to the timeline
-    fcpxml.fcpxml.library.event.project.sequence.spine.gap['asset-clip'].push({
+    fcpxml.fcpxml.library.event.project.sequence.spine['asset-clip'].push({
       _attributes: {
         offset: `${offset}/${denominator}s`,
         enabled: '1',
@@ -278,7 +270,6 @@ export async function createFCPXML(
   const startTimecodeInSeconds = framesToSeconds(startFrame, frameRate);
 
   const xml = generateFCPXML(
-    'Silence Removed',
     videoInfo.path,
     clipName,
     videoInfo.duration,
