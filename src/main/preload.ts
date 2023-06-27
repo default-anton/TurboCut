@@ -2,7 +2,7 @@
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer } from 'electron';
 
-import createEDL from './exporters/davinci';
+import { createEDL, createFCPXML } from './exporters/davinci';
 import {
   getSilentClips,
   renderTimelineAudio,
@@ -28,6 +28,11 @@ const electronHandler = {
     ...args: Parameters<typeof createEDL>
   ): ReturnType<typeof createEDL> => {
     return ipcRenderer.invoke('createEDL', ...args);
+  },
+  createFCPXML: async (
+    ...args: Parameters<typeof createFCPXML>
+  ): ReturnType<typeof createFCPXML> => {
+    return ipcRenderer.invoke('createFCPXML', ...args);
   },
   renderTimelineAudio: async (
     ...args: Parameters<typeof renderTimelineAudio>

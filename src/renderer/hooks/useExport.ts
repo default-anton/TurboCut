@@ -38,7 +38,7 @@ export function useExport(): {
         key: 'exporting',
       });
 
-      const exported = await window.electron.createEDL(
+      const exported = await window.electron.createFCPXML(
         `Export to ${editor}`,
         clipsToExport || clips,
         { duration: fileDuration, path: filePath },
