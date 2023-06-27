@@ -1,5 +1,5 @@
 import { useMemo, FC } from 'react';
-import { Row, Col, Space, Card, Steps, theme } from 'antd';
+import { Row, Col, Space, Card, Steps } from 'antd';
 
 import { ProjectStep } from '../../shared/types';
 
@@ -20,8 +20,6 @@ const Setup: FC = () => {
     settings: silenceDetectionSettings,
   } = useSilenceDetection();
   const { isTranscribing, transcribe } = useTranscription();
-
-  const { token } = theme.useToken();
 
   const steps = useMemo(() => {
     return [

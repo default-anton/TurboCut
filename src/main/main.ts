@@ -30,7 +30,7 @@ import {
   createProject,
   updateProject,
 } from './projects';
-import createEDL from './exporters/davinci';
+import { createEDL, createFCPXML } from './exporters/davinci';
 import Transcriber from './transcriber';
 
 class AppUpdater {
@@ -169,6 +169,15 @@ app
         ...args: Parameters<typeof createEDL>
       ): ReturnType<typeof createEDL> => {
         return createEDL(...args);
+      }
+    );
+    ipcMain.handle(
+      'createFCPXML',
+      async (
+        _event,
+        ...args: Parameters<typeof createFCPXML>
+      ): ReturnType<typeof createFCPXML> => {
+        return createFCPXML(...args);
       }
     );
     ipcMain.handle(

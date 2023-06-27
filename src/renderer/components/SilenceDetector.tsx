@@ -1,12 +1,18 @@
-import { FC, useEffect } from 'react';
+import { FC, useCallback, useEffect } from 'react';
 
 import { Spin, Space, Divider } from 'antd';
+
+import { Editor } from 'shared/types';
+
+import { useExport } from 'renderer/hooks/useExport';
+import { useProjectConfig } from 'renderer/hooks/useProjectConfig';
+import { useSilenceDetectionWaveform } from 'renderer/hooks/useSilenceDetectionWaveform';
+import { UseSilenceDetection } from 'renderer/hooks/useSilenceDetection';
 
 import DetectSilenceForm from './DetectSilenceForm';
 import Waveform from './Waveform';
 
-import { UseSilenceDetection } from '../hooks/useSilenceDetection';
-import { useSilenceDetectionWaveform } from '../hooks/useSilenceDetectionWaveform';
+import ExportButton from './ExportButton';
 
 const SilenceDetector: FC<UseSilenceDetection> = ({
   isDetectingSilence,
@@ -24,6 +30,15 @@ const SilenceDetector: FC<UseSilenceDetection> = ({
     gain,
     setGain,
   } = useSilenceDetectionWaveform();
+  const { projectConfig: { speech } = {} } = useProjectConfig();
+  const { exportTimeline, isExporting } = useExport();
+
+  const handleExport = useCallback(
+    async (editor: Editor, frameRate: number) => {
+      await exportTimeline(editor, frameRate, speech);
+    },
+    [exportTimeline, speech]
+  );
 
   useEffect(() => {
     const ref = waveformRef.current;
@@ -56,6 +71,12 @@ const SilenceDetector: FC<UseSilenceDetection> = ({
           settings={settings}
           onSubmit={detectSilence}
           onApply={applySilenceDetection}
+        />
+
+        <ExportButton
+          handleExport={handleExport}
+          loading={isExporting}
+          disabled={isExporting}
         />
       </Space>
     </Spin>
