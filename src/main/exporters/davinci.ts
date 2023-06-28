@@ -1,30 +1,9 @@
 import ffmpeg, { FfprobeData } from 'fluent-ffmpeg';
 import { Clip, VideoInfo } from 'shared/types';
-import { js2xml, ElementCompact } from 'xml-js';
+import { js2xml } from 'xml-js';
 import { dialog } from 'electron';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
-
-// Convert the timecode of the video to seconds.
-function framesToTimecode(frames: number, frameRate: number): string {
-  // Rounding the frame rate to the nearest integer is necessary to avoid floating point errors
-  const fps = Math.round(frameRate);
-  // Calculate the number of hours, minutes, seconds, and frames
-  const hours = Math.floor(frames / (3600 * fps));
-  const minutes = Math.floor((frames % (3600 * fps)) / (60 * fps));
-  const seconds = Math.floor(((frames % (3600 * fps)) % (60 * fps)) / fps);
-  const frs = Math.floor(((frames % (3600 * fps)) % (60 * fps)) % fps);
-
-  // Format the timecode string as HH:MM:SS:FF (hours, minutes, seconds, frames)
-  // This is necessary to ensure that the timecode is parsed correctly by DaVinci Resolve.
-  const timecode = `${hours.toString().padStart(2, '0')}:${minutes
-    .toString()
-    .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${frs
-    .toString()
-    .padStart(2, '0')}`;
-
-  return timecode;
-}
 
 function framesToSeconds(frames: number, frameRate: number): number {
   // Rounding the frame rate to the nearest integer is necessary to avoid floating point errors
@@ -60,98 +39,154 @@ function generateFCPXML(
   sourceDuration: number,
   clips: Array<Clip>,
   frameRate: number,
-  timecodeInSeconds: number
+  timecodeInSeconds: number,
+  leaveGaps: boolean
 ): string {
-  // The root FCPXML element
-  const fcpxml: ElementCompact = {
-    _declaration: {
-      _attributes: {
-        version: '1.0',
-        encoding: 'UTF-8',
-      },
-    },
-    fcpxml: {
-      _attributes: {
-        version: '1.10',
-      },
-      resources: {
-        format: {
-          _attributes: {
-            id: 'r0',
-            name: `FFVideoFormat3840x2160p${(Math.round(frameRate * 100) / 100)
-              .toString()
-              .replace('.', '')}`,
-            frameDuration: frameRateToFrameDuration(frameRate),
-            width: '3840',
-            height: '2160',
-          },
-        },
-        asset: [],
-      },
-      library: {
-        event: {
-          _attributes: {
-            name: `TurboCut ${sourceClipName}`,
-          },
-          project: {
-            _attributes: {
-              name: `TurboCut ${sourceClipName}`,
-            },
-            sequence: {
-              _attributes: {
-                tcStart: '0/1s',
-                format: 'r0',
-                tcFormat: 'NDF',
-              },
-              spine: {
-                'asset-clip': [],
-              },
-            },
-          },
-        },
-      },
-    },
-  };
-
   const [numerator, denominator] = frameRateToFrameDuration(frameRate)
     .split('/')
     .map((n) => parseInt(n, 10));
-  const assetId = 'r2';
+  const assetId = 'r1';
   const assetStart = numerator * Math.floor(timecodeInSeconds * frameRate);
   const assetDuration = numerator * Math.floor(sourceDuration * frameRate);
+  const spineElemements: any[] = [];
 
-  // Add the asset
-  fcpxml.fcpxml.resources.asset.push({
-    _attributes: {
-      id: assetId,
-      name: sourceClipName,
-      start: `${assetStart}/${denominator}s`,
-      duration: `${assetDuration}/${denominator}s`,
-      format: 'r1',
-      hasAudio: '1',
-      audioSources: '1',
-      audioChannels: '1',
-    },
-    'media-rep': {
-      _attributes: {
-        src: `file://${pathToSource}`,
-        kind: 'original-media',
+  const fcpxml2 = {
+    declaration: { attributes: { version: '1.0', encoding: 'UTF-8' } },
+    elements: [
+      {
+        type: 'element',
+        name: 'fcpxml',
+        attributes: { version: '1.10' },
+        elements: [
+          {
+            type: 'element',
+            name: 'resources',
+            elements: [
+              {
+                type: 'element',
+                name: 'format',
+                attributes: {
+                  id: 'r0',
+                  name: `FFVideoFormat3840x2160p${(
+                    Math.round(frameRate * 100) / 100
+                  )
+                    .toString()
+                    .replace('.', '')}`,
+                  frameDuration: frameRateToFrameDuration(frameRate),
+                  width: '3840',
+                  height: '2160',
+                },
+              },
+              {
+                type: 'element',
+                name: 'asset',
+                attributes: {
+                  id: assetId,
+                  name: sourceClipName,
+                  start: `${assetStart}/${denominator}s`,
+                  duration: `${assetDuration}/${denominator}s`,
+                  format: 'r1',
+                  hasAudio: '1',
+                  audioSources: '1',
+                  audioChannels: '1',
+                },
+                elements: [
+                  {
+                    type: 'element',
+                    name: 'media-rep',
+                    attributes: {
+                      src: `file://${pathToSource}`,
+                      kind: 'original-media',
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            type: 'element',
+            name: 'library',
+            elements: [
+              {
+                type: 'element',
+                name: 'event',
+                attributes: { name: `TurboCut ${sourceClipName}` },
+                elements: [
+                  {
+                    type: 'element',
+                    name: 'project',
+                    attributes: { name: `TurboCut ${sourceClipName}` },
+                    elements: [
+                      {
+                        type: 'element',
+                        name: 'sequence',
+                        attributes: {
+                          tcStart: '0/1s',
+                          format: 'r0',
+                          tcFormat: 'NDF',
+                        },
+                        elements: [
+                          {
+                            type: 'element',
+                            name: 'spine',
+                            elements: spineElemements,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       },
-    },
-  });
+    ],
+  };
 
   let offset = 0;
 
-  clips.forEach((clip) => {
+  clips.forEach((clip, index) => {
+    const sourceStart = numerator * Math.floor(timecodeInSeconds * frameRate);
     const start =
       numerator * Math.floor((timecodeInSeconds + clip.start) * frameRate);
     const end =
       numerator * Math.floor((timecodeInSeconds + clip.end) * frameRate);
     const duration = end - start;
 
+    // Add a gap clip to the timeline if the clip does not start at the beginning of the timeline
+    if (leaveGaps && index === 0 && start > sourceStart) {
+      const gapDuration = start - sourceStart;
+      spineElemements.push({
+        type: 'element',
+        name: 'gap',
+        attributes: {
+          duration: `${gapDuration}/${denominator}s`,
+        },
+      });
+      offset = gapDuration;
+    }
+
+    if (leaveGaps && clips[index - 1] && clip.start > clips[index - 1].end) {
+      const prevClipEnd =
+        numerator *
+        Math.floor((timecodeInSeconds + clips[index - 1].end) * frameRate);
+      const gapDuration = start - prevClipEnd;
+      spineElemements.push({
+        type: 'element',
+        name: 'gap',
+        attributes: {
+          duration: `${gapDuration}/${denominator}s`,
+        },
+      });
+      offset += gapDuration;
+    }
+
     // Add the clip to the timeline
-    fcpxml.fcpxml.library.event.project.sequence.spine['asset-clip'].push({
-      _attributes: {
+    spineElemements.push({
+      type: 'element',
+      name: 'asset-clip',
+      attributes: {
         offset: `${offset}/${denominator}s`,
         enabled: '1',
         ref: assetId,
@@ -165,55 +200,7 @@ function generateFCPXML(
     offset += duration;
   });
 
-  return js2xml(fcpxml, { compact: true, spaces: 4 });
-}
-
-function generateEDL(
-  title: string,
-  sourceClipName: string,
-  clips: Array<Clip>,
-  frameRate: number,
-  timecodeInSeconds: number
-): string {
-  // The EDL header. The FCM (frame count mode) is set to NON-DROP FRAME.
-  let edl = `TITLE: ${title}\nFCM: NON-DROP FRAME\n\n`;
-
-  // recordStartFrames is the number of frames since the beginning of the video
-  // at which the next clip should be inserted. It is incremented by the number of frames in each clip.
-  let recordStartFrames = 0;
-  clips.forEach((clip, index) => {
-    // srcStartFrames and srcEndFrames are the start and end frames of the clip in the source video.
-    // timecodeInSeconds is the offset of the source video in seconds.
-    const srcStartFrames = Math.floor(
-      (clip.start + timecodeInSeconds) * frameRate
-    );
-    const srcEndFrames = Math.floor((clip.end + timecodeInSeconds) * frameRate);
-    // recStartFrames and recEndFrames are the start and end frames of the clip in the EDL.
-    const recStartFrames = recordStartFrames;
-    const recEndFrames = Math.floor(
-      recordStartFrames + (clip.end - clip.start) * frameRate
-    );
-
-    // "AX" represents an auxiliary track
-    // "V" stands for "video"
-    // "C" indicates a basic cut transition
-    edl += `${String(index + 1).padStart(
-      3,
-      '0'
-    )}  AX       V     C        ${framesToTimecode(
-      srcStartFrames,
-      frameRate
-    )} ${framesToTimecode(srcEndFrames, frameRate)} ${framesToTimecode(
-      recStartFrames,
-      frameRate
-    )} ${framesToTimecode(recEndFrames, frameRate)}\n`;
-    edl += `* FROM CLIP NAME: ${sourceClipName}\n\n`;
-
-    // Increment the number of frames since the beginning of the video at which the next clip should be inserted.
-    recordStartFrames = recEndFrames;
-  });
-
-  return edl;
+  return js2xml(fcpxml2, { compact: false, spaces: 4 });
 }
 
 async function getStartTimecode(filePath: string): Promise<string> {
@@ -246,12 +233,14 @@ async function getStartTimecode(filePath: string): Promise<string> {
   );
 }
 
+// eslint-disable-next-line import/prefer-default-export
 export async function createFCPXML(
   title: string,
   clips: Array<Clip>,
   videoInfo: VideoInfo,
   clipName: string,
-  frameRate: number
+  frameRate: number,
+  leaveGaps: boolean = false
 ): Promise<boolean> {
   // Show the save file dialog and get the user's chosen path
   const result = await dialog.showSaveDialog({
@@ -275,7 +264,8 @@ export async function createFCPXML(
     videoInfo.duration,
     clips,
     frameRate,
-    startTimecodeInSeconds
+    startTimecodeInSeconds,
+    leaveGaps
   );
 
   try {
@@ -287,42 +277,6 @@ export async function createFCPXML(
   }
 
   await writeFile(path.join(result.filePath!, 'Info.fcpxml'), xml, 'utf8');
-
-  return true;
-}
-
-export async function createEDL(
-  title: string,
-  clips: Array<Clip>,
-  videoInfo: VideoInfo,
-  clipName: string,
-  frameRate: number
-): Promise<boolean> {
-  // Show the save file dialog and get the user's chosen path
-  const result = await dialog.showSaveDialog({
-    title,
-    defaultPath: `${videoInfo.path.split('/').pop()}.edl`,
-    filters: [{ name: 'EDL', extensions: ['edl'] }],
-  });
-
-  if (result.canceled || result.filePath === undefined) {
-    return false;
-  }
-
-  const startTimecode = await getStartTimecode(videoInfo.path);
-
-  const startFrame = timecodeToFrames(startTimecode, frameRate);
-  const startTimecodeInSeconds = framesToSeconds(startFrame, frameRate);
-
-  const edl = generateEDL(
-    'Silence Removed',
-    clipName,
-    clips,
-    frameRate,
-    startTimecodeInSeconds
-  );
-
-  await writeFile(result.filePath!, edl, 'utf8');
 
   return true;
 }

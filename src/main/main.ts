@@ -30,7 +30,7 @@ import {
   createProject,
   updateProject,
 } from './projects';
-import { createEDL, createFCPXML } from './exporters/davinci';
+import { createFCPXML } from './exporters/davinci';
 import Transcriber from './transcriber';
 
 class AppUpdater {
@@ -160,15 +160,6 @@ app
         ...args: Parameters<typeof getSilentClips>
       ): ReturnType<typeof getSilentClips> => {
         return getSilentClips(...args);
-      }
-    );
-    ipcMain.handle(
-      'createEDL',
-      async (
-        _event,
-        ...args: Parameters<typeof createEDL>
-      ): ReturnType<typeof createEDL> => {
-        return createEDL(...args);
       }
     );
     ipcMain.handle(
