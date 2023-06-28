@@ -35,7 +35,7 @@ const SilenceDetector: FC<UseSilenceDetection> = ({
 
   const handleExport = useCallback(
     async (editor: Editor, frameRate: number) => {
-      await exportTimeline(editor, frameRate, speech);
+      await exportTimeline(editor, frameRate, true, speech);
     },
     [exportTimeline, speech]
   );

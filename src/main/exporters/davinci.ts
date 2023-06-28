@@ -5,27 +5,6 @@ import { dialog } from 'electron';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 
-// Convert the timecode of the video to seconds.
-function framesToTimecode(frames: number, frameRate: number): string {
-  // Rounding the frame rate to the nearest integer is necessary to avoid floating point errors
-  const fps = Math.round(frameRate);
-  // Calculate the number of hours, minutes, seconds, and frames
-  const hours = Math.floor(frames / (3600 * fps));
-  const minutes = Math.floor((frames % (3600 * fps)) / (60 * fps));
-  const seconds = Math.floor(((frames % (3600 * fps)) % (60 * fps)) / fps);
-  const frs = Math.floor(((frames % (3600 * fps)) % (60 * fps)) % fps);
-
-  // Format the timecode string as HH:MM:SS:FF (hours, minutes, seconds, frames)
-  // This is necessary to ensure that the timecode is parsed correctly by DaVinci Resolve.
-  const timecode = `${hours.toString().padStart(2, '0')}:${minutes
-    .toString()
-    .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${frs
-    .toString()
-    .padStart(2, '0')}`;
-
-  return timecode;
-}
-
 function framesToSeconds(frames: number, frameRate: number): number {
   // Rounding the frame rate to the nearest integer is necessary to avoid floating point errors
   return Math.round((frames / frameRate) * 10) / 10;
@@ -60,7 +39,8 @@ function generateFCPXML(
   sourceDuration: number,
   clips: Array<Clip>,
   frameRate: number,
-  timecodeInSeconds: number
+  timecodeInSeconds: number,
+  leaveGaps: boolean
 ): string {
   const [numerator, denominator] = frameRateToFrameDuration(frameRate)
     .split('/')
@@ -166,12 +146,41 @@ function generateFCPXML(
 
   let offset = 0;
 
-  clips.forEach((clip) => {
+  clips.forEach((clip, index) => {
+    const sourceStart = numerator * Math.floor(timecodeInSeconds * frameRate);
     const start =
       numerator * Math.floor((timecodeInSeconds + clip.start) * frameRate);
     const end =
       numerator * Math.floor((timecodeInSeconds + clip.end) * frameRate);
     const duration = end - start;
+
+    // Add a gap clip to the timeline if the clip does not start at the beginning of the timeline
+    if (leaveGaps && index === 0 && start > sourceStart) {
+      const gapDuration = start - sourceStart;
+      spineElemements.push({
+        type: 'element',
+        name: 'gap',
+        attributes: {
+          duration: `${gapDuration}/${denominator}s`,
+        },
+      });
+      offset = gapDuration;
+    }
+
+    if (leaveGaps && clips[index - 1] && clip.start > clips[index - 1].end) {
+      const prevClipEnd =
+        numerator *
+        Math.floor((timecodeInSeconds + clips[index - 1].end) * frameRate);
+      const gapDuration = start - prevClipEnd;
+      spineElemements.push({
+        type: 'element',
+        name: 'gap',
+        attributes: {
+          duration: `${gapDuration}/${denominator}s`,
+        },
+      });
+      offset += gapDuration;
+    }
 
     // Add the clip to the timeline
     spineElemements.push({
@@ -230,7 +239,8 @@ export async function createFCPXML(
   clips: Array<Clip>,
   videoInfo: VideoInfo,
   clipName: string,
-  frameRate: number
+  frameRate: number,
+  leaveGaps: boolean = false
 ): Promise<boolean> {
   // Show the save file dialog and get the user's chosen path
   const result = await dialog.showSaveDialog({
@@ -254,7 +264,8 @@ export async function createFCPXML(
     videoInfo.duration,
     clips,
     frameRate,
-    startTimecodeInSeconds
+    startTimecodeInSeconds,
+    leaveGaps
   );
 
   try {

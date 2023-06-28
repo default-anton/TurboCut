@@ -8,6 +8,7 @@ export function useExport(): {
   exportTimeline: (
     editor: Editor,
     frameRate: number,
+    leaveGaps: boolean,
     clipsToExport?: Clip[]
   ) => Promise<void>;
   isExporting: boolean;
@@ -17,7 +18,12 @@ export function useExport(): {
   const [isExporting, setIsExporting] = useState(false);
 
   const exportTimeline = useCallback(
-    async (editor: Editor, frameRate: number, clipsToExport?: Clip[]) => {
+    async (
+      editor: Editor,
+      frameRate: number,
+      leaveGaps: boolean,
+      clipsToExport?: Clip[]
+    ) => {
       if (!filePath || !clips || !fileDuration) {
         message.error('Please select a file first');
         return;
@@ -43,7 +49,8 @@ export function useExport(): {
         clipsToExport || clips,
         { duration: fileDuration, path: filePath },
         clipName,
-        frameRate
+        frameRate,
+        leaveGaps
       );
 
       setIsExporting(false);
