@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "fluent-ffmpeg": "^2.1.2",
-    "openai": "^3.2.1",
+    "openai": "^4.4.0",
     "check-disk-space": "^3.3.1"
   }
 }
