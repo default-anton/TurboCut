@@ -47,13 +47,13 @@ const TranscriptionEditor = forwardRef<HTMLElement, Props>(
     ref
   ) => {
     const searchRef = useRef<InputRef>(null);
-    const percentile10thIntervalBetweenSegments = useMemo(() => {
+    const percentile95thIntervalBetweenSegments = useMemo(() => {
       const intervalsBetweenSegments = transcription
         .map(({ start }, index) => start - (transcription[index - 1]?.end || 0))
         .filter((interval) => interval > 0)
         .sort((a, b) => a - b);
 
-      const index = Math.floor(intervalsBetweenSegments.length * 0.1);
+      const index = Math.floor(intervalsBetweenSegments.length * 0.95);
 
       return intervalsBetweenSegments[index];
     }, [transcription]);
@@ -107,7 +107,7 @@ const TranscriptionEditor = forwardRef<HTMLElement, Props>(
               id={id}
               condition={
                 start - (transcription[index - 1]?.end || 0) >
-                percentile10thIntervalBetweenSegments
+                percentile95thIntervalBetweenSegments
               }
             >
               <Text
@@ -122,6 +122,7 @@ const TranscriptionEditor = forwardRef<HTMLElement, Props>(
                 onMouseLeave={() => onMouseLeaveSegment()}
               >
                 {text}
+                &nbsp;
               </Text>
             </IfParagraph>
           ))}
