@@ -1,8 +1,14 @@
 import fs from 'fs';
 
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 
 import { Transcription } from 'shared/types';
+
+interface Word {
+  word: string;
+  start: number;
+  end: number;
+}
 
 const transcribe = async ({
   apiKey,
@@ -13,23 +19,23 @@ const transcribe = async ({
   pathToAudioFile: string;
   languageCode?: string;
 }): Promise<Transcription> => {
-  const config = new Configuration({ apiKey });
-  const openai = new OpenAIApi(config);
-  const response = await openai.createTranscription(
-    fs.createReadStream(pathToAudioFile) as any,
-    'whisper-1',
-    undefined,
-    'verbose_json',
-    0.7,
-    languageCode,
-    { maxContentLength: Infinity, maxBodyLength: Infinity }
-  );
+  const openai = new OpenAI({ apiKey });
+  const transcription = await openai.audio.transcriptions.create({
+    file: fs.createReadStream(pathToAudioFile) as any,
+    model: "whisper-1",
+    response_format: "verbose_json",
+    language: languageCode,
+    timestamp_granularities: ["word"]
+  });
 
-  if (response.status !== 200) {
-    throw new Error(`Transcription failed. ${response.data}`);
-  }
-
-  return (response.data as any).segments as Transcription;
+  return transcription.words.map((word: Word) => {
+    return {
+      id: 0,
+      start: word.start,
+      end: word.end,
+      text: word.word,
+    };
+  });
 };
 
 export default transcribe;
